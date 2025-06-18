@@ -1,0 +1,151 @@
+services:
+  db:
+    image: postgres:alpine
+    restart: always
+    volumes:
+      - db:/var/lib/postgresql/data:Z
+    env_file:
+      - db.env
+
+  redis:
+    image: redis:alpine
+    restart: always
+
+  app:
+    # image: nextcloud:26.0.3-fpm
+    build: ./my_nc
+    restart: always
+    volumes:
+      - nextcloud:/var/www/html:z
+      - type: tmpfs
+        target: /tmp:exec
+      - /var/run/docker.sock:/var/run/docker.sock:z,ro
+    environment:
+      - POSTGRES_HOST=db
+      - REDIS_HOST=redis
+    env_file:
+      - db.env
+    depends_on:
+      - db
+      - redis
+
+  web:
+    build: ./web
+    restart: always
+    volumes:
+      - nextcloud:/var/www/html:z,ro
+    environment:
+      - VIRTUAL_HOST=nc.kcfam.us
+      - LETSENCRYPT_HOST=nc.kcfam.us
+      - LETSENCRYPT_EMAIL=maxkatzchristy@gmail.com
+    depends_on:
+      - app
+    networks:
+      - proxy-tier
+      - default
+
+  cron:
+    # image: nextcloud:26.0.3-fpm
+    build: ./my_nc
+    restart: always
+    volumes:
+      - nextcloud:/var/www/html:z
+    entrypoint: /cron.sh
+    depends_on:
+      - db
+      - redis
+
+  proxy:
+    build: ./proxy
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    labels:
+      com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
+    volumes:
+      - certs:/etc/nginx/certs:z,ro
+      - vhost.d:/etc/nginx/vhost.d:z
+      - html:/usr/share/nginx/html:z
+      - /var/run/docker.sock:/tmp/docker.sock:z,ro
+    networks:
+      - proxy-tier
+
+  letsencrypt-companion:
+    image: nginxproxy/acme-companion
+    restart: always
+    volumes:
+      - certs:/etc/nginx/certs:z
+      - acme:/etc/acme.sh:z
+      - vhost.d:/etc/nginx/vhost.d:z
+      - html:/usr/share/nginx/html:z
+      - /var/run/docker.sock:/var/run/docker.sock:z,ro
+    networks:
+      - proxy-tier
+    depends_on:
+      - proxy
+
+  grampsweb: &grampsweb
+    container_name: grampsweb
+    image: ghcr.io/gramps-project/grampsweb:latest
+    restart: always
+    environment: &grampsweb-env
+      GRAMPSWEB_TREE: "Kamenetsky-Meek Family"  # will create a new tree if not exists
+      VIRTUAL_PORT: "5000"
+      VIRTUAL_HOST: "gramps.kcfam.us"  # e.g. gramps.mydomain.com
+      # LETSENCRYPT_TEST: "true"
+      LETSENCRYPT_HOST: "gramps.kcfam.us"   # e.g. gramps.mydomain.com
+      LETSENCRYPT_EMAIL: "maxkatzchristy@gmail.com"  # your email
+      GRAMPSWEB_CELERY_CONFIG__broker_url: "redis://grampsweb_redis:6379/0"
+      GRAMPSWEB_CELERY_CONFIG__result_backend: "redis://grampsweb_redis:6379/0"
+      GRAMPSWEB_RATELIMIT_STORAGE_URI: "redis://grampsweb_redis:6379/1"
+    volumes:
+      - gramps_users:/app/users
+      - gramps_index:/app/indexdir
+      - gramps_thumb_cache:/app/thumbnail_cache
+      - gramps_cache:/app/cache
+      - gramps_secret:/app/secret
+      - gramps_db:/root/.gramps/grampsdb
+      - gramps_media:/app/media
+      - gramps_tmp:/tmp
+    networks:
+      - proxy-tier
+      - default
+
+  grampsweb_celery:
+    <<: *grampsweb  # YAML merge key copying the entire grampsweb service config
+    container_name: grampsweb_celery
+    depends_on:
+      - grampsweb_redis
+    environment:
+      <<: *grampsweb-env  # YAML merge key copying the grampsweb environment config
+      # overriding let's encrypt variables since celery is not exposed
+      VIRTUAL_PORT: ""
+      VIRTUAL_HOST: ""
+      LETSENCRYPT_HOST: ""
+      LETSENCRYPT_EMAIL: ""
+    command: celery -A gramps_webapi.celery worker --loglevel=INFO
+
+  grampsweb_redis:
+    image: docker.io/library/redis:7.2.4-alpine
+    container_name: grampsweb_redis
+    restart: always
+
+volumes:
+  db:
+  nextcloud:
+  certs:
+  acme:
+  vhost.d:
+  html:
+  gramps_users:
+  gramps_index:
+  gramps_thumb_cache:
+  gramps_cache:
+  gramps_secret:
+  gramps_db:
+  gramps_media:
+  gramps_tmp:
+
+networks:
+  proxy-tier:
