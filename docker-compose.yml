@@ -6,6 +6,21 @@ services:
       - db:/var/lib/postgresql/data:Z
     env_file:
       - db.env
+    labels:
+      - backup.stop=true
+
+  immich_postgres:
+    container_name: immich_postgres
+    image: tensorchord/pgvecto-rs:pg14-v0.2.0
+    restart: always
+    environment:
+      POSTGRES_DB: immich
+      POSTGRES_USER: immich
+      POSTGRES_PASSWORD: immich_secure_password_2024
+    volumes:
+      - immich_postgres:/var/lib/postgresql/data
+    labels:
+      - backup.stop=true
 
   redis:
     image: redis:alpine
@@ -28,6 +43,8 @@ services:
     depends_on:
       - db
       - redis
+    labels:
+      - backup.stop=true
 
   web:
     build: ./web
@@ -131,6 +148,78 @@ services:
     container_name: grampsweb_redis
     restart: always
 
+  backup:
+    image: offen/docker-volume-backup:latest
+    restart: always
+    environment:
+      - BACKUP_FILENAME=homeserver-backup-%Y%m%d-%H%M%S.tar.gz
+      - BACKUP_CRON_EXPRESSION=0 2 * * *  # Daily at 2 AM
+      - BACKUP_RETENTION_DAYS=30
+      - BACKUP_STOP_DURING_BACKUP_LABEL=backup.stop
+      - BACKUP_EXCLUDE_REGEXP=^/backup/tmp/
+    volumes:
+      - db:/backup/postgresql:ro
+      - nextcloud:/backup/nextcloud:ro
+      - gramps_users:/backup/gramps_users:ro
+      - gramps_index:/backup/gramps_index:ro
+      - gramps_thumb_cache:/backup/gramps_thumb_cache:ro
+      - gramps_cache:/backup/gramps_cache:ro
+      - gramps_secret:/backup/gramps_secret:ro
+      - gramps_db:/backup/gramps_db:ro
+      - gramps_media:/backup/gramps_media:ro
+      - immich_upload:/backup/immich_upload:ro
+      - immich_postgres:/backup/immich_postgres:ro
+      - /mnt/backups:/archive
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  # Immich Services
+  immich_server:
+    container_name: immich_server
+    image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+    command: ['start.sh', 'immich']
+    volumes:
+      - immich_upload:/usr/src/app/upload
+      - nextcloud:/mnt/nextcloud:ro  # Read-only access to Nextcloud data
+      - /etc/localtime:/etc/localtime:ro
+    env_file:
+      - immich.env
+    environment:
+      - VIRTUAL_HOST=im.kcfam.us
+      - VIRTUAL_PORT=2283
+      - LETSENCRYPT_HOST=im.kcfam.us
+      - LETSENCRYPT_EMAIL=maxkatzchristy@gmail.com
+    depends_on:
+      - redis
+      - immich_postgres
+    restart: always
+    networks:
+      - proxy-tier
+      - default
+
+  immich_microservices:
+    container_name: immich_microservices
+    image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+    command: ['start.sh', 'microservices']
+    volumes:
+      - immich_upload:/usr/src/app/upload
+      - nextcloud:/mnt/nextcloud:ro  # Read-only access to Nextcloud data
+      - /etc/localtime:/etc/localtime:ro
+    env_file:
+      - immich.env
+    depends_on:
+      - redis
+      - immich_postgres
+    restart: always
+
+  immich_machine_learning:
+    container_name: immich_machine_learning
+    image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
+    volumes:
+      - model_cache:/cache
+    env_file:
+      - immich.env
+    restart: always
+
 volumes:
   db:
   nextcloud:
@@ -146,6 +235,9 @@ volumes:
   gramps_db:
   gramps_media:
   gramps_tmp:
+  immich_upload:
+  immich_postgres:
+  model_cache:
 
 networks:
   proxy-tier:
