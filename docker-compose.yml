@@ -220,6 +220,25 @@ services:
       - immich.env
     restart: always
 
+  snapserver:
+    container_name: snapserver
+    image: ivdata/snapserver:latest
+    restart: always
+    ports:
+      - "1704:1704"  # Snapcast control port
+      - "1705:1705"  # Snapcast stream port
+      - "1780:1780"  # Web interface (HTTP)
+    volumes:
+      - snapserver_config:/opt/snapserver/etc
+    environment:
+      - VIRTUAL_HOST=snap.kcfam.us
+      - VIRTUAL_PORT=1780
+      - LETSENCRYPT_HOST=snap.kcfam.us
+      - LETSENCRYPT_EMAIL=maxkatzchristy@gmail.com
+    networks:
+      - proxy-tier
+      - default
+
 volumes:
   db:
   nextcloud:
@@ -238,6 +257,7 @@ volumes:
   immich_upload:
   immich_postgres:
   model_cache:
+  snapserver_config:
 
 networks:
   proxy-tier:
