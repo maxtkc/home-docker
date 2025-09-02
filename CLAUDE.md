@@ -7,19 +7,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a Docker Compose-based home server setup that runs multiple services behind an nginx reverse proxy with Let's Encrypt SSL certificates. The stack consists of:
 
 - **Nextcloud**: A custom-built Nextcloud instance (my_nc/) with ffmpeg, exiftool, and imagemagick support
-- **PostgreSQL + Redis**: Database and caching layer for Nextcloud
+- **PostgreSQL + Redis**: Database and caching layer for Nextcloud and shared by other services
 - **nginx Reverse Proxy**: Custom nginx proxy (proxy/) with large file upload support (10GB max)
 - **GrampsWeb**: Family tree/genealogy application with Celery workers and Redis
+- **Immich**: Self-hosted photo and video management with AI features, machine learning, and microservices
 - **Let's Encrypt**: Automatic SSL certificate management
 
 The proxy handles all external traffic and routes to internal services based on virtual hosts:
 - nc.kcfam.us → Nextcloud
 - gramps.kcfam.us → GrampsWeb
+- im.kcfam.us → Immich
 
 ## Key Components
 
 - **docker-compose.yml**: Main orchestration file defining all services, networks, and volumes
 - **db.env**: PostgreSQL credentials (contains sensitive data)
+- **immich.env**: Immich configuration and credentials
 - **my_nc/Dockerfile**: Custom Nextcloud build with additional media processing tools
 - **proxy/Dockerfile**: nginx-proxy with custom upload size configuration
 - **web/Dockerfile**: nginx web server with Nextcloud-specific configuration
@@ -69,6 +72,8 @@ docker run --rm \
   -v home-docker_gramps_secret:/backup/gramps_secret:ro \
   -v home-docker_gramps_db:/backup/gramps_db:ro \
   -v home-docker_gramps_media:/backup/gramps_media:ro \
+  -v home-docker_immich_upload:/backup/immich_upload:ro \
+  -v home-docker_immich_postgres:/backup/immich_postgres:ro \
   -v /mnt/backups:/archive \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
   --entrypoint backup \
@@ -105,7 +110,7 @@ docker compose run --rm backup tar -tzf /archive/homeserver-backup-YYYYMMDD-HHMM
 docker compose down
 
 # Remove volumes to restore (WARNING: DESTRUCTIVE!)
-docker volume rm home-docker_db home-docker_nextcloud home-docker_gramps_users home-docker_gramps_db home-docker_gramps_media
+docker volume rm home-docker_db home-docker_nextcloud home-docker_gramps_users home-docker_gramps_db home-docker_gramps_media home-docker_immich_upload home-docker_immich_postgres
 
 # Restore from backup (use backup container's tar, NOT alpine)
 docker run --rm \
@@ -114,10 +119,12 @@ docker run --rm \
   -v home-docker_gramps_users:/backup/gramps_users \
   -v home-docker_gramps_db:/backup/gramps_db \
   -v home-docker_gramps_media:/backup/gramps_media \
+  -v home-docker_immich_upload:/backup/immich_upload \
+  -v home-docker_immich_postgres:/backup/immich_postgres \
   -v /mnt/backups:/archive \
   --entrypoint tar \
   offen/docker-volume-backup:latest \
-  -xvzf /archive/homeserver-backup-YYYYMMDD-HHMMSS.tar.gz -C / --overwrite backup/nextcloud backup/postgresql
+  -xvzf /archive/homeserver-backup-YYYYMMDD-HHMMSS.tar.gz -C / --overwrite
 
 # Restart services
 docker compose up -d
@@ -150,13 +157,14 @@ docker compose up -d
 
 ## Network Architecture
 
-- **proxy-tier network**: Connects external-facing services (web, proxy, letsencrypt-companion, grampsweb)
+- **proxy-tier network**: Connects external-facing services (web, proxy, letsencrypt-companion, grampsweb, immich_server)
 - **default network**: Internal communication between application services
 - All services use named volumes for persistent data storage
 
 ## Security Notes
 
-- PostgreSQL credentials are stored in db.env (excluded from version control)
+- PostgreSQL credentials are stored in db.env and Immich credentials in immich.env (excluded from version control)
 - Services run with restart policies for high availability
 - nginx configured with security headers and hidden server tokens
 - Docker socket access is read-only where possible
+- Immich has read-only access to Nextcloud data for photo management integration

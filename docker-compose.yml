@@ -220,24 +220,51 @@ services:
       - immich.env
     restart: always
 
-  snapserver:
-    container_name: snapserver
-    image: ivdata/snapserver:latest
-    restart: always
-    ports:
-      - "1704:1704"  # Snapcast control port
-      - "1705:1705"  # Snapcast stream port
-      - "1780:1780"  # Web interface (HTTP)
-    volumes:
-      - snapserver_config:/opt/snapserver/etc
-    environment:
-      - VIRTUAL_HOST=snap.kcfam.us
-      - VIRTUAL_PORT=1780
-      - LETSENCRYPT_HOST=snap.kcfam.us
-      - LETSENCRYPT_EMAIL=maxkatzchristy@gmail.com
-    networks:
-      - proxy-tier
-      - default
+  # snapserver:
+  #   container_name: snapserver
+  #   image: ivdata/snapserver:latest
+  #   restart: always
+  #   ports:
+  #     - "1704:1704"  # Snapcast control port
+  #     - "1705:1705"  # Snapcast stream port
+  #     - "1780:1780"  # Web interface (HTTP)
+  #   volumes:
+  #     - snapserver_config:/opt/snapserver/etc
+  #     - mopidy_snapfifo:/tmp/snapfifo  # Shared FIFO with Mopidy
+  #   environment:
+  #     - VIRTUAL_HOST=snap.kcfam.us
+  #     - VIRTUAL_PORT=1780
+  #     - LETSENCRYPT_HOST=snap.kcfam.us
+  #     - LETSENCRYPT_EMAIL=maxkatzchristy@gmail.com
+  #   networks:
+  #     - proxy-tier
+  #     - default
+  #   depends_on:
+  #     - mopidy
+
+  # mopidy:
+  #   container_name: mopidy
+  #   image: sweisgerber/mopidy:alpine
+  #   restart: always
+  #   ports:
+  #     - "6600:6600"  # MPD remote control
+  #     - "6680:6680"  # Web interface
+  #   volumes:
+  #     - mopidy_config:/config
+  #     - mopidy_data:/data
+  #     - mopidy_snapfifo:/tmp/snapfifo  # Shared FIFO with Snapcast
+  #     - nextcloud:/mnt/nextcloud:ro  # Read-only access to Nextcloud data
+  #   environment:
+  #     - PUID=33
+  #     - PGID=33
+  #     - TZ=America/New_York
+  #     - VIRTUAL_HOST=mopidy.kcfam.us
+  #     - VIRTUAL_PORT=6680
+  #     - LETSENCRYPT_HOST=mopidy.kcfam.us
+  #     - LETSENCRYPT_EMAIL=maxkatzchristy@gmail.com
+  #   networks:
+  #     - proxy-tier
+  #     - default
 
 volumes:
   db:
@@ -258,6 +285,9 @@ volumes:
   immich_postgres:
   model_cache:
   snapserver_config:
+  mopidy_config:
+  mopidy_data:
+  mopidy_snapfifo:
 
 networks:
   proxy-tier:
