@@ -169,6 +169,7 @@ services:
       - gramps_media:/backup/gramps_media:ro
       - immich_upload:/backup/immich_upload:ro
       - immich_postgres:/backup/immich_postgres:ro
+      - uptime_kuma:/backup/uptime_kuma:ro
       - /mnt/backups:/archive
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
@@ -219,6 +220,26 @@ services:
     env_file:
       - immich.env
     restart: always
+
+  uptime-kuma:
+    container_name: uptime-kuma
+    image: louislam/uptime-kuma:latest
+    restart: always
+    ports:
+      - "3001:3001"
+    volumes:
+      - uptime_kuma:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - VIRTUAL_HOST=uptime.kcfam.us
+      - VIRTUAL_PORT=3001
+      - LETSENCRYPT_HOST=uptime.kcfam.us
+      - LETSENCRYPT_EMAIL=maxkatzchristy@gmail.com
+    networks:
+      - proxy-tier
+      - default
+    labels:
+      - backup.stop=true
 
   # snapserver:
   #   container_name: snapserver
@@ -284,10 +305,11 @@ volumes:
   immich_upload:
   immich_postgres:
   model_cache:
-  snapserver_config:
-  mopidy_config:
-  mopidy_data:
-  mopidy_snapfifo:
+  uptime_kuma:
+  # snapserver_config:
+  # mopidy_config:
+  # mopidy_data:
+  # mopidy_snapfifo:
 
 networks:
   proxy-tier:
