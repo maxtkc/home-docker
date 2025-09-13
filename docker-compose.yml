@@ -1,11 +1,12 @@
 services:
   db:
-    image: postgres:alpine
+    image: postgres:15-alpine
     restart: always
     volumes:
       - db:/var/lib/postgresql/data:Z
     env_file:
-      - db.env
+      - .env
+      - secrets.env
     labels:
       - backup.stop=true
 
@@ -14,9 +15,12 @@ services:
     image: tensorchord/pgvecto-rs:pg14-v0.2.0
     restart: always
     environment:
-      POSTGRES_DB: immich
-      POSTGRES_USER: immich
-      POSTGRES_PASSWORD: immich_secure_password_2024
+      POSTGRES_DB: ${DB_DATABASE_NAME:-immich}
+      POSTGRES_USER: ${DB_USERNAME:-immich}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-}
+    env_file:
+      - .env
+      - secrets.env
     volumes:
       - immich_postgres:/var/lib/postgresql/data
     labels:
@@ -39,7 +43,8 @@ services:
       - POSTGRES_HOST=db
       - REDIS_HOST=redis
     env_file:
-      - db.env
+      - .env
+      - secrets.env
     depends_on:
       - db
       - redis
@@ -176,14 +181,15 @@ services:
   # Immich Services
   immich_server:
     container_name: immich_server
-    image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+    image: ghcr.io/immich-app/immich-server:release
     command: ['start.sh', 'immich']
     volumes:
       - immich_upload:/usr/src/app/upload
       - nextcloud:/mnt/nextcloud:ro  # Read-only access to Nextcloud data
       - /etc/localtime:/etc/localtime:ro
     env_file:
-      - immich.env
+      - .env
+      - secrets.env
     environment:
       - VIRTUAL_HOST=im.kcfam.us
       - VIRTUAL_PORT=2283
@@ -199,14 +205,15 @@ services:
 
   immich_microservices:
     container_name: immich_microservices
-    image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+    image: ghcr.io/immich-app/immich-server:release
     command: ['start.sh', 'microservices']
     volumes:
       - immich_upload:/usr/src/app/upload
       - nextcloud:/mnt/nextcloud:ro  # Read-only access to Nextcloud data
       - /etc/localtime:/etc/localtime:ro
     env_file:
-      - immich.env
+      - .env
+      - secrets.env
     depends_on:
       - redis
       - immich_postgres
@@ -214,12 +221,15 @@ services:
 
   immich_machine_learning:
     container_name: immich_machine_learning
-    image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
+    image: ghcr.io/immich-app/immich-machine-learning:release
     volumes:
       - model_cache:/cache
     env_file:
-      - immich.env
+      - .env
+      - secrets.env
     restart: always
+    ports:
+      - 2283:2283
 
   uptime-kuma:
     container_name: uptime-kuma

@@ -1,1 +1,4 @@
+# Sensitive files - DO NOT COMMIT
+secrets.env
 db.env
+immich.env
