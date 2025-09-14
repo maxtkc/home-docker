@@ -159,12 +159,46 @@ services:
     environment:
       - BACKUP_FILENAME=homeserver-backup-%Y%m%d-%H%M%S.tar.gz
       - BACKUP_CRON_EXPRESSION=0 2 * * *  # Daily at 2 AM
+      - BACKUP_RETENTION_DAYS=1
+      - BACKUP_STOP_DURING_BACKUP_LABEL=backup.stop
+      - BACKUP_EXCLUDE_REGEXP=^/backup/tmp/|\.tmp$|/backups/.*\.sql\.gz\.tmp$
+      - NOTIFICATION_URLS=http://uptime-kuma:3001/api/push/DAILY_BACKUP_KEY?status=up&msg=Daily%20backup%20completed||http://uptime-kuma:3001/api/push/DAILY_BACKUP_KEY?status=down&msg=Daily%20backup%20failed
+    volumes:
+      - nextcloud:/backup/nextcloud:ro
+      - immich_upload:/backup/immich_upload:ro
+      - immich_postgres:/backup/immich_postgres:ro
+      - /mnt/backups:/archive
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  backup_weekly:
+    image: offen/docker-volume-backup:latest
+    restart: always
+    environment:
+      - BACKUP_FILENAME=homeserver-backup-weekly-%Y%m%d-%H%M%S.tar.gz
+      - BACKUP_CRON_EXPRESSION=0 3 * * 0  # Weekly on Sunday at 3 AM
+      - BACKUP_RETENTION_DAYS=7
+      - BACKUP_STOP_DURING_BACKUP_LABEL=backup.stop
+      - BACKUP_EXCLUDE_REGEXP=^/backup/tmp/|\.tmp$|/backups/.*\.sql\.gz\.tmp$
+      - NOTIFICATION_URLS=http://uptime-kuma:3001/api/push/WEEKLY_BACKUP_KEY?status=up&msg=Weekly%20backup%20completed||http://uptime-kuma:3001/api/push/WEEKLY_BACKUP_KEY?status=down&msg=Weekly%20backup%20failed
+    volumes:
+      - nextcloud:/backup/nextcloud:ro
+      - immich_upload:/backup/immich_upload:ro
+      - immich_postgres:/backup/immich_postgres:ro
+      - /mnt/backups:/archive
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  backup_monthly:
+    image: offen/docker-volume-backup:latest
+    restart: always
+    environment:
+      - BACKUP_FILENAME=homeserver-backup-monthly-%Y%m%d-%H%M%S.tar.gz
+      - BACKUP_CRON_EXPRESSION=0 4 1 * *  # Monthly on 1st day at 4 AM
       - BACKUP_RETENTION_DAYS=30
       - BACKUP_STOP_DURING_BACKUP_LABEL=backup.stop
-      - BACKUP_EXCLUDE_REGEXP=^/backup/tmp/
+      - BACKUP_EXCLUDE_REGEXP=^/backup/tmp/|\.tmp$|/backups/.*\.sql\.gz\.tmp$
+      - NOTIFICATION_URLS=http://uptime-kuma:3001/api/push/MONTHLY_BACKUP_KEY?status=up&msg=Monthly%20backup%20completed||http://uptime-kuma:3001/api/push/MONTHLY_BACKUP_KEY?status=down&msg=Monthly%20backup%20failed
     volumes:
       - db:/backup/postgresql:ro
-      - nextcloud:/backup/nextcloud:ro
       - gramps_users:/backup/gramps_users:ro
       - gramps_index:/backup/gramps_index:ro
       - gramps_thumb_cache:/backup/gramps_thumb_cache:ro
@@ -172,9 +206,9 @@ services:
       - gramps_secret:/backup/gramps_secret:ro
       - gramps_db:/backup/gramps_db:ro
       - gramps_media:/backup/gramps_media:ro
-      - immich_upload:/backup/immich_upload:ro
-      - immich_postgres:/backup/immich_postgres:ro
       - uptime_kuma:/backup/uptime_kuma:ro
+      - grafana_data:/backup/grafana_data:ro
+      - prometheus_data:/backup/prometheus_data:ro
       - /mnt/backups:/archive
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
@@ -251,6 +285,82 @@ services:
     labels:
       - backup.stop=true
 
+  # Monitoring Stack
+  grafana:
+    container_name: grafana
+    build: ./grafana
+    restart: always
+    user: "472"
+    environment:
+      - VIRTUAL_HOST=gf.kcfam.us
+      - VIRTUAL_PORT=3000
+      - LETSENCRYPT_HOST=gf.kcfam.us
+      - LETSENCRYPT_EMAIL=maxkatzchristy@gmail.com
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=grafana-piechart-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - proxy-tier
+      - default
+    depends_on:
+      - prometheus
+    labels:
+      - backup.stop=true
+
+  prometheus:
+    container_name: prometheus
+    build: ./prometheus
+    restart: always
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--storage.tsdb.retention.time=30d'
+    volumes:
+      - prometheus_data:/prometheus
+    networks:
+      - default
+    depends_on:
+      - node-exporter
+      - cadvisor
+
+  node-exporter:
+    container_name: node-exporter
+    image: prom/node-exporter:latest
+    restart: always
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - default
+
+  cadvisor:
+    container_name: cadvisor
+    image: gcr.io/cadvisor/cadvisor:latest
+    restart: always
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - default
+    devices:
+      - /dev/kmsg
+
   # snapserver:
   #   container_name: snapserver
   #   image: ivdata/snapserver:latest
@@ -316,6 +426,8 @@ volumes:
   immich_postgres:
   model_cache:
   uptime_kuma:
+  grafana_data:
+  prometheus_data:
   # snapserver_config:
   # mopidy_config:
   # mopidy_data:
