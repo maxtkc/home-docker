@@ -2,3 +2,17 @@
 secrets.env
 db.env
 immich.env
+
+# Docker Compose — replaced by Terraform
+docker-compose.yml
+docker-compose.yml.backup
+.env
+
+# Terraform
+tf/terraform.tfstate
+tf/terraform.tfstate.backup
+tf/.terraform.tfstate.lock.info
+tf/.terraform/
+tf/*.tfplan
+tf/secrets.auto.tfvars
+tf/*.auto.tfvars

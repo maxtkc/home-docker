@@ -1,0 +1,30 @@
+http:
+  middlewares:
+    sablier-openproject:
+      plugin:
+        sablier:
+          sablierUrl: "http://sablier:10000"
+          sessionDuration: "15m"
+          group: "openproject"
+          dynamic:
+            displayName: "OpenProject"
+            showDetails: true
+            theme: "ghost"
+            refreshFrequency: "5s"
+
+  services:
+    openproject:
+      loadBalancer:
+        servers:
+          - url: "http://openproject:80"
+
+  routers:
+    openproject:
+      rule: "Host(`op.kcfam.us`)"
+      entryPoints:
+        - "websecure"
+      tls:
+        certResolver: letsencrypt
+      middlewares:
+        - sablier-openproject
+      service: "openproject"

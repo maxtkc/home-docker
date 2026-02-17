@@ -154,16 +154,6 @@ def create_monitors(api, update_existing=False, delete_unmanaged=False, full_res
             "accepted_statuscodes": ["200"],
             "description": "Immich photo management and AI features"
         },
-        {
-            "name": "GrampsWeb (External)",
-            "type": MonitorType.HTTP,
-            "url": "https://gramps.kcfam.us",
-            "interval": 60,
-            "maxretries": 3,
-            "maxredirects": 10,
-            "accepted_statuscodes": ["200"],
-            "description": "Family tree and genealogy application"
-        },
         
         # Internal services (Port monitoring)
         {
@@ -192,15 +182,6 @@ def create_monitors(api, update_existing=False, delete_unmanaged=False, full_res
             "interval": 30,
             "maxretries": 3,
             "description": "Redis cache for Nextcloud and shared services"
-        },
-        {
-            "name": "GrampsWeb Redis",
-            "type": MonitorType.PORT,
-            "hostname": "grampsweb_redis",
-            "port": 6379,
-            "interval": 30,
-            "maxretries": 3,
-            "description": "Redis instance for GrampsWeb Celery and rate limiting"
         },
         
         # Internal HTTP services
@@ -231,15 +212,6 @@ def create_monitors(api, update_existing=False, delete_unmanaged=False, full_res
             "maxretries": 3,
             "accepted_statuscodes": ["200", "404"],
             "description": "Internal Immich server API"
-        },
-        {
-            "name": "GrampsWeb (Internal)",
-            "type": MonitorType.HTTP,
-            "url": "http://grampsweb:5000",
-            "interval": 60,
-            "maxretries": 3,
-            "accepted_statuscodes": ["200", "404"],
-            "description": "Internal GrampsWeb application server"
         },
         
         # Proxy and SSL
@@ -274,9 +246,6 @@ def create_monitors(api, update_existing=False, delete_unmanaged=False, full_res
         {"name": "Immich Microservices Container", "container": "immich_microservices", "description": "Immich background processing container"},
         {"name": "Immich ML Container", "container": "immich_machine_learning", "description": "Immich machine learning container"},
         {"name": "Immich PostgreSQL Container", "container": "immich_postgres", "description": "Immich PostgreSQL with vector extensions"},
-        {"name": "GrampsWeb Container", "container": "grampsweb", "description": "GrampsWeb main application container"},
-        {"name": "GrampsWeb Celery Container", "container": "grampsweb_celery", "description": "GrampsWeb background worker container"},
-        {"name": "GrampsWeb Redis Container", "container": "grampsweb_redis", "description": "GrampsWeb Redis container"},
         {"name": "Nginx Proxy Container", "container": "proxy", "description": "Main reverse proxy container"},
         {"name": "Let's Encrypt Container", "container": "letsencrypt-companion", "description": "SSL certificate management container"}
     ]
