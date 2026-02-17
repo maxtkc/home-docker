@@ -11,8 +11,16 @@ docker-compose.yml.backup
 # Terraform
 tf/terraform.tfstate
 tf/terraform.tfstate.backup
+tf/terraform.tfstate.*.backup
 tf/.terraform.tfstate.lock.info
 tf/.terraform/
 tf/*.tfplan
 tf/secrets.auto.tfvars
 tf/*.auto.tfvars
+tf-monitors/terraform.tfstate
+tf-monitors/terraform.tfstate.backup
+tf-monitors/terraform.tfstate.*.backup
+tf-monitors/.terraform.tfstate.lock.info
+tf-monitors/.terraform/
+tf-monitors/*.tfplan
+tf-monitors/secrets.auto.tfvars

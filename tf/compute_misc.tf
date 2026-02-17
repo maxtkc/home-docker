@@ -1,94 +1,7 @@
-resource "docker_container" "openproject" {
-  name    = "openproject"
-  image   = "openproject/openproject:16"
-  restart = "always"
-
-  env = [
-    "OPENPROJECT_SECRET_KEY_BASE=${random_password.openproject_secret_key_base.result}",
-    "OPENPROJECT_HOST__NAME=op.kcfam.us",
-    "OPENPROJECT_HTTPS=true",
-    "OPENPROJECT_DEFAULT__LANGUAGE=en",
-    "OPENPROJECT_RAILS__SESSION__STORE=active_record_store",
-    "OPENPROJECT_SESSION__TTL__ENABLED=true",
-    "OPENPROJECT_SESSION__TTL=28800",
-    "OPENPROJECT_DROP__OLD__SESSIONS__ON__LOGIN=false",
-  ]
-
-  volumes {
-    volume_name    = docker_volume.openproject_data.name
-    container_path = "/var/openproject/assets"
-  }
-
-  volumes {
-    volume_name    = docker_volume.openproject_pgdata.name
-    container_path = "/var/openproject/pgdata"
-  }
-
-  networks_advanced {
-    name = docker_network.proxy_tier.name
-  }
-
-  networks_advanced {
-    name = docker_network.default.name
-  }
-
-  healthcheck {
-    test         = ["CMD", "curl", "-f", "http://localhost:80/health_checks/default"]
-    interval     = "30s"
-    timeout      = "10s"
-    retries      = 3
-    start_period = "2m0s"
-  }
-
-  labels {
-    label = "backup.stop"
-    value = "true"
-  }
-
-  labels {
-    label = "sablier.enable"
-    value = "true"
-  }
-
-  labels {
-    label = "sablier.group"
-    value = "openproject"
-  }
-
-  labels {
-    label = "sablier.group.openproject.session_duration"
-    value = "15m"
-  }
-
-  labels {
-    label = "traefik.enable"
-    value = "true"
-  }
-
-  labels {
-    label = "traefik.http.routers.openproject.rule"
-    value = "Host(`op.kcfam.us`)"
-  }
-
-  labels {
-    label = "traefik.http.routers.openproject.tls"
-    value = "true"
-  }
-
-  labels {
-    label = "traefik.http.routers.openproject.tls.certresolver"
-    value = "letsencrypt"
-  }
-
-  labels {
-    label = "traefik.http.services.openproject.loadbalancer.server.port"
-    value = "80"
-  }
-}
 
 resource "docker_container" "backup" {
   name    = "nextcloud_backup_1"
-  image   = "offen/docker-volume-backup:latest"
+  image   = "offen/docker-volume-backup:${var.docker_volume_backup_version}"
   restart = "always"
 
   env = [
@@ -137,7 +50,7 @@ resource "docker_container" "backup" {
 
 resource "docker_container" "backup_weekly" {
   name    = "nextcloud_backup_weekly_1"
-  image   = "offen/docker-volume-backup:latest"
+  image   = "offen/docker-volume-backup:${var.docker_volume_backup_version}"
   restart = "always"
 
   env = [
@@ -186,7 +99,7 @@ resource "docker_container" "backup_weekly" {
 
 resource "docker_container" "backup_monthly" {
   name    = "nextcloud_backup_monthly_1"
-  image   = "offen/docker-volume-backup:latest"
+  image   = "offen/docker-volume-backup:${var.docker_volume_backup_version}"
   restart = "always"
 
   env = [
@@ -265,17 +178,6 @@ resource "docker_container" "backup_monthly" {
     read_only      = true
   }
 
-  volumes {
-    volume_name    = docker_volume.openproject_data.name
-    container_path = "/backup/openproject_data"
-    read_only      = true
-  }
-
-  volumes {
-    volume_name    = docker_volume.openproject_pgdata.name
-    container_path = "/backup/openproject_pgdata"
-    read_only      = true
-  }
 
   volumes {
     host_path      = "/mnt/backups"

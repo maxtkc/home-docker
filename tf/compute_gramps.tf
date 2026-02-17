@@ -1,6 +1,6 @@
 resource "docker_container" "grampsweb_redis" {
   name    = "grampsweb_redis"
-  image   = "docker.io/library/redis:7.2.4-alpine"
+  image   = "docker.io/library/redis:${var.grampsweb_redis_version}"
   restart = "always"
 
   networks_advanced {
@@ -15,7 +15,7 @@ resource "docker_container" "grampsweb_redis" {
 
 resource "docker_container" "grampsweb" {
   name    = "grampsweb"
-  image   = "ghcr.io/gramps-project/grampsweb:latest"
+  image   = "ghcr.io/gramps-project/grampsweb:${var.grampsweb_version}"
   restart = "always"
 
   env = local.grampsweb_env
@@ -91,7 +91,7 @@ resource "docker_container" "grampsweb" {
 
 resource "docker_container" "grampsweb_celery" {
   name    = "grampsweb_celery"
-  image   = "ghcr.io/gramps-project/grampsweb:latest"
+  image   = "ghcr.io/gramps-project/grampsweb:${var.grampsweb_version}"
   restart = "always"
 
   command = ["celery", "-A", "gramps_webapi.celery", "worker", "--loglevel=INFO"]
