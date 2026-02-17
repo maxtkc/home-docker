@@ -1,6 +1,6 @@
 resource "docker_container" "immich_postgres" {
   name    = "immich_postgres"
-  image   = "tensorchord/pgvecto-rs:pg14-v0.2.0"
+  image   = "ghcr.io/immich-app/postgres:${var.immich_postgres_version}"
   restart = "always"
 
   env = [
@@ -14,6 +14,8 @@ resource "docker_container" "immich_postgres" {
     container_path = "/var/lib/postgresql/data"
   }
 
+  shm_size = 134217728 # 128MB
+
   networks_advanced {
     name = docker_network.default.name
   }
@@ -26,7 +28,7 @@ resource "docker_container" "immich_postgres" {
 
 resource "docker_container" "immich_server" {
   name    = "immich_server"
-  image   = "ghcr.io/immich-app/immich-server:v2.3.1"
+  image   = "ghcr.io/immich-app/immich-server:${var.immich_version}"
   restart = "always"
 
   command = ["start.sh", "immich"]
@@ -102,7 +104,7 @@ resource "docker_container" "immich_server" {
 
 resource "docker_container" "immich_microservices" {
   name    = "immich_microservices"
-  image   = "ghcr.io/immich-app/immich-server:v2.3.1"
+  image   = "ghcr.io/immich-app/immich-server:${var.immich_version}"
   restart = "always"
 
   command = ["start.sh", "microservices"]
@@ -149,7 +151,7 @@ resource "docker_container" "immich_microservices" {
 
 resource "docker_container" "immich_machine_learning" {
   name    = "immich_machine_learning"
-  image   = "ghcr.io/immich-app/immich-machine-learning:v2.3.1"
+  image   = "ghcr.io/immich-app/immich-machine-learning:${var.immich_version}"
   restart = "always"
 
   env = [

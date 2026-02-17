@@ -1,6 +1,6 @@
 resource "docker_container" "node_exporter" {
   name    = "node-exporter"
-  image   = "prom/node-exporter:latest"
+  image   = "prom/node-exporter:${var.node_exporter_version}"
   restart = "always"
 
   command = [
@@ -35,7 +35,7 @@ resource "docker_container" "node_exporter" {
 
 resource "docker_container" "cadvisor" {
   name       = "cadvisor"
-  image      = "gcr.io/cadvisor/cadvisor:latest"
+  image      = "ghcr.io/google/cadvisor:${var.cadvisor_version}"
   restart    = "always"
   privileged = true
 
@@ -177,7 +177,7 @@ resource "docker_container" "grafana" {
 
 resource "docker_container" "uptime_kuma" {
   name    = "uptime-kuma"
-  image   = "louislam/uptime-kuma:latest"
+  image   = "louislam/uptime-kuma:${var.uptime_kuma_version}"
   restart = "always"
 
   volumes {

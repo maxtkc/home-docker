@@ -154,21 +154,3 @@ resource "docker_volume" "prometheus_data" {
     ignore_changes  = [labels]
   }
 }
-
-resource "docker_volume" "openproject_data" {
-  name = "nextcloud_openproject_data"
-
-  lifecycle {
-    prevent_destroy = true
-    ignore_changes  = [labels]
-  }
-}
-
-resource "docker_volume" "openproject_pgdata" {
-  name = "nextcloud_openproject_pgdata"
-
-  lifecycle {
-    prevent_destroy = true
-    ignore_changes  = [labels]
-  }
-}

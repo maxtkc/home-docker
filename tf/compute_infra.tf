@@ -1,6 +1,6 @@
 resource "docker_container" "db" {
   name    = "nextcloud_db_1"
-  image   = "postgres:15-alpine"
+  image   = "postgres:${var.postgres_version}"
   restart = "always"
 
   env = [
@@ -27,7 +27,7 @@ resource "docker_container" "db" {
 
 resource "docker_container" "redis" {
   name    = "nextcloud_redis_1"
-  image   = "redis:alpine"
+  image   = "redis:${var.redis_version}"
   restart = "always"
 
   networks_advanced {
@@ -81,7 +81,7 @@ resource "docker_container" "traefik" {
 
 resource "docker_container" "sablier" {
   name    = "nextcloud_sablier_1"
-  image   = "ghcr.io/sablierapp/sablier:1.10.1"
+  image   = "ghcr.io/sablierapp/sablier:${var.sablier_version}"
   restart = "always"
 
   command = [

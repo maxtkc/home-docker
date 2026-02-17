@@ -6,8 +6,3 @@ output "grafana_admin_password" {
   sensitive   = true
 }
 
-output "openproject_secret_key_base" {
-  description = "Generated OpenProject Rails secret key base"
-  value       = random_password.openproject_secret_key_base.result
-  sensitive   = true
-}

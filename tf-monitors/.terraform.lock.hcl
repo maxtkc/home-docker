@@ -1,0 +1,24 @@
+# This file is maintained automatically by "tofu init".
+# Manual edits may be lost in future updates.
+
+provider "registry.opentofu.org/breml/uptimekuma" {
+  version     = "0.1.8"
+  constraints = "~> 0.1"
+  hashes = [
+    "h1:3Ae5ja59qvgH7pcY4kCK9l/zkB0j5wLL+0E4dkDOWKY=",
+    "zh:293d3a16bc3fc5c6664aff549074cd7053fd6f7a9a9d48a45ca49f2ad4c0d7fd",
+    "zh:2d23ba0b3e20dca37afbd4f39b3a8abb4be6a5ff49b617546982de51f7c253bc",
+    "zh:43376611d9037fdfdae5f24a2f4108271f9d3ae142afd5228ac5d37feb9828b7",
+    "zh:5ef639b0345071215b3a14078e5bcfe83d03f1e16bf51b080288474da4ef84c1",
+    "zh:5f0c93389f1c5c2e92409a4fa8656acbf409d14a4101ad25627551d24ca050f7",
+    "zh:663726102735a2cc103752220a1b524a43e66ba2dbd2fc669669783bcfbd24d7",
+    "zh:664551d63ac43a9877385e3a38eda112d2ed4314be3d072210441de077a84b3a",
+    "zh:6d20af0f09e69212b01dabae812328e90b109e49a02a140d95750628c6579782",
+    "zh:890df766e9b839623b1f0437355032a3c006226a6c200cd911e15ee1a9014e9f",
+    "zh:a0f93b807efa1dd138b73caaf5d0c88d7d58c7191754c911c0fe9dad2fd5696a",
+    "zh:cb8883632936ba834c250038fd7e8543558d974a7cdb47202b00453d03bad7c2",
+    "zh:e81dfa6d991f9f9f9a3993e154d69811cf8cbd7da208a79029fc07a389f53e51",
+    "zh:f567358dbe505003fa9c890c5a01b35a953787b5480ea4b445c2ad244aef81d2",
+    "zh:f66b39c9624ce54786a5130e82897d5887b1003abef90c8354f27f1fa03bfa27",
+  ]
+}
