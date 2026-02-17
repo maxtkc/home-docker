@@ -168,3 +168,4 @@ docker compose up -d
 - nginx configured with security headers and hidden server tokens
 - Docker socket access is read-only where possible
 - Immich has read-only access to Nextcloud data for photo management integration
+- Because were using a remote docker host, configuration files must be copied into custom images and not volume mounted

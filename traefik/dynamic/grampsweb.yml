@@ -1,0 +1,30 @@
+http:
+  middlewares:
+    sablier-gramps:
+      plugin:
+        sablier:
+          sablierUrl: "http://sablier:10000"
+          sessionDuration: "30m"
+          group: "gramps"
+          dynamic:
+            displayName: "GrampsWeb Family Tree"
+            showDetails: true
+            theme: "ghost"
+            refreshFrequency: "5s"
+
+  services:
+    grampsweb:
+      loadBalancer:
+        servers:
+          - url: "http://grampsweb:5000"
+
+  routers:
+    grampsweb:
+      rule: "Host(`gramps.kcfam.us`)"
+      entryPoints:
+        - "websecure"
+      tls:
+        certResolver: letsencrypt
+      middlewares:
+        - sablier-gramps
+      service: "grampsweb"
