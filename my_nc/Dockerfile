@@ -1,5 +1,5 @@
 # FROM nextcloud:26.0.3-fpm-alpine
-FROM nextcloud:32.0.3-fpm
+FROM nextcloud:32.0.6-fpm
 
 # Add face recognition
 # https://github.com/matiasdelellis/facerecognition/wiki/Docker
