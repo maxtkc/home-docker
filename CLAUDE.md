@@ -4,168 +4,126 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture
 
-This is a Docker Compose-based home server setup that runs multiple services behind an nginx reverse proxy with Let's Encrypt SSL certificates. The stack consists of:
+This is a home server stack managed with **OpenTofu (Terraform)** deploying Docker containers to a remote SSH host (`ssh://kcfam`). All infrastructure is defined as code in the `tf/` directory. A separate `tf-monitors/` module manages Uptime Kuma health checks.
 
-- **Nextcloud**: A custom-built Nextcloud instance (my_nc/) with ffmpeg, exiftool, and imagemagick support
-- **PostgreSQL + Redis**: Database and caching layer for Nextcloud and shared by other services
-- **nginx Reverse Proxy**: Custom nginx proxy (proxy/) with large file upload support (10GB max)
-- **GrampsWeb**: Family tree/genealogy application with Celery workers and Redis
-- **Immich**: Self-hosted photo and video management with AI features, machine learning, and microservices
-- **Let's Encrypt**: Automatic SSL certificate management
+Services and their routes:
+- `nc.kcfam.us` → Nextcloud (custom-built with ffmpeg, exiftool, imagemagick)
+- `im.kcfam.us` → Immich (photo management with AI/ML)
+- `gramps.kcfam.us` → GrampsWeb (genealogy)
+- `gf.kcfam.us` → Grafana (metrics dashboards)
+- `uptime.kcfam.us` → Uptime Kuma (status monitoring)
+- `op.kcfam.us` → OpenProject (project management)
+- `git.kcfam.us` → Forgejo (planned — see forgejo-terraform-plan.md)
 
-The proxy handles all external traffic and routes to internal services based on virtual hosts:
-- nc.kcfam.us → Nextcloud
-- gramps.kcfam.us → GrampsWeb
-- im.kcfam.us → Immich
+**Traefik v3** handles reverse proxying and Let's Encrypt SSL. **Sablier** manages auto-scaling for low-traffic services (GrampsWeb, OpenProject): containers spin down after 1 minute of inactivity and wake on request.
 
-## Key Components
+## Terraform Modules
 
-- **docker-compose.yml**: Main orchestration file defining all services, networks, and volumes
-- **db.env**: PostgreSQL credentials (contains sensitive data)
-- **immich.env**: Immich configuration and credentials
-- **my_nc/Dockerfile**: Custom Nextcloud build with additional media processing tools
-- **proxy/Dockerfile**: nginx-proxy with custom upload size configuration
-- **web/Dockerfile**: nginx web server with Nextcloud-specific configuration
+### `tf/` — Main infrastructure
+- **providers.tf / terraform.tf**: Docker provider (kreuzwerker/docker v3.9.0) connecting via SSH to remote host
+- **variables.tf / secrets.auto.tfvars**: Sensitive values (passwords, API keys) — gitignored
+- **locals.tf**: Shared local values
+- **networks.tf / volumes.tf**: Docker networks and named volumes (all volumes have `prevent_destroy = true`)
+- **images.tf**: Custom Docker image builds (Nextcloud, nginx, Traefik, Prometheus, Grafana)
+- **compute_*.tf**: Service definitions grouped by function
+
+### `tf-monitors/` — Uptime Kuma monitors
+Uses the `breml/uptimekuma` provider to declaratively manage HTTP, TCP, and Docker container monitors plus a public status page at `status.kcfam.us`. Requires `secrets.auto.tfvars` with Uptime Kuma credentials.
+
+### Custom Docker images
+Configuration files are **baked into images** (not volume-mounted) because we use a remote Docker host. Edit the relevant directory and rebuild:
+- `my_nc/` — Nextcloud with media tools
+- `web/` — nginx serving Nextcloud
+- `traefik/` — Traefik with static config and dynamic routing rules
+- `prometheus/` — Prometheus with scrape config
+- `grafana/` — Grafana with provisioning and dashboards
 
 ## Common Commands
 
-Start all services:
+All Terraform commands run from within the module directory.
+
+**Deploy / update infrastructure:**
 ```bash
-docker compose up -d
+cd tf
+tofu plan
+tofu apply
 ```
 
-View logs for specific service:
+**Update monitors:**
 ```bash
-docker compose logs -f [service_name]
+cd tf-monitors
+tofu plan
+tofu apply
 ```
 
-Rebuild and restart a service:
+**Rebuild a custom image and redeploy:**
 ```bash
-docker compose build [service_name]
-docker compose up -d [service_name]
+cd tf
+tofu apply -replace=docker_image.nextcloud   # or grafana, traefik, etc.
 ```
 
-Stop all services:
+**View container logs (on remote host):**
 ```bash
-docker compose down
+ssh kcfam docker logs -f <container_name>
 ```
+
+**Initialize a module (first time or after provider changes):**
+```bash
+cd tf          # or tf-monitors
+tofu init
+```
+
+## Secrets Management
+
+Sensitive values live in `secrets.auto.tfvars` (gitignored) in each module directory. Variable declarations are in `variables.tf`. The `.env` file holds non-sensitive configuration referenced by some containers.
 
 ## Backup and Restore
 
-The setup includes automated backups using [docker-volume-backup](https://offen.github.io/docker-volume-backup/) that run daily at 2 AM to `/mnt/backups`.
+Three automated backup tiers (daily 2 AM, weekly Sunday 3 AM, monthly 1st 4 AM) write `.tar.gz` archives to `/mnt/backups` on the host.
 
-### Backup Operations
+**Lessons learned:**
+- Use the backup container's tar (GNU tar), not Alpine's BusyBox tar — Alpine fails with exit code 125 on large files
+- Verify backup file size; empty backups mean the volume was empty at backup time
+- Always stop services using a volume before restoring it
+- Check timestamps after restore to confirm data was replaced
 
-Manual backup:
+### Manual backup
 ```bash
-# Using docker run (recommended)
 docker run --rm \
   --env BACKUP_FILENAME=homeserver-backup-%Y%m%d-%H%M%S.tar.gz \
   --env BACKUP_STOP_DURING_BACKUP_LABEL=backup.stop \
   --env BACKUP_EXCLUDE_REGEXP='^/backup/tmp/' \
-  -v home-docker_db:/backup/postgresql:ro \
-  -v home-docker_nextcloud:/backup/nextcloud:ro \
-  -v home-docker_gramps_users:/backup/gramps_users:ro \
-  -v home-docker_gramps_index:/backup/gramps_index:ro \
-  -v home-docker_gramps_thumb_cache:/backup/gramps_thumb_cache:ro \
-  -v home-docker_gramps_cache:/backup/gramps_cache:ro \
-  -v home-docker_gramps_secret:/backup/gramps_secret:ro \
-  -v home-docker_gramps_db:/backup/gramps_db:ro \
-  -v home-docker_gramps_media:/backup/gramps_media:ro \
-  -v home-docker_immich_upload:/backup/immich_upload:ro \
-  -v home-docker_immich_postgres:/backup/immich_postgres:ro \
+  -v nextcloud_db:/backup/postgresql:ro \
+  -v nextcloud_nextcloud:/backup/nextcloud:ro \
+  -v nextcloud_immich_upload:/backup/immich_upload:ro \
+  -v nextcloud_immich_postgres:/backup/immich_postgres:ro \
   -v /mnt/backups:/archive \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
   --entrypoint backup \
   offen/docker-volume-backup:latest
-
-# Alternative using docker compose (may have lock issues)
-docker compose run --rm --entrypoint backup backup
 ```
 
-View backup files:
+### Restore a volume
 ```bash
-ls -la /mnt/backups/
-```
+# Stop affected containers first
+ssh kcfam docker stop <container_names>
 
-List contents of a backup:
-```bash
-docker compose run --rm backup tar -tzf /archive/homeserver-backup-YYYYMMDD-HHMMSS.tar.gz
-```
-
-### Restore Operations
-
-**⚠️ IMPORTANT: Always stop services before restoring to prevent data corruption!**
-
-**Lessons learned from testing:**
-- Use the backup container's tar (GNU tar) instead of Alpine's BusyBox tar for large files
-- Alpine's tar may fail with exit code 125 on large compressed files
-- Always verify backup file size - empty backups indicate the volumes were empty when backed up
-- Stop all services that use the volumes before restoring
-- Check timestamps after restore to verify data was actually replaced
-
-**Full system restore:**
-```bash
-# Stop all services
-docker compose down
-
-# Remove volumes to restore (WARNING: DESTRUCTIVE!)
-docker volume rm home-docker_db home-docker_nextcloud home-docker_gramps_users home-docker_gramps_db home-docker_gramps_media home-docker_immich_upload home-docker_immich_postgres
-
-# Restore from backup (use backup container's tar, NOT alpine)
+# Remove and restore volume
+ssh kcfam docker volume rm nextcloud_<volume_name>
 docker run --rm \
-  -v home-docker_db:/backup/postgresql \
-  -v home-docker_nextcloud:/backup/nextcloud \
-  -v home-docker_gramps_users:/backup/gramps_users \
-  -v home-docker_gramps_db:/backup/gramps_db \
-  -v home-docker_gramps_media:/backup/gramps_media \
-  -v home-docker_immich_upload:/backup/immich_upload \
-  -v home-docker_immich_postgres:/backup/immich_postgres \
+  -v nextcloud_<volume_name>:/backup/<path> \
   -v /mnt/backups:/archive \
   --entrypoint tar \
   offen/docker-volume-backup:latest \
-  -xvzf /archive/homeserver-backup-YYYYMMDD-HHMMSS.tar.gz -C / --overwrite
+  -xvzf /archive/homeserver-backup-YYYYMMDD-HHMMSS.tar.gz -C / --overwrite backup/<path>
 
-# Restart services
-docker compose up -d
-```
-
-**Selective restore (Nextcloud only):**
-```bash
-docker compose stop app web cron
-docker run --rm \
-  -v home-docker_nextcloud:/backup/nextcloud \
-  -v /mnt/backups:/archive \
-  --entrypoint tar \
-  offen/docker-volume-backup:latest \
-  -xvzf /archive/homeserver-backup-YYYYMMDD-HHMMSS.tar.gz -C / --overwrite backup/nextcloud
-docker compose up -d app web cron
-```
-
-**Database-only restore:**
-```bash
-docker compose stop db app cron
-docker volume rm home-docker_db
-docker run --rm \
-  -v home-docker_db:/backup/postgresql \
-  -v /mnt/backups:/archive \
-  --entrypoint tar \
-  offen/docker-volume-backup:latest \
-  -xvzf /archive/homeserver-backup-YYYYMMDD-HHMMSS.tar.gz -C / --overwrite backup/postgresql
-docker compose up -d
+# Redeploy
+cd tf && tofu apply
 ```
 
 ## Network Architecture
 
-- **proxy-tier network**: Connects external-facing services (web, proxy, letsencrypt-companion, grampsweb, immich_server)
-- **default network**: Internal communication between application services
-- All services use named volumes for persistent data storage
+- **nextcloud_proxy-tier**: External-facing services (Traefik, Sablier, GrampsWeb, Immich, OpenProject)
+- **nextcloud_default**: Internal service communication (DB, Redis, app containers)
 
-## Security Notes
-
-- PostgreSQL credentials are stored in db.env and Immich credentials in immich.env (excluded from version control)
-- Services run with restart policies for high availability
-- nginx configured with security headers and hidden server tokens
-- Docker socket access is read-only where possible
-- Immich has read-only access to Nextcloud data for photo management integration
-- Because were using a remote docker host, configuration files must be copied into custom images and not volume mounted
+Immich has **read-only** access to the Nextcloud volume for photo library integration.

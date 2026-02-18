@@ -1,39 +1,17 @@
 # Forgejo Terraform Plan
 
-Two-layer approach: Docker provider deploys the container; svalabs/forgejo provider manages
-Forgejo configuration (users, orgs, repos). The Forgejo provider requires the instance to be
-running first, so there's a bootstrap step in the middle.
+Two-layer approach: the Docker container lives in `tf/` (like all other services); Forgejo
+API resources (users, orgs, repos) live in a separate `tf-forgejo/` module — mirroring how
+`tf-monitors/` manages Uptime Kuma independently from the main infrastructure. The Forgejo
+provider requires the instance to be running first, so there's a bootstrap step in the middle.
 
-## Phase 1: Deploy the Container
-
-### `tf/terraform.tf`
-Add to `required_providers`:
-```hcl
-forgejo = {
-  source  = "svalabs/forgejo"
-  version = "~> 1.2"
-}
-```
-
-### `tf/providers.tf`
-```hcl
-provider "forgejo" {
-  host      = "https://git.kcfam.us"
-  api_token = var.forgejo_api_token
-}
-```
+## Phase 1: Deploy the Container (in `tf/`)
 
 ### `tf/variables.tf`
 ```hcl
 variable "forgejo_db_password" {
   type      = string
   sensitive = true
-}
-
-variable "forgejo_api_token" {
-  type      = string
-  sensitive = true
-  default   = ""  # empty until bootstrap complete
 }
 ```
 
@@ -122,20 +100,52 @@ After `tofu apply` deploys the container:
 3. **Create admin API token** — Forgejo UI → Settings → Applications → Generate token
    with scopes: `write:organization`, `write:repository`, `write:user`, `write:admin`.
 
-4. **Add to `secrets.auto.tfvars`**:
+4. **Add to `tf-forgejo/secrets.auto.tfvars`**:
    ```
    forgejo_api_token = "<token>"
    ```
 
 ---
 
-## Phase 2: Manage Forgejo Resources
+## Phase 2: Manage Forgejo Resources (in `tf-forgejo/`)
 
-### `tf/compute_forgejo.tf` (additions after bootstrap)
-Example resources to manage declaratively:
+A separate module keeps the Forgejo provider isolated — it only works once the instance is
+running, and its lifecycle is independent of the main infrastructure (same pattern as
+`tf-monitors/` for Uptime Kuma).
+
+### `tf-forgejo/terraform.tf`
+```hcl
+terraform {
+  required_providers {
+    forgejo = {
+      source  = "svalabs/forgejo"
+      version = "~> 1.2"
+    }
+  }
+  backend "local" {}
+}
+```
+
+### `tf-forgejo/providers.tf`
+```hcl
+provider "forgejo" {
+  host      = "https://git.kcfam.us"
+  api_token = var.forgejo_api_token
+}
+```
+
+### `tf-forgejo/variables.tf`
+```hcl
+variable "forgejo_api_token" {
+  type      = string
+  sensitive = true
+}
+```
+
+### `tf-forgejo/resources.tf`
 ```hcl
 resource "forgejo_user" "admin" {
-  login    = "maxtkc"
+  login = "maxtkc"
   # ... other fields
 }
 
@@ -148,11 +158,10 @@ resource "forgejo_organization" "kcfam" {
 
 ## Order of Operations
 
-1. Create DB user/database manually (or via a null_resource if desired)
-2. Add `forgejo_db_password` to `secrets.auto.tfvars` (leave `forgejo_api_token = ""`)
-3. `tofu init` (picks up new svalabs/forgejo provider)
-4. `tofu apply` (deploys container only; Forgejo provider resources are added later)
-5. Bootstrap: create admin API token via UI
-6. Add `forgejo_api_token` to `secrets.auto.tfvars`
-7. Add Forgejo provider resources (users, orgs, repos) to tf files
-8. `tofu apply` again
+1. Create DB user/database manually on the `db` container
+2. Add `forgejo_db_password` to `tf/secrets.auto.tfvars`
+3. `cd tf && tofu init && tofu apply` (deploys container)
+4. Bootstrap: complete setup and create admin API token via UI
+5. Create `tf-forgejo/` directory with files above
+6. Add `forgejo_api_token` to `tf-forgejo/secrets.auto.tfvars`
+7. `cd tf-forgejo && tofu init && tofu apply`
