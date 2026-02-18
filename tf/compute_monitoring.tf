@@ -228,4 +228,24 @@ resource "docker_container" "uptime_kuma" {
     label = "traefik.http.services.uptime.loadbalancer.server.port"
     value = "3001"
   }
+
+  labels {
+    label = "traefik.http.routers.status-page.rule"
+    value = "Host(`status.kcfam.us`)"
+  }
+
+  labels {
+    label = "traefik.http.routers.status-page.tls"
+    value = "true"
+  }
+
+  labels {
+    label = "traefik.http.routers.status-page.tls.certresolver"
+    value = "letsencrypt"
+  }
+
+  labels {
+    label = "traefik.http.routers.status-page.service"
+    value = "uptime"
+  }
 }
