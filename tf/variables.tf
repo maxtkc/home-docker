@@ -7,6 +7,12 @@ variable "db_password" {
   sensitive   = true
 }
 
+variable "forgejo_db_password" {
+  type        = string
+  description = "PostgreSQL password for the Forgejo database user"
+  sensitive   = true
+}
+
 variable "docker_host" {
   type        = string
   description = "Remote Docker daemon URI (e.g. ssh://kcfam)"

@@ -24,3 +24,17 @@ tf-monitors/.terraform.tfstate.lock.info
 tf-monitors/.terraform/
 tf-monitors/*.tfplan
 tf-monitors/secrets.auto.tfvars
+tf-dns/terraform.tfstate
+tf-dns/terraform.tfstate.backup
+tf-dns/terraform.tfstate.*.backup
+tf-dns/.terraform.tfstate.lock.info
+tf-dns/.terraform/
+tf-dns/*.tfplan
+tf-dns/secrets.auto.tfvars
+tf-forgejo/terraform.tfstate
+tf-forgejo/terraform.tfstate.backup
+tf-forgejo/terraform.tfstate.*.backup
+tf-forgejo/.terraform.tfstate.lock.info
+tf-forgejo/.terraform/
+tf-forgejo/*.tfplan
+tf-forgejo/secrets.auto.tfvars

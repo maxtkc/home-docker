@@ -178,6 +178,11 @@ resource "docker_container" "backup_monthly" {
     read_only      = true
   }
 
+  volumes {
+    volume_name    = docker_volume.forgejo_data.name
+    container_path = "/backup/forgejo_data"
+    read_only      = true
+  }
 
   volumes {
     host_path      = "/mnt/backups"
