@@ -66,3 +66,16 @@ resource "docker_image" "prometheus" {
     dir_sha1 = sha1(join("", [for f in fileset("${path.cwd}/../prometheus", "**") : filesha1("${path.cwd}/../prometheus/${f}")]))
   }
 }
+
+resource "docker_image" "forgejo_runner" {
+  name         = "kcfam/forgejo-runner:local"
+  keep_locally = true
+
+  build {
+    context = "${path.cwd}/../forgejo_runner"
+  }
+
+  triggers = {
+    dir_sha1 = sha1(join("", [for f in fileset("${path.cwd}/../forgejo_runner", "**") : filesha1("${path.cwd}/../forgejo_runner/${f}")]))
+  }
+}

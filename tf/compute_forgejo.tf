@@ -28,7 +28,7 @@ resource "docker_container" "forgejo_db_init" {
 
 resource "docker_container" "forgejo" {
   name    = "forgejo"
-  image   = "codeberg.org/forgejo/forgejo:11"
+  image   = "codeberg.org/forgejo/forgejo:14"
   restart = "always"
 
   env = [
@@ -88,4 +88,69 @@ resource "docker_container" "forgejo" {
   }
 
   depends_on = [docker_container.forgejo_db_init]
+}
+
+# Register the runner in Forgejo's database using offline registration.
+# Runs on first apply and whenever the runner secret rotates.
+# Admin-level (no --scope) so it accepts jobs from all repos on the instance.
+resource "terraform_data" "forgejo_runner_registration" {
+  triggers_replace = random_id.forgejo_runner_secret.hex
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      for i in $(seq 1 36); do
+        ssh kcfam docker exec -u git forgejo forgejo forgejo-cli actions register \
+          --name forgejo-runner \
+          --secret "${random_id.forgejo_runner_secret.hex}" && break
+        echo "Forgejo not ready yet, retrying in 10s..."
+        sleep 10
+      done
+    EOT
+  }
+
+  depends_on = [docker_container.forgejo]
+}
+
+resource "docker_container" "forgejo_runner" {
+  name    = "forgejo_runner"
+  image   = docker_image.forgejo_runner.image_id
+  restart = "always"
+  user    = "root"
+
+  # Pass the secret via env to avoid it appearing in `docker inspect` command args
+  env = [
+    "RUNNER_SECRET=${random_id.forgejo_runner_secret.hex}",
+  ]
+
+  # On first start, create the .runner credentials file then start the daemon.
+  # Config is baked into the image at /etc/forgejo-runner/config.yml.
+  command = [
+    "/bin/sh", "-c",
+    <<-EOT
+      cd /data
+      [ -f /data/.runner ] || forgejo-runner create-runner-file \
+        --instance http://forgejo:3000 \
+        --secret "$RUNNER_SECRET" \
+        --name forgejo-runner
+      forgejo-runner daemon --config /etc/forgejo-runner/config.yml
+    EOT
+  ]
+
+  volumes {
+    volume_name    = docker_volume.forgejo_runner_data.name
+    container_path = "/data"
+  }
+
+  # Mount host Docker socket so the runner can spin up job containers.
+  # docker_host in config.yml stays "-" so job containers don't get Docker access.
+  volumes {
+    host_path      = "/var/run/docker.sock"
+    container_path = "/var/run/docker.sock"
+  }
+
+  networks_advanced {
+    name = docker_network.default.name
+  }
+
+  depends_on = [terraform_data.forgejo_runner_registration]
 }

@@ -1,0 +1,36 @@
+log:
+  level: info
+
+runner:
+  file: /data/.runner
+  capacity: 1
+  timeout: 3h0m0s
+  insecure: false
+  fetch_timeout: 5s
+  fetch_interval: 2s
+  labels:
+    - "ubuntu-latest:docker://node:20-bookworm"
+    - "ubuntu-22.04:docker://node:20-bookworm"
+    - "alpine-latest:docker://alpine:3.23"
+    - "alpine-3.23:docker://alpine:3.23"
+
+cache:
+  enabled: true
+  dir: ""
+  host: ""
+  port: 0
+  external_server: ""
+
+container:
+  network: "nextcloud_default"
+  enable_ipv6: false
+  privileged: false
+  options: ""
+  workdir_parent: ""
+  valid_volumes: []
+  # "-" means the runner uses the host Docker socket but does not expose it to job containers
+  docker_host: "-"
+  force_pull: false
+
+host:
+  workdir_parent: ""

@@ -163,3 +163,12 @@ resource "docker_volume" "forgejo_data" {
     ignore_changes  = [labels]
   }
 }
+
+resource "docker_volume" "forgejo_runner_data" {
+  name = "nextcloud_forgejo_runner_data"
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [labels]
+  }
+}
