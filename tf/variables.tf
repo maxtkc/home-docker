@@ -37,6 +37,27 @@ variable "immich_db_password" {
   sensitive   = true
 }
 
+variable "porkbun_api_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "porkbun_secret_api_key" {
+  type      = string
+  sensitive = true
+}
+
+variable "server_ip" {
+  type        = string
+  description = "Public IP address of the home server"
+}
+
+variable "static_sites" {
+  type        = set(string)
+  description = "Subdomains to create as CNAME records for static site hosting"
+  default     = []
+}
+
 # Image versions — pin these to specific digests or tags for reproducible deployments.
 
 variable "cadvisor_version" {

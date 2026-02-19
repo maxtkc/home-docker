@@ -19,11 +19,7 @@ resource "docker_container" "static_sites" {
   }
   labels {
     label = "traefik.http.routers.static-sites.rule"
-    value = "HostRegexp(`[a-z0-9-]+\\.kcfam\\.us`)"
-  }
-  labels {
-    label = "traefik.http.routers.static-sites.priority"
-    value = "1"
+    value = join(" || ", [for s in var.static_sites : "Host(`${s}.${local.domain}`)"])
   }
   labels {
     label = "traefik.http.routers.static-sites.entrypoints"
