@@ -1,6 +1,13 @@
 # Local values shared across resources.
 
 locals {
+  domain = "kcfam.us"
+  ttl    = 600
+
+  dns_subdomains = toset([
+    "ssh", "nc", "im", "gramps", "gf", "uptime", "op", "git", "status",
+  ])
+
   # Non-sensitive database config (mirrors .env)
   nextcloud_db_name = "nextcloud"
   nextcloud_db_user = "nextcloud"

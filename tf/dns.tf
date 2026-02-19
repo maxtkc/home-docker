@@ -1,21 +1,3 @@
-locals {
-  domain = "kcfam.us"
-  ttl    = 600
-
-  # Subdomains pointing to the root domain via CNAME
-  subdomains = toset([
-    "ssh",     # For ssh
-    "nc",      # Nextcloud
-    "im",      # Immich
-    "gramps",  # GrampsWeb
-    "gf",      # Grafana
-    "uptime",  # Uptime Kuma
-    "op",      # OpenProject
-    "git",     # Forgejo
-    "status",  # Uptime Kuma public status page
-  ])
-}
-
 resource "porkbun_dns_record" "root" {
   domain    = local.domain
   subdomain = ""
@@ -25,8 +7,7 @@ resource "porkbun_dns_record" "root" {
 }
 
 resource "porkbun_dns_record" "subdomains" {
-  for_each = local.subdomains
-
+  for_each  = local.dns_subdomains
   domain    = local.domain
   subdomain = each.key
   type      = "CNAME"

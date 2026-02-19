@@ -5,6 +5,11 @@ terraform {
       version = "3.9.0"
     }
 
+    porkbun = {
+      source  = "marcfrederick/porkbun"
+      version = "1.3.1"
+    }
+
     random = {
       source  = "hashicorp/random"
       version = "3.8.1"
