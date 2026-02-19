@@ -172,3 +172,12 @@ resource "docker_volume" "forgejo_runner_data" {
     ignore_changes  = [labels]
   }
 }
+
+resource "docker_volume" "static_sites" {
+  name = "nextcloud_static_sites"
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [labels]
+  }
+}

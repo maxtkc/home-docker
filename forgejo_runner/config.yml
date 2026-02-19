@@ -25,9 +25,10 @@ container:
   network: "nextcloud_default"
   enable_ipv6: false
   privileged: false
-  options: ""
+  options: "-v nextcloud_static_sites:/sites"
   workdir_parent: ""
-  valid_volumes: []
+  valid_volumes:
+    - "nextcloud_static_sites"
   # "-" means the runner uses the host Docker socket but does not expose it to job containers
   docker_host: "-"
   force_pull: false
