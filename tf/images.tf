@@ -79,3 +79,16 @@ resource "docker_image" "forgejo_runner" {
     dir_sha1 = sha1(join("", [for f in fileset("${path.cwd}/../forgejo_runner", "**") : filesha1("${path.cwd}/../forgejo_runner/${f}")]))
   }
 }
+
+resource "docker_image" "static_sites" {
+  name         = "kcfam/static-sites:local"
+  keep_locally = true
+
+  build {
+    context = "${path.cwd}/../static-sites"
+  }
+
+  triggers = {
+    dir_sha1 = sha1(join("", [for f in fileset("${path.cwd}/../static-sites", "**") : filesha1("${path.cwd}/../static-sites/${f}")]))
+  }
+}
