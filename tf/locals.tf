@@ -19,7 +19,7 @@ locals {
   immich_host           = "0.0.0.0"
   immich_port           = "2283"
   immich_ml_host        = "immich_machine_learning"
-  immich_ml_url         = "http://immich_machine_learning:2283"
+  immich_ml_url         = "http://immich_machine_learning:3003"
 
   # Shared environment variables for grampsweb and grampsweb_celery
   grampsweb_env = [
