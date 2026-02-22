@@ -181,3 +181,12 @@ resource "docker_volume" "static_sites" {
     ignore_changes  = [labels]
   }
 }
+
+resource "docker_volume" "tgtg_tokens" {
+  name = "nextcloud_tgtg_tokens"
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [labels]
+  }
+}
