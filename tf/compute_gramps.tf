@@ -1,7 +1,8 @@
 resource "docker_container" "grampsweb_redis" {
-  name    = "grampsweb_redis"
-  image   = "docker.io/library/redis:${var.grampsweb_redis_version}"
-  restart = "always"
+  name      = "grampsweb_redis"
+  image     = "docker.io/library/redis:${var.grampsweb_redis_version}"
+  restart   = "no"
+  must_run  = false
 
   networks_advanced {
     name = docker_network.default.name
@@ -11,12 +12,23 @@ resource "docker_container" "grampsweb_redis" {
     label = "backup.stop"
     value = "true"
   }
+
+  labels {
+    label = "sablier.enable"
+    value = "true"
+  }
+
+  labels {
+    label = "sablier.group"
+    value = "gramps"
+  }
 }
 
 resource "docker_container" "grampsweb" {
-  name    = "grampsweb"
-  image   = "ghcr.io/gramps-project/grampsweb:${var.grampsweb_version}"
-  restart = "always"
+  name      = "grampsweb"
+  image     = "ghcr.io/gramps-project/grampsweb:${var.grampsweb_version}"
+  restart   = "no"
+  must_run  = false
 
   env = local.grampsweb_env
 
@@ -90,9 +102,10 @@ resource "docker_container" "grampsweb" {
 }
 
 resource "docker_container" "grampsweb_celery" {
-  name    = "grampsweb_celery"
-  image   = "ghcr.io/gramps-project/grampsweb:${var.grampsweb_version}"
-  restart = "always"
+  name      = "grampsweb_celery"
+  image     = "ghcr.io/gramps-project/grampsweb:${var.grampsweb_version}"
+  restart   = "no"
+  must_run  = false
 
   command = ["celery", "-A", "gramps_webapi.celery", "worker", "--loglevel=INFO"]
 

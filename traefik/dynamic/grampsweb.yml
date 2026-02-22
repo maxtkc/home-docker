@@ -12,15 +12,39 @@ http:
             theme: "ghost"
             refreshFrequency: "5s"
 
+    gramps-offline:
+      errors:
+        status:
+          - "502"
+          - "503"
+          - "504"
+        service: gramps-error-page
+        query: "/errors/gramps.html"
+
   services:
     grampsweb:
       loadBalancer:
         servers:
           - url: "http://grampsweb:5000"
 
+    gramps-error-page:
+      loadBalancer:
+        servers:
+          - url: "http://static-sites:80"
+
   routers:
     grampsweb:
       rule: "Host(`gramps.kcfam.us`)"
+      entryPoints:
+        - "websecure"
+      tls:
+        certResolver: letsencrypt
+      middlewares:
+        - gramps-offline
+      service: "grampsweb"
+
+    grampsweb-wakeup:
+      rule: "Host(`gramps.kcfam.us`) && Path(`/wakeup`)"
       entryPoints:
         - "websecure"
       tls:
