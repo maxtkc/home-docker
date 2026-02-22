@@ -125,3 +125,121 @@ variable "uptime_kuma_version" {
   description = "Uptime Kuma image tag"
   default     = "latest"
 }
+
+variable "tgtg_version" {
+  type        = string
+  description = "derhenning/tgtg image tag"
+  default     = "latest-alpine"
+}
+
+# TGTG account
+variable "tgtg_username" {
+  type      = string
+  sensitive = true
+}
+
+# Main settings
+variable "tgtg_sleep_time" {
+  type     = number
+  nullable = true
+  default  = null
+}
+
+variable "tgtg_tz" {
+  type     = string
+  nullable = true
+  default  = null
+}
+
+variable "tgtg_locale" {
+  type     = string
+  nullable = true
+  default  = null
+}
+
+# Must match the port hardcoded in traefik/dynamic/tgtg.yml
+variable "tgtg_port" {
+  type    = number
+  default = 3000
+}
+
+variable "tgtg_metrics" {
+  type     = bool
+  nullable = true
+  default  = null
+}
+
+variable "tgtg_metrics_port" {
+  type     = number
+  nullable = true
+  default  = null
+}
+
+variable "tgtg_disable_tests" {
+  type     = bool
+  nullable = true
+  default  = null
+}
+
+variable "tgtg_quiet" {
+  type     = bool
+  nullable = true
+  default  = null
+}
+
+variable "tgtg_schedule_cron" {
+  type     = string
+  nullable = true
+  default  = null
+}
+
+variable "tgtg_price_monitoring" {
+  type     = bool
+  nullable = true
+  default  = null
+}
+
+# Telegram notifier
+variable "tgtg_telegram" {
+  type     = bool
+  nullable = true
+  default  = null
+}
+
+variable "tgtg_telegram_token" {
+  type      = string
+  sensitive = true
+  nullable  = true
+  default   = null
+}
+
+variable "tgtg_telegram_chat_ids" {
+  type      = string
+  sensitive = true
+  nullable  = true
+  default   = null
+}
+
+variable "tgtg_telegram_body" {
+  type     = string
+  nullable = true
+  default  = null
+}
+
+variable "tgtg_telegram_disable_commands" {
+  type     = bool
+  nullable = true
+  default  = null
+}
+
+variable "tgtg_telegram_only_reservations" {
+  type     = bool
+  nullable = true
+  default  = null
+}
+
+variable "tgtg_telegram_cron" {
+  type     = string
+  nullable = true
+  default  = null
+}
