@@ -47,6 +47,13 @@ variable "porkbun_secret_api_key" {
   sensitive = true
 }
 
+variable "google_site_verification" {
+  type        = string
+  description = "Google site verification token (the value after 'google-site-verification=')"
+  default     = null
+  nullable    = true
+}
+
 variable "server_ip" {
   type        = string
   description = "Public IP address of the home server"

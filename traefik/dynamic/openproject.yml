@@ -1,5 +1,10 @@
 http:
   middlewares:
+    basic-auth:
+      basicAuth:
+        users:
+          - "home:$apr1$JpX5BhqZ$h5XTxPgiogaiRBUMlHcdI1"
+
     sablier-openproject:
       plugin:
         sablier:
@@ -26,5 +31,6 @@ http:
       tls:
         certResolver: letsencrypt
       middlewares:
+        - basic-auth
         - sablier-openproject
       service: "openproject"
