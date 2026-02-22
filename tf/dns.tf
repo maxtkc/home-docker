@@ -23,3 +23,12 @@ resource "porkbun_dns_record" "static_sites" {
   content   = local.domain
   ttl       = local.ttl
 }
+
+resource "porkbun_dns_record" "google_site_verification" {
+  count     = var.google_site_verification != null ? 1 : 0
+  domain    = local.domain
+  subdomain = ""
+  type      = "TXT"
+  content   = "google-site-verification=${var.google_site_verification}"
+  ttl       = local.ttl
+}
