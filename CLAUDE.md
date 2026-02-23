@@ -12,18 +12,20 @@ Services and their routes:
 - `gramps.kcfam.us` → GrampsWeb (genealogy)
 - `gf.kcfam.us` → Grafana (metrics dashboards)
 - `uptime.kcfam.us` → Uptime Kuma (status monitoring)
-- `git.kcfam.us` → Forgejo (planned — see forgejo-terraform-plan.md)
+- `git.kcfam.us` → Forgejo (git hosting with CI/CD runner)
+- `tgtg.kcfam.us` → Too Good To Go notifier
 
 **Traefik v3** handles reverse proxying and Let's Encrypt SSL. **Sablier** manages auto-scaling for low-traffic services (GrampsWeb): containers spin down after 1 minute of inactivity and wake on request.
 
 ## Terraform Modules
 
 ### `tf/` — Main infrastructure
-- **providers.tf / terraform.tf**: Docker provider (kreuzwerker/docker v3.9.0) connecting via SSH to remote host
+- **providers.tf / terraform.tf**: Docker provider (kreuzwerker/docker v3.9.0) connecting via SSH to remote host; Porkbun provider for DNS management
 - **variables.tf / secrets.auto.tfvars**: Sensitive values (passwords, API keys) — gitignored
 - **locals.tf**: Shared local values
 - **networks.tf / volumes.tf**: Docker networks and named volumes (all volumes have `prevent_destroy = true`)
-- **images.tf**: Custom Docker image builds (Nextcloud, nginx, Traefik, Prometheus, Grafana)
+- **dns.tf**: DNS records managed via Porkbun API (A records, CNAMEs for all subdomains)
+- **images.tf**: Custom Docker image builds; rebuild is triggered by SHA1 hash of the source directory
 - **compute_*.tf**: Service definitions grouped by function
 
 ### `tf-monitors/` — Uptime Kuma monitors
@@ -36,6 +38,8 @@ Configuration files are **baked into images** (not volume-mounted) because we us
 - `traefik/` — Traefik with static config and dynamic routing rules
 - `prometheus/` — Prometheus with scrape config
 - `grafana/` — Grafana with provisioning and dashboards
+- `forgejo_runner/` — Forgejo CI/CD runner
+- `static-sites/` — nginx serving static sites
 
 ## Common Commands
 
