@@ -22,7 +22,7 @@ Home server stack managed with OpenTofu, deploying Docker containers to a remote
 
 ## External Dependencies
 
-- Cloudflare — DNS
+- Porkbun — DNS management (managed via Terraform)
 - Let's Encrypt — TLS certificates (via Traefik)
 - Remote host `kcfam` — Docker runs here, accessed over SSH
 
