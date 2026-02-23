@@ -12,10 +12,9 @@ Services and their routes:
 - `gramps.kcfam.us` → GrampsWeb (genealogy)
 - `gf.kcfam.us` → Grafana (metrics dashboards)
 - `uptime.kcfam.us` → Uptime Kuma (status monitoring)
-- `op.kcfam.us` → OpenProject (project management)
 - `git.kcfam.us` → Forgejo (planned — see forgejo-terraform-plan.md)
 
-**Traefik v3** handles reverse proxying and Let's Encrypt SSL. **Sablier** manages auto-scaling for low-traffic services (GrampsWeb, OpenProject): containers spin down after 1 minute of inactivity and wake on request.
+**Traefik v3** handles reverse proxying and Let's Encrypt SSL. **Sablier** manages auto-scaling for low-traffic services (GrampsWeb): containers spin down after 1 minute of inactivity and wake on request.
 
 ## Terraform Modules
 
@@ -123,7 +122,7 @@ cd tf && tofu apply
 
 ## Network Architecture
 
-- **nextcloud_proxy-tier**: External-facing services (Traefik, Sablier, GrampsWeb, Immich, OpenProject)
+- **nextcloud_proxy-tier**: External-facing services (Traefik, Sablier, GrampsWeb, Immich)
 - **nextcloud_default**: Internal service communication (DB, Redis, app containers)
 
 Immich has **read-only** access to the Nextcloud volume for photo library integration.
