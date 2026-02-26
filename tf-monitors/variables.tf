@@ -9,3 +9,14 @@ variable "uptime_kuma_password" {
   description = "Uptime Kuma admin password"
   sensitive   = true
 }
+
+variable "telegram_bot_token" {
+  type        = string
+  description = "Telegram bot token for Uptime Kuma notifications"
+  sensitive   = true
+}
+
+variable "telegram_chat_id" {
+  type        = string
+  description = "Telegram chat ID to send notifications to"
+}
