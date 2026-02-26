@@ -139,6 +139,98 @@ variable "tgtg_version" {
   default     = "latest-alpine"
 }
 
+variable "openproject_version" {
+  type        = string
+  description = "OpenProject image tag"
+  default     = "17-slim"
+}
+
+variable "openproject_postgres_version" {
+  type        = string
+  description = "PostgreSQL image tag used by OpenProject"
+  default     = "17"
+}
+
+variable "openproject_hocuspocus_enabled" {
+  type        = bool
+  description = "Whether to enable the collaborative editing (Hocuspocus) container"
+  default     = false
+}
+
+variable "openproject_hocuspocus_version" {
+  type        = string
+  description = "OpenProject Hocuspocus image tag"
+  default     = "17.1.1"
+}
+
+variable "openproject_db_password" {
+  type        = string
+  description = "PostgreSQL password for the OpenProject database user"
+  sensitive   = true
+}
+
+variable "openproject_secret_key_base" {
+  type        = string
+  description = "Rails secret key base for OpenProject"
+  sensitive   = true
+}
+
+variable "openproject_hocuspocus_secret" {
+  type        = string
+  description = "Shared secret between OpenProject and Hocuspocus for collaborative editing"
+  sensitive   = true
+  nullable    = true
+  default     = null
+}
+
+variable "forgejo_disable_registration" {
+  type        = bool
+  description = "Disable public registration on Forgejo"
+  default     = false
+}
+
+variable "forgejo_register_email_confirm" {
+  type        = bool
+  description = "Require email confirmation to complete registration"
+  default     = true
+}
+
+variable "forgejo_enable_notify_mail" {
+  type        = bool
+  description = "Send email notifications to watchers on issues, PRs, etc."
+  default     = true
+}
+
+variable "forgejo_show_registration_button" {
+  type        = bool
+  description = "Show the register button on the login page"
+  default     = true
+}
+
+variable "forgejo_enable_captcha" {
+  type        = bool
+  description = "Require captcha on registration"
+  default     = true
+}
+
+variable "forgejo_captcha_type" {
+  type        = string
+  description = "Captcha type: image, recaptcha, hcaptcha, mcaptcha, cfturnstile"
+  default     = "image"
+}
+
+variable "smtp_email" {
+  type        = string
+  description = "Gmail address used as the SMTP sender"
+  sensitive   = true
+}
+
+variable "smtp_password" {
+  type        = string
+  description = "Gmail App Password for SMTP"
+  sensitive   = true
+}
+
 # TGTG account
 variable "tgtg_username" {
   type      = string
@@ -193,6 +285,7 @@ variable "tgtg_quiet" {
   nullable = true
   default  = null
 }
+
 
 variable "tgtg_schedule_cron" {
   type     = string

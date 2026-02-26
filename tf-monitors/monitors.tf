@@ -8,8 +8,7 @@ resource "uptimekuma_docker_host" "local" {
 # ─── External HTTP monitors ───────────────────────────────────────────────────
 
 resource "uptimekuma_monitor_http_keyword" "nextcloud_external" {
-  name                  = "Nextcloud (External)"
-  description           = "Nextcloud file sharing and collaboration platform"
+  name                  = "Nextcloud"
   url                   = "https://nc.kcfam.us"
   keyword               = "Nextcloud"
   interval              = 60
@@ -20,8 +19,7 @@ resource "uptimekuma_monitor_http_keyword" "nextcloud_external" {
 }
 
 resource "uptimekuma_monitor_http" "immich_external" {
-  name                  = "Immich (External)"
-  description           = "Immich photo management and AI features"
+  name                  = "Immich"
   url                   = "https://im.kcfam.us"
   interval              = 60
   max_retries           = 3
@@ -30,12 +28,52 @@ resource "uptimekuma_monitor_http" "immich_external" {
   active                = true
 }
 
+resource "uptimekuma_monitor_http" "grafana_external" {
+  name                  = "Grafana"
+  url                   = "https://gf.kcfam.us"
+  interval              = 60
+  max_retries           = 3
+  max_redirects         = 10
+  accepted_status_codes = ["200"]
+  active                = true
+}
+
+resource "uptimekuma_monitor_http" "forgejo_external" {
+  name                  = "Forgejo"
+  url                   = "https://git.kcfam.us"
+  interval              = 60
+  max_retries           = 3
+  max_redirects         = 10
+  accepted_status_codes = ["200"]
+  active                = true
+}
+
+# Long interval — avoids constantly waking the Sablier-managed container
+resource "uptimekuma_monitor_http" "openproject_external" {
+  name                  = "OpenProject"
+  url                   = "https://op.kcfam.us/health_checks/default"
+  interval              = 60
+  max_retries           = 3
+  max_redirects         = 5
+  accepted_status_codes = ["200"]
+  active                = true
+}
+
+resource "uptimekuma_monitor_http" "grampsweb_external" {
+  name                  = "GrampsWeb"
+  url                   = "https://gramps.kcfam.us"
+  interval              = 300
+  max_retries           = 3
+  max_redirects         = 10
+  accepted_status_codes = ["200"]
+  active                = true
+}
+
 # ─── Internal HTTP monitors ───────────────────────────────────────────────────
 
-resource "uptimekuma_monitor_http" "nginx_web" {
-  name                  = "Nginx Web Server"
-  description           = "Nginx web server for Nextcloud"
-  url                   = "http://nextcloud_web_1:80"
+resource "uptimekuma_monitor_http" "nextcloud_web_internal" {
+  name                  = "Nextcloud Web (nginx)"
+  url                   = "http://nextcloud-web:80"
   interval              = 60
   max_retries           = 3
   accepted_status_codes = ["200", "301", "302", "400", "404"]
@@ -44,8 +82,7 @@ resource "uptimekuma_monitor_http" "nginx_web" {
 }
 
 resource "uptimekuma_monitor_http" "immich_server_internal" {
-  name                  = "Immich Server (Internal)"
-  description           = "Internal Immich server API"
+  name                  = "Immich Server (internal)"
   url                   = "http://immich_server:2283"
   interval              = 60
   max_retries           = 3
@@ -53,52 +90,47 @@ resource "uptimekuma_monitor_http" "immich_server_internal" {
   active                = true
 }
 
+resource "uptimekuma_monitor_http" "immich_ml_internal" {
+  name                  = "Immich Machine Learning (internal)"
+  url                   = "http://immich_machine_learning:3003"
+  interval              = 60
+  max_retries           = 3
+  accepted_status_codes = ["200"]
+  active                = true
+}
+
+resource "uptimekuma_monitor_http" "forgejo_internal" {
+  name                  = "Forgejo (internal)"
+  url                   = "http://forgejo:3000"
+  interval              = 60
+  max_retries           = 3
+  accepted_status_codes = ["200"]
+  active                = true
+}
+
+resource "uptimekuma_monitor_http" "prometheus_internal" {
+  name                  = "Prometheus (internal)"
+  url                   = "http://prometheus:9090/-/healthy"
+  interval              = 60
+  max_retries           = 3
+  accepted_status_codes = ["200"]
+  active                = true
+}
+
+resource "uptimekuma_monitor_http" "grafana_internal" {
+  name                  = "Grafana (internal)"
+  url                   = "http://grafana:3000/api/health"
+  interval              = 60
+  max_retries           = 3
+  accepted_status_codes = ["200"]
+  active                = true
+}
+
 # ─── TCP port monitors ────────────────────────────────────────────────────────
-
-resource "uptimekuma_monitor_tcp_port" "postgres_main" {
-  name        = "PostgreSQL (Main DB)"
-  description = "Main PostgreSQL database for Nextcloud and shared services"
-  hostname    = "nextcloud_db_1"
-  port        = 5432
-  interval    = 30
-  max_retries = 3
-  active      = true
-}
-
-resource "uptimekuma_monitor_tcp_port" "postgres_immich" {
-  name        = "PostgreSQL (Immich)"
-  description = "PostgreSQL database for Immich with vector extensions"
-  hostname    = "immich_postgres"
-  port        = 5432
-  interval    = 30
-  max_retries = 3
-  active      = true
-}
-
-resource "uptimekuma_monitor_tcp_port" "redis" {
-  name        = "Redis Cache"
-  description = "Redis cache for Nextcloud and shared services"
-  hostname    = "nextcloud_redis_1"
-  port        = 6379
-  interval    = 30
-  max_retries = 3
-  active      = true
-}
-
-resource "uptimekuma_monitor_tcp_port" "nextcloud_app_internal" {
-  name        = "Nextcloud App (Internal)"
-  description = "Internal Nextcloud PHP-FPM application"
-  hostname    = "nextcloud_app_1"
-  port        = 9000
-  interval    = 60
-  max_retries = 3
-  active      = true
-}
 
 resource "uptimekuma_monitor_tcp_port" "traefik_http" {
   name        = "Traefik HTTP"
-  description = "Traefik reverse proxy (HTTP)"
-  hostname    = "nextcloud_traefik_1"
+  hostname    = "traefik"
   port        = 80
   interval    = 30
   max_retries = 3
@@ -107,79 +139,128 @@ resource "uptimekuma_monitor_tcp_port" "traefik_http" {
 
 resource "uptimekuma_monitor_tcp_port" "traefik_https" {
   name        = "Traefik HTTPS"
-  description = "Traefik reverse proxy (HTTPS)"
-  hostname    = "nextcloud_traefik_1"
+  hostname    = "traefik"
   port        = 443
   interval    = 30
   max_retries = 3
   active      = true
 }
 
+resource "uptimekuma_monitor_tcp_port" "postgres_main" {
+  name        = "PostgreSQL (main)"
+  hostname    = "db"
+  port        = 5432
+  interval    = 30
+  max_retries = 3
+  active      = true
+}
+
+resource "uptimekuma_monitor_tcp_port" "postgres_immich" {
+  name        = "PostgreSQL (Immich)"
+  hostname    = "immich_postgres"
+  port        = 5432
+  interval    = 30
+  max_retries = 3
+  active      = true
+}
+
+resource "uptimekuma_monitor_tcp_port" "redis" {
+  name        = "Redis"
+  hostname    = "redis"
+  port        = 6379
+  interval    = 30
+  max_retries = 3
+  active      = true
+}
+
+resource "uptimekuma_monitor_tcp_port" "nextcloud_php_fpm" {
+  name        = "Nextcloud PHP-FPM"
+  hostname    = "nextcloud"
+  port        = 9000
+  interval    = 60
+  max_retries = 3
+  active      = true
+}
+
+resource "uptimekuma_monitor_tcp_port" "forgejo_ssh" {
+  name        = "Forgejo SSH"
+  hostname    = "git.kcfam.us"
+  port        = 2222
+  interval    = 60
+  max_retries = 3
+  active      = true
+}
+
 # ─── Docker container monitors ───────────────────────────────────────────────
 
-resource "uptimekuma_monitor_docker" "nextcloud_app" {
-  name             = "Nextcloud App Container"
-  description      = "Nextcloud PHP-FPM application container"
+# Infrastructure
+resource "uptimekuma_monitor_docker" "traefik" {
+  name             = "traefik"
   docker_host_id   = uptimekuma_docker_host.local.id
-  docker_container = "nextcloud_app_1"
+  docker_container = "traefik"
   interval         = 60
   max_retries      = 3
   active           = true
 }
 
-resource "uptimekuma_monitor_docker" "nextcloud_web" {
-  name             = "Nextcloud Web Container"
-  description      = "Nginx web server container"
+resource "uptimekuma_monitor_docker" "sablier" {
+  name             = "sablier"
   docker_host_id   = uptimekuma_docker_host.local.id
-  docker_container = "nextcloud_web_1"
+  docker_container = "sablier"
   interval         = 60
   max_retries      = 3
   active           = true
 }
 
-resource "uptimekuma_monitor_docker" "nextcloud_cron" {
-  name             = "Nextcloud Cron Container"
-  description      = "Nextcloud background job container"
+resource "uptimekuma_monitor_docker" "db" {
+  name             = "db (postgres)"
   docker_host_id   = uptimekuma_docker_host.local.id
-  docker_container = "nextcloud_cron_1"
-  interval         = 60
-  max_retries      = 3
-  active           = true
-}
-
-resource "uptimekuma_monitor_docker" "postgres" {
-  name             = "PostgreSQL Container"
-  description      = "Main PostgreSQL database container"
-  docker_host_id   = uptimekuma_docker_host.local.id
-  docker_container = "nextcloud_db_1"
+  docker_container = "db"
   interval         = 60
   max_retries      = 3
   active           = true
 }
 
 resource "uptimekuma_monitor_docker" "redis" {
-  name             = "Redis Container"
-  description      = "Redis cache container"
+  name             = "redis"
   docker_host_id   = uptimekuma_docker_host.local.id
-  docker_container = "nextcloud_redis_1"
+  docker_container = "redis"
   interval         = 60
   max_retries      = 3
   active           = true
 }
 
-resource "uptimekuma_monitor_docker" "traefik" {
-  name             = "Traefik Container"
-  description      = "Traefik reverse proxy container"
+# Nextcloud
+resource "uptimekuma_monitor_docker" "nextcloud" {
+  name             = "nextcloud (app)"
   docker_host_id   = uptimekuma_docker_host.local.id
-  docker_container = "nextcloud_traefik_1"
+  docker_container = "nextcloud"
   interval         = 60
   max_retries      = 3
   active           = true
 }
 
+resource "uptimekuma_monitor_docker" "nextcloud_web" {
+  name             = "nextcloud-web"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "nextcloud-web"
+  interval         = 60
+  max_retries      = 3
+  active           = true
+}
+
+resource "uptimekuma_monitor_docker" "nextcloud_cron" {
+  name             = "nextcloud-cron"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "nextcloud-cron"
+  interval         = 60
+  max_retries      = 3
+  active           = true
+}
+
+# Immich
 resource "uptimekuma_monitor_docker" "immich_server" {
-  name             = "Immich Server Container"
-  description      = "Immich main server container"
+  name             = "immich_server"
   docker_host_id   = uptimekuma_docker_host.local.id
   docker_container = "immich_server"
   interval         = 60
@@ -188,8 +269,7 @@ resource "uptimekuma_monitor_docker" "immich_server" {
 }
 
 resource "uptimekuma_monitor_docker" "immich_microservices" {
-  name             = "Immich Microservices Container"
-  description      = "Immich background processing container"
+  name             = "immich_microservices"
   docker_host_id   = uptimekuma_docker_host.local.id
   docker_container = "immich_microservices"
   interval         = 60
@@ -198,8 +278,7 @@ resource "uptimekuma_monitor_docker" "immich_microservices" {
 }
 
 resource "uptimekuma_monitor_docker" "immich_machine_learning" {
-  name             = "Immich ML Container"
-  description      = "Immich machine learning container"
+  name             = "immich_machine_learning"
   docker_host_id   = uptimekuma_docker_host.local.id
   docker_container = "immich_machine_learning"
   interval         = 60
@@ -208,10 +287,195 @@ resource "uptimekuma_monitor_docker" "immich_machine_learning" {
 }
 
 resource "uptimekuma_monitor_docker" "immich_postgres" {
-  name             = "Immich PostgreSQL Container"
-  description      = "Immich PostgreSQL with vector extensions"
+  name             = "immich_postgres"
   docker_host_id   = uptimekuma_docker_host.local.id
   docker_container = "immich_postgres"
+  interval         = 60
+  max_retries      = 3
+  active           = true
+}
+
+# GrampsWeb (Sablier-managed — containers may be stopped when idle)
+resource "uptimekuma_monitor_docker" "grampsweb" {
+  name             = "grampsweb"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "grampsweb"
+  interval         = 60
+  max_retries      = 3
+  active           = true
+}
+
+resource "uptimekuma_monitor_docker" "grampsweb_celery" {
+  name             = "grampsweb_celery"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "grampsweb_celery"
+  interval         = 60
+  max_retries      = 3
+  active           = true
+}
+
+resource "uptimekuma_monitor_docker" "grampsweb_redis" {
+  name             = "grampsweb_redis"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "grampsweb_redis"
+  interval         = 60
+  max_retries      = 3
+  active           = true
+}
+
+# Forgejo
+resource "uptimekuma_monitor_docker" "forgejo" {
+  name             = "forgejo"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "forgejo"
+  interval         = 60
+  max_retries      = 3
+  active           = true
+}
+
+resource "uptimekuma_monitor_docker" "forgejo_runner" {
+  name             = "forgejo_runner"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "forgejo_runner"
+  interval         = 60
+  max_retries      = 3
+  active           = true
+}
+
+# Monitoring stack
+resource "uptimekuma_monitor_docker" "prometheus" {
+  name             = "prometheus"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "prometheus"
+  interval         = 60
+  max_retries      = 3
+  active           = true
+}
+
+resource "uptimekuma_monitor_docker" "grafana" {
+  name             = "grafana"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "grafana"
+  interval         = 60
+  max_retries      = 3
+  active           = true
+}
+
+resource "uptimekuma_monitor_docker" "node_exporter" {
+  name             = "node-exporter"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "node-exporter"
+  interval         = 60
+  max_retries      = 3
+  active           = true
+}
+
+resource "uptimekuma_monitor_docker" "cadvisor" {
+  name             = "cadvisor"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "cadvisor"
+  interval         = 60
+  max_retries      = 3
+  active           = true
+}
+
+resource "uptimekuma_monitor_docker" "uptime_kuma" {
+  name             = "uptime-kuma"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "uptime-kuma"
+  interval         = 60
+  max_retries      = 3
+  active           = true
+}
+
+# Misc
+resource "uptimekuma_monitor_docker" "static_sites" {
+  name             = "static-sites"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "static-sites"
+  interval         = 60
+  max_retries      = 3
+  active           = true
+}
+
+resource "uptimekuma_monitor_docker" "backup_daily" {
+  name             = "backup-daily"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "backup-daily"
+  interval         = 60
+  max_retries      = 3
+  active           = true
+}
+
+resource "uptimekuma_monitor_docker" "backup_weekly" {
+  name             = "backup-weekly"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "backup-weekly"
+  interval         = 60
+  max_retries      = 3
+  active           = true
+}
+
+resource "uptimekuma_monitor_docker" "backup_monthly" {
+  name             = "backup-monthly"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "backup-monthly"
+  interval         = 60
+  max_retries      = 3
+  active           = true
+}
+
+# OpenProject
+resource "uptimekuma_monitor_http" "openproject_web_internal" {
+  name                  = "OpenProject Web (internal)"
+  url                   = "http://openproject_web:8080/health_checks/default"
+  interval              = 60
+  max_retries           = 3
+  accepted_status_codes = ["200"]
+  headers               = jsonencode({ Host = "op.kcfam.us" })
+  active                = true
+}
+
+resource "uptimekuma_monitor_tcp_port" "openproject_postgres" {
+  name        = "PostgreSQL (OpenProject)"
+  hostname    = "openproject_db"
+  port        = 5432
+  interval    = 30
+  max_retries = 3
+  active      = true
+}
+
+resource "uptimekuma_monitor_docker" "openproject_db" {
+  name             = "openproject_db"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "openproject_db"
+  interval         = 60
+  max_retries      = 3
+  active           = true
+}
+
+resource "uptimekuma_monitor_docker" "openproject_web" {
+  name             = "openproject_web"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "openproject_web"
+  interval         = 60
+  max_retries      = 3
+  active           = true
+}
+
+resource "uptimekuma_monitor_docker" "openproject_worker" {
+  name             = "openproject_worker"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "openproject_worker"
+  interval         = 60
+  max_retries      = 3
+  active           = true
+}
+
+resource "uptimekuma_monitor_docker" "openproject_cron" {
+  name             = "openproject_cron"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "openproject_cron"
   interval         = 60
   max_retries      = 3
   active           = true

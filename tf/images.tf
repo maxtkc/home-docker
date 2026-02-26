@@ -80,6 +80,7 @@ resource "docker_image" "forgejo_runner" {
   }
 }
 
+
 resource "docker_image" "static_sites" {
   name         = "kcfam/static-sites:local"
   keep_locally = true

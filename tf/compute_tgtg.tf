@@ -1,5 +1,5 @@
 resource "docker_container" "tgtg" {
-  name    = "nextcloud_tgtg_1"
+  name    = "tgtg"
   image   = "derhenning/tgtg:${var.tgtg_version}"
   restart = "always"
 

@@ -22,7 +22,7 @@ cache:
   external_server: ""
 
 container:
-  network: "nextcloud_default"
+  network: "internal"
   enable_ipv6: false
   privileged: false
   options: "-v nextcloud_static_sites:/sites"

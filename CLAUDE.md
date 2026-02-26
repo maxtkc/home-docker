@@ -65,9 +65,9 @@ cd tf
 tofu apply -replace=docker_image.nextcloud   # or grafana, traefik, etc.
 ```
 
-**View container logs (on remote host):**
+**View container logs (on remote host, assumes remote docker context set):**
 ```bash
-ssh kcfam docker logs -f <container_name>
+docker logs -f <container_name>
 ```
 
 **Initialize a module (first time or after provider changes):**
@@ -126,7 +126,7 @@ cd tf && tofu apply
 
 ## Network Architecture
 
-- **nextcloud_proxy-tier**: External-facing services (Traefik, Sablier, GrampsWeb, Immich)
-- **nextcloud_default**: Internal service communication (DB, Redis, app containers)
+- **proxy-tier**: External-facing services (Traefik, Sablier, GrampsWeb, Immich)
+- **internal**: Internal service communication (DB, Redis, app containers)
 
 Immich has **read-only** access to the Nextcloud volume for photo library integration.
