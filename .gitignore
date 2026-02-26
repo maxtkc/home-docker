@@ -3,6 +3,8 @@ secrets.env
 db.env
 immich.env
 
+.playwright-mcp
+
 # Docker Compose — replaced by Terraform
 docker-compose.yml
 docker-compose.yml.backup

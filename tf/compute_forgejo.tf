@@ -42,7 +42,19 @@ resource "docker_container" "forgejo" {
     "FORGEJO__server__SSH_DOMAIN=git.kcfam.us",
     "FORGEJO__server__SSH_PORT=2222",
     "FORGEJO__security__SECRET_KEY=${random_password.forgejo_secret_key.result}",
-    "FORGEJO__service__DISABLE_REGISTRATION=true",
+    "FORGEJO__service__DISABLE_REGISTRATION=${var.forgejo_disable_registration}",
+    "FORGEJO__service__REGISTER_EMAIL_CONFIRM=${var.forgejo_register_email_confirm}",
+    "FORGEJO__service__ENABLE_NOTIFY_MAIL=${var.forgejo_enable_notify_mail}",
+    "FORGEJO__service__SHOW_REGISTRATION_BUTTON=${var.forgejo_show_registration_button}",
+    "FORGEJO__service__ENABLE_CAPTCHA=${var.forgejo_enable_captcha}",
+    "FORGEJO__service__CAPTCHA_TYPE=${var.forgejo_captcha_type}",
+    "FORGEJO__mailer__ENABLED=true",
+    "FORGEJO__mailer__SMTP_ADDR=smtp.gmail.com",
+    "FORGEJO__mailer__SMTP_PORT=587",
+    "FORGEJO__mailer__USER=${var.smtp_email}",
+    "FORGEJO__mailer__PASSWD=${var.smtp_password}",
+    "FORGEJO__mailer__FROM=${var.smtp_email}",
+    "FORGEJO__mailer__PROTOCOL=smtp+starttls",
   ]
 
   ports {

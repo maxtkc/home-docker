@@ -149,7 +149,7 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "container_last_seen{name=\"nextcloud_app_1\"} > bool (time() - 60)",
+          "expr": "container_last_seen{name=\"nextcloud\"} > bool (time() - 60)",
           "interval": "1m",
           "legendFormat": "Nextcloud",
           "refId": "D"

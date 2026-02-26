@@ -229,6 +229,7 @@ resource "docker_container" "uptime_kuma" {
     value = "3001"
   }
 
+  # Router: pass all status.kcfam.us traffic to Uptime Kuma (custom domain set in UI)
   labels {
     label = "traefik.http.routers.status-page.rule"
     value = "Host(`status.kcfam.us`)"
