@@ -1,5 +1,5 @@
 resource "docker_container" "db" {
-  name    = "nextcloud_db_1"
+  name    = "db"
   image   = "postgres:${var.postgres_version}"
   restart = "always"
 
@@ -26,7 +26,7 @@ resource "docker_container" "db" {
 }
 
 resource "docker_container" "redis" {
-  name    = "nextcloud_redis_1"
+  name    = "redis"
   image   = "redis:${var.redis_version}"
   restart = "always"
 
@@ -42,7 +42,7 @@ resource "docker_container" "redis" {
 }
 
 resource "docker_container" "traefik" {
-  name    = "nextcloud_traefik_1"
+  name    = "traefik"
   image   = docker_image.traefik.image_id
   restart = "always"
 
@@ -85,7 +85,7 @@ resource "docker_container" "traefik" {
 }
 
 resource "docker_container" "sablier" {
-  name    = "nextcloud_sablier_1"
+  name    = "sablier"
   image   = "ghcr.io/sablierapp/sablier:${var.sablier_version}"
   restart = "always"
 

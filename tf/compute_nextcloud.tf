@@ -1,5 +1,5 @@
 resource "docker_container" "app" {
-  name    = "nextcloud_app_1"
+  name    = "nextcloud"
   image   = docker_image.nextcloud.image_id
   restart = "always"
 
@@ -42,7 +42,7 @@ resource "docker_container" "app" {
 }
 
 resource "docker_container" "web" {
-  name    = "nextcloud_web_1"
+  name    = "nextcloud-web"
   image   = docker_image.nextcloud_web.image_id
   restart = "always"
 
@@ -94,7 +94,7 @@ resource "docker_container" "web" {
 }
 
 resource "docker_container" "cron" {
-  name       = "nextcloud_cron_1"
+  name       = "nextcloud-cron"
   image      = docker_container.app.image
   restart    = "always"
   entrypoint = ["/cron.sh"]

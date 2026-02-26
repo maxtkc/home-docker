@@ -190,3 +190,22 @@ resource "docker_volume" "tgtg_tokens" {
     ignore_changes  = [labels]
   }
 }
+
+
+resource "docker_volume" "openproject_pgdata" {
+  name = "nextcloud_openproject_pgdata"
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [labels]
+  }
+}
+
+resource "docker_volume" "openproject_assets" {
+  name = "nextcloud_openproject_assets"
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [labels]
+  }
+}

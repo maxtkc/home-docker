@@ -3,7 +3,7 @@ http:
     tgtg:
       loadBalancer:
         servers:
-          - url: "http://nextcloud_tgtg_1:3000"
+          - url: "http://tgtg:3000"
 
   routers:
     tgtg:
