@@ -5,6 +5,10 @@ resource "uptimekuma_docker_host" "local" {
   docker_daemon = "/run/docker.sock"
 }
 
+locals {
+  notification_ids = [uptimekuma_notification.telegram.id]
+}
+
 # ─── External HTTP monitors ───────────────────────────────────────────────────
 
 resource "uptimekuma_monitor_http_keyword" "nextcloud_external" {
@@ -15,6 +19,7 @@ resource "uptimekuma_monitor_http_keyword" "nextcloud_external" {
   max_retries           = 3
   max_redirects         = 10
   accepted_status_codes = ["200"]
+  notification_ids      = local.notification_ids
   active                = true
 }
 
@@ -25,6 +30,7 @@ resource "uptimekuma_monitor_http" "immich_external" {
   max_retries           = 3
   max_redirects         = 10
   accepted_status_codes = ["200"]
+  notification_ids      = local.notification_ids
   active                = true
 }
 
@@ -35,6 +41,7 @@ resource "uptimekuma_monitor_http" "grafana_external" {
   max_retries           = 3
   max_redirects         = 10
   accepted_status_codes = ["200"]
+  notification_ids      = local.notification_ids
   active                = true
 }
 
@@ -45,6 +52,7 @@ resource "uptimekuma_monitor_http" "forgejo_external" {
   max_retries           = 3
   max_redirects         = 10
   accepted_status_codes = ["200"]
+  notification_ids      = local.notification_ids
   active                = true
 }
 
@@ -56,6 +64,7 @@ resource "uptimekuma_monitor_http" "openproject_external" {
   max_retries           = 3
   max_redirects         = 5
   accepted_status_codes = ["200"]
+  notification_ids      = local.notification_ids
   active                = true
 }
 
@@ -66,7 +75,11 @@ resource "uptimekuma_monitor_http" "grampsweb_external" {
   max_retries           = 3
   max_redirects         = 10
   accepted_status_codes = ["200"]
+  notification_ids      = []
   active                = true
+  lifecycle {
+    ignore_changes = [notification_ids]
+  }
 }
 
 # ─── Internal HTTP monitors ───────────────────────────────────────────────────
@@ -78,6 +91,7 @@ resource "uptimekuma_monitor_http" "nextcloud_web_internal" {
   max_retries           = 3
   accepted_status_codes = ["200", "301", "302", "400", "404"]
   headers               = jsonencode({ Host = "nc.kcfam.us" })
+  notification_ids      = local.notification_ids
   active                = true
 }
 
@@ -87,6 +101,7 @@ resource "uptimekuma_monitor_http" "immich_server_internal" {
   interval              = 60
   max_retries           = 3
   accepted_status_codes = ["200", "404"]
+  notification_ids      = local.notification_ids
   active                = true
 }
 
@@ -96,6 +111,7 @@ resource "uptimekuma_monitor_http" "immich_ml_internal" {
   interval              = 60
   max_retries           = 3
   accepted_status_codes = ["200"]
+  notification_ids      = local.notification_ids
   active                = true
 }
 
@@ -105,6 +121,7 @@ resource "uptimekuma_monitor_http" "forgejo_internal" {
   interval              = 60
   max_retries           = 3
   accepted_status_codes = ["200"]
+  notification_ids      = local.notification_ids
   active                = true
 }
 
@@ -114,6 +131,7 @@ resource "uptimekuma_monitor_http" "prometheus_internal" {
   interval              = 60
   max_retries           = 3
   accepted_status_codes = ["200"]
+  notification_ids      = local.notification_ids
   active                = true
 }
 
@@ -123,72 +141,80 @@ resource "uptimekuma_monitor_http" "grafana_internal" {
   interval              = 60
   max_retries           = 3
   accepted_status_codes = ["200"]
+  notification_ids      = local.notification_ids
   active                = true
 }
 
 # ─── TCP port monitors ────────────────────────────────────────────────────────
 
 resource "uptimekuma_monitor_tcp_port" "traefik_http" {
-  name        = "Traefik HTTP"
-  hostname    = "traefik"
-  port        = 80
-  interval    = 30
-  max_retries = 3
-  active      = true
+  name             = "Traefik HTTP"
+  hostname         = "traefik"
+  port             = 80
+  interval         = 30
+  max_retries      = 3
+  notification_ids = local.notification_ids
+  active           = true
 }
 
 resource "uptimekuma_monitor_tcp_port" "traefik_https" {
-  name        = "Traefik HTTPS"
-  hostname    = "traefik"
-  port        = 443
-  interval    = 30
-  max_retries = 3
-  active      = true
+  name             = "Traefik HTTPS"
+  hostname         = "traefik"
+  port             = 443
+  interval         = 30
+  max_retries      = 3
+  notification_ids = local.notification_ids
+  active           = true
 }
 
 resource "uptimekuma_monitor_tcp_port" "postgres_main" {
-  name        = "PostgreSQL (main)"
-  hostname    = "db"
-  port        = 5432
-  interval    = 30
-  max_retries = 3
-  active      = true
+  name             = "PostgreSQL (main)"
+  hostname         = "db"
+  port             = 5432
+  interval         = 30
+  max_retries      = 3
+  notification_ids = local.notification_ids
+  active           = true
 }
 
 resource "uptimekuma_monitor_tcp_port" "postgres_immich" {
-  name        = "PostgreSQL (Immich)"
-  hostname    = "immich_postgres"
-  port        = 5432
-  interval    = 30
-  max_retries = 3
-  active      = true
+  name             = "PostgreSQL (Immich)"
+  hostname         = "immich_postgres"
+  port             = 5432
+  interval         = 30
+  max_retries      = 3
+  notification_ids = local.notification_ids
+  active           = true
 }
 
 resource "uptimekuma_monitor_tcp_port" "redis" {
-  name        = "Redis"
-  hostname    = "redis"
-  port        = 6379
-  interval    = 30
-  max_retries = 3
-  active      = true
+  name             = "Redis"
+  hostname         = "redis"
+  port             = 6379
+  interval         = 30
+  max_retries      = 3
+  notification_ids = local.notification_ids
+  active           = true
 }
 
 resource "uptimekuma_monitor_tcp_port" "nextcloud_php_fpm" {
-  name        = "Nextcloud PHP-FPM"
-  hostname    = "nextcloud"
-  port        = 9000
-  interval    = 60
-  max_retries = 3
-  active      = true
+  name             = "Nextcloud PHP-FPM"
+  hostname         = "nextcloud"
+  port             = 9000
+  interval         = 60
+  max_retries      = 3
+  notification_ids = local.notification_ids
+  active           = true
 }
 
 resource "uptimekuma_monitor_tcp_port" "forgejo_ssh" {
-  name        = "Forgejo SSH"
-  hostname    = "git.kcfam.us"
-  port        = 2222
-  interval    = 60
-  max_retries = 3
-  active      = true
+  name             = "Forgejo SSH"
+  hostname         = "git.kcfam.us"
+  port             = 2222
+  interval         = 60
+  max_retries      = 3
+  notification_ids = local.notification_ids
+  active           = true
 }
 
 # ─── Docker container monitors ───────────────────────────────────────────────
@@ -200,6 +226,7 @@ resource "uptimekuma_monitor_docker" "traefik" {
   docker_container = "traefik"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -209,6 +236,7 @@ resource "uptimekuma_monitor_docker" "sablier" {
   docker_container = "sablier"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -218,6 +246,7 @@ resource "uptimekuma_monitor_docker" "db" {
   docker_container = "db"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -227,6 +256,7 @@ resource "uptimekuma_monitor_docker" "redis" {
   docker_container = "redis"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -237,6 +267,7 @@ resource "uptimekuma_monitor_docker" "nextcloud" {
   docker_container = "nextcloud"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -246,6 +277,7 @@ resource "uptimekuma_monitor_docker" "nextcloud_web" {
   docker_container = "nextcloud-web"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -255,6 +287,7 @@ resource "uptimekuma_monitor_docker" "nextcloud_cron" {
   docker_container = "nextcloud-cron"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -265,6 +298,7 @@ resource "uptimekuma_monitor_docker" "immich_server" {
   docker_container = "immich_server"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -274,6 +308,7 @@ resource "uptimekuma_monitor_docker" "immich_microservices" {
   docker_container = "immich_microservices"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -283,6 +318,7 @@ resource "uptimekuma_monitor_docker" "immich_machine_learning" {
   docker_container = "immich_machine_learning"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -292,17 +328,22 @@ resource "uptimekuma_monitor_docker" "immich_postgres" {
   docker_container = "immich_postgres"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
-# GrampsWeb (Sablier-managed — containers may be stopped when idle)
+# GrampsWeb (Sablier-managed — containers may be stopped when idle; no notifications)
 resource "uptimekuma_monitor_docker" "grampsweb" {
   name             = "grampsweb"
   docker_host_id   = uptimekuma_docker_host.local.id
   docker_container = "grampsweb"
   interval         = 60
   max_retries      = 3
+  notification_ids = []
   active           = true
+  lifecycle {
+    ignore_changes = [notification_ids]
+  }
 }
 
 resource "uptimekuma_monitor_docker" "grampsweb_celery" {
@@ -311,7 +352,11 @@ resource "uptimekuma_monitor_docker" "grampsweb_celery" {
   docker_container = "grampsweb_celery"
   interval         = 60
   max_retries      = 3
+  notification_ids = []
   active           = true
+  lifecycle {
+    ignore_changes = [notification_ids]
+  }
 }
 
 resource "uptimekuma_monitor_docker" "grampsweb_redis" {
@@ -320,7 +365,11 @@ resource "uptimekuma_monitor_docker" "grampsweb_redis" {
   docker_container = "grampsweb_redis"
   interval         = 60
   max_retries      = 3
+  notification_ids = []
   active           = true
+  lifecycle {
+    ignore_changes = [notification_ids]
+  }
 }
 
 # Forgejo
@@ -330,6 +379,7 @@ resource "uptimekuma_monitor_docker" "forgejo" {
   docker_container = "forgejo"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -339,6 +389,7 @@ resource "uptimekuma_monitor_docker" "forgejo_runner" {
   docker_container = "forgejo_runner"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -349,6 +400,7 @@ resource "uptimekuma_monitor_docker" "prometheus" {
   docker_container = "prometheus"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -358,6 +410,7 @@ resource "uptimekuma_monitor_docker" "grafana" {
   docker_container = "grafana"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -367,6 +420,7 @@ resource "uptimekuma_monitor_docker" "node_exporter" {
   docker_container = "node-exporter"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -376,6 +430,7 @@ resource "uptimekuma_monitor_docker" "cadvisor" {
   docker_container = "cadvisor"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -385,6 +440,7 @@ resource "uptimekuma_monitor_docker" "uptime_kuma" {
   docker_container = "uptime-kuma"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -395,6 +451,7 @@ resource "uptimekuma_monitor_docker" "static_sites" {
   docker_container = "static-sites"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -404,6 +461,7 @@ resource "uptimekuma_monitor_docker" "backup_daily" {
   docker_container = "backup-daily"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -413,6 +471,7 @@ resource "uptimekuma_monitor_docker" "backup_weekly" {
   docker_container = "backup-weekly"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -422,6 +481,7 @@ resource "uptimekuma_monitor_docker" "backup_monthly" {
   docker_container = "backup-monthly"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -433,16 +493,18 @@ resource "uptimekuma_monitor_http" "openproject_web_internal" {
   max_retries           = 3
   accepted_status_codes = ["200"]
   headers               = jsonencode({ Host = "op.kcfam.us" })
+  notification_ids      = local.notification_ids
   active                = true
 }
 
 resource "uptimekuma_monitor_tcp_port" "openproject_postgres" {
-  name        = "PostgreSQL (OpenProject)"
-  hostname    = "openproject_db"
-  port        = 5432
-  interval    = 30
-  max_retries = 3
-  active      = true
+  name             = "PostgreSQL (OpenProject)"
+  hostname         = "openproject_db"
+  port             = 5432
+  interval         = 30
+  max_retries      = 3
+  notification_ids = local.notification_ids
+  active           = true
 }
 
 resource "uptimekuma_monitor_docker" "openproject_db" {
@@ -451,6 +513,7 @@ resource "uptimekuma_monitor_docker" "openproject_db" {
   docker_container = "openproject_db"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -460,6 +523,7 @@ resource "uptimekuma_monitor_docker" "openproject_web" {
   docker_container = "openproject_web"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -469,6 +533,7 @@ resource "uptimekuma_monitor_docker" "openproject_worker" {
   docker_container = "openproject_worker"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
 
@@ -478,5 +543,6 @@ resource "uptimekuma_monitor_docker" "openproject_cron" {
   docker_container = "openproject_cron"
   interval         = 60
   max_retries      = 3
+  notification_ids = local.notification_ids
   active           = true
 }
