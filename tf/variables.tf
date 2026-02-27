@@ -151,6 +151,12 @@ variable "openproject_postgres_version" {
   default     = "17"
 }
 
+variable "run_openproject" {
+  type        = bool
+  description = "Whether to run the OpenProject containers"
+  default     = true
+}
+
 variable "openproject_hocuspocus_enabled" {
   type        = bool
   description = "Whether to enable the collaborative editing (Hocuspocus) container"
