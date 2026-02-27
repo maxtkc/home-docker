@@ -445,6 +445,39 @@ resource "uptimekuma_monitor_docker" "uptime_kuma" {
   active           = true
 }
 
+# ─── NanoMQ ──────────────────────────────────────────────────────────────────
+
+resource "uptimekuma_monitor_docker" "nanomq" {
+  name             = "nanomq"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "nanomq"
+  interval         = 60
+  max_retries      = 3
+  notification_ids = local.notification_ids
+  active           = true
+}
+
+resource "uptimekuma_monitor_tcp_port" "nanomq_mqtt" {
+  name             = "NanoMQ MQTT (1883)"
+  hostname         = "nanomq"
+  port             = 1883
+  interval         = 30
+  max_retries      = 3
+  notification_ids = local.notification_ids
+  active           = true
+}
+
+resource "uptimekuma_monitor_tcp_port" "nanomq_ws" {
+  name             = "NanoMQ WebSocket (8083)"
+  hostname         = "nanomq"
+  port             = 8083
+  interval         = 30
+  max_retries      = 3
+  notification_ids = local.notification_ids
+  active           = true
+}
+
+
 # Misc
 resource "uptimekuma_monitor_docker" "static_sites" {
   name             = "static-sites"

@@ -5,7 +5,7 @@ locals {
   ttl    = 600
 
   dns_subdomains = toset([
-    "ssh", "nc", "im", "gramps", "gf", "uptime", "op", "git", "status", "tgtg",
+    "ssh", "nc", "im", "gramps", "gf", "uptime", "op", "git", "status", "tgtg", "mqtt", "ws.mqtt",
   ])
 
   # Non-sensitive database config (mirrors .env)
