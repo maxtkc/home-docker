@@ -1,4 +1,5 @@
 resource "docker_container" "openproject_db" {
+  count   = var.run_openproject ? 1 : 0
   name    = "openproject_db"
   image   = "postgres:${var.openproject_postgres_version}"
   restart = "always"
@@ -26,6 +27,7 @@ resource "docker_container" "openproject_db" {
 }
 
 resource "docker_container" "openproject_cache" {
+  count   = var.run_openproject ? 1 : 0
   name    = "openproject_cache"
   image   = "memcached"
   restart = "always"
@@ -37,6 +39,7 @@ resource "docker_container" "openproject_cache" {
 }
 
 resource "docker_container" "openproject_seeder" {
+  count     = var.run_openproject ? 1 : 0
   name      = "openproject_seeder"
   image     = "openproject/openproject:${var.openproject_version}"
   restart   = "on-failure"
@@ -58,6 +61,7 @@ resource "docker_container" "openproject_seeder" {
 }
 
 resource "docker_container" "openproject_web" {
+  count   = var.run_openproject ? 1 : 0
   name    = "openproject_web"
   image   = "openproject/openproject:${var.openproject_version}"
   restart = "always"
@@ -109,6 +113,7 @@ resource "docker_container" "openproject_web" {
 }
 
 resource "docker_container" "openproject_worker" {
+  count   = var.run_openproject ? 1 : 0
   name    = "openproject_worker"
   image   = "openproject/openproject:${var.openproject_version}"
   restart = "always"
@@ -129,6 +134,7 @@ resource "docker_container" "openproject_worker" {
 }
 
 resource "docker_container" "openproject_cron" {
+  count   = var.run_openproject ? 1 : 0
   name    = "openproject_cron"
   image   = "openproject/openproject:${var.openproject_version}"
   restart = "always"
@@ -149,7 +155,7 @@ resource "docker_container" "openproject_cron" {
 }
 
 resource "docker_container" "openproject_hocuspocus" {
-  count   = var.openproject_hocuspocus_enabled ? 1 : 0
+  count   = var.run_openproject && var.openproject_hocuspocus_enabled ? 1 : 0
   name    = "openproject_hocuspocus"
   image   = "openproject/hocuspocus:${var.openproject_hocuspocus_version}"
   restart = "always"

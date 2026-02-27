@@ -58,6 +58,7 @@ resource "uptimekuma_monitor_http" "forgejo_external" {
 
 # Long interval — avoids constantly waking the Sablier-managed container
 resource "uptimekuma_monitor_http" "openproject_external" {
+  count                 = var.monitor_openproject ? 1 : 0
   name                  = "OpenProject"
   url                   = "https://op.kcfam.us/health_checks/default"
   interval              = 60
@@ -487,6 +488,7 @@ resource "uptimekuma_monitor_docker" "backup_monthly" {
 
 # OpenProject
 resource "uptimekuma_monitor_http" "openproject_web_internal" {
+  count                 = var.monitor_openproject ? 1 : 0
   name                  = "OpenProject Web (internal)"
   url                   = "http://openproject_web:8080/health_checks/default"
   interval              = 60
@@ -498,6 +500,7 @@ resource "uptimekuma_monitor_http" "openproject_web_internal" {
 }
 
 resource "uptimekuma_monitor_tcp_port" "openproject_postgres" {
+  count            = var.monitor_openproject ? 1 : 0
   name             = "PostgreSQL (OpenProject)"
   hostname         = "openproject_db"
   port             = 5432
@@ -508,6 +511,7 @@ resource "uptimekuma_monitor_tcp_port" "openproject_postgres" {
 }
 
 resource "uptimekuma_monitor_docker" "openproject_db" {
+  count            = var.monitor_openproject ? 1 : 0
   name             = "openproject_db"
   docker_host_id   = uptimekuma_docker_host.local.id
   docker_container = "openproject_db"
@@ -518,6 +522,7 @@ resource "uptimekuma_monitor_docker" "openproject_db" {
 }
 
 resource "uptimekuma_monitor_docker" "openproject_web" {
+  count            = var.monitor_openproject ? 1 : 0
   name             = "openproject_web"
   docker_host_id   = uptimekuma_docker_host.local.id
   docker_container = "openproject_web"
@@ -528,6 +533,7 @@ resource "uptimekuma_monitor_docker" "openproject_web" {
 }
 
 resource "uptimekuma_monitor_docker" "openproject_worker" {
+  count            = var.monitor_openproject ? 1 : 0
   name             = "openproject_worker"
   docker_host_id   = uptimekuma_docker_host.local.id
   docker_container = "openproject_worker"
@@ -538,6 +544,7 @@ resource "uptimekuma_monitor_docker" "openproject_worker" {
 }
 
 resource "uptimekuma_monitor_docker" "openproject_cron" {
+  count            = var.monitor_openproject ? 1 : 0
   name             = "openproject_cron"
   docker_host_id   = uptimekuma_docker_host.local.id
   docker_container = "openproject_cron"

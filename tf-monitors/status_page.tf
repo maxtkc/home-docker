@@ -11,20 +11,22 @@ resource "uptimekuma_status_page" "main" {
     "status.kcfam.us",
   ]
 
-  public_group_list = [
+  public_group_list = concat([
 
     # ───────────────── Public Services ────────────────────
     {
       name   = "Public Services"
       weight = 1
 
-      monitor_list = [
-        { id = uptimekuma_monitor_http_keyword.nextcloud_external.id, send_url = true },
-        { id = uptimekuma_monitor_http.immich_external.id,            send_url = true },
-        { id = uptimekuma_monitor_http.grafana_external.id,           send_url = true },
-        { id = uptimekuma_monitor_http.forgejo_external.id,           send_url = true },
-        { id = uptimekuma_monitor_http.openproject_external.id,       send_url = true },
-      ]
+      monitor_list = concat(
+        [
+          { id = uptimekuma_monitor_http_keyword.nextcloud_external.id, send_url = true },
+          { id = uptimekuma_monitor_http.immich_external.id,            send_url = true },
+          { id = uptimekuma_monitor_http.grafana_external.id,           send_url = true },
+          { id = uptimekuma_monitor_http.forgejo_external.id,           send_url = true },
+        ],
+        var.monitor_openproject ? [{ id = uptimekuma_monitor_http.openproject_external[0].id, send_url = true }] : [],
+      )
     },
 
     # ───────────────── Infrastructure ─────────────────────
@@ -99,21 +101,6 @@ resource "uptimekuma_status_page" "main" {
       ]
     },
 
-    # ───────────────── OpenProject ───────────────────────
-    {
-      name   = "OpenProject"
-      weight = 7
-
-      monitor_list = [
-        { id = uptimekuma_monitor_http.openproject_web_internal.id },
-        { id = uptimekuma_monitor_tcp_port.openproject_postgres.id },
-        { id = uptimekuma_monitor_docker.openproject_db.id },
-        { id = uptimekuma_monitor_docker.openproject_web.id },
-        { id = uptimekuma_monitor_docker.openproject_worker.id },
-        { id = uptimekuma_monitor_docker.openproject_cron.id },
-      ]
-    },
-
     # ───────────────── Misc ───────────────────────────────
     {
       name   = "Misc"
@@ -126,5 +113,23 @@ resource "uptimekuma_status_page" "main" {
         { id = uptimekuma_monitor_docker.backup_monthly.id },
       ]
     },
-  ]
+
+  ], var.monitor_openproject ? [
+
+    # ───────────────── OpenProject ───────────────────────
+    {
+      name   = "OpenProject"
+      weight = 7
+
+      monitor_list = [
+        { id = uptimekuma_monitor_http.openproject_web_internal[0].id },
+        { id = uptimekuma_monitor_tcp_port.openproject_postgres[0].id },
+        { id = uptimekuma_monitor_docker.openproject_db[0].id },
+        { id = uptimekuma_monitor_docker.openproject_web[0].id },
+        { id = uptimekuma_monitor_docker.openproject_worker[0].id },
+        { id = uptimekuma_monitor_docker.openproject_cron[0].id },
+      ]
+    },
+
+  ] : [])
 }
