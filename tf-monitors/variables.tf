@@ -1,3 +1,9 @@
+variable "monitor_openproject" {
+  type        = bool
+  description = "Whether to create Uptime Kuma monitors for OpenProject"
+  default     = true
+}
+
 variable "uptime_kuma_username" {
   type        = string
   description = "Uptime Kuma admin username"
