@@ -101,10 +101,22 @@ resource "uptimekuma_status_page" "main" {
       ]
     },
 
+    # ───────────────── NanoMQ ────────────────────────────
+    {
+      name   = "NanoMQ"
+      weight = 8
+
+      monitor_list = [
+        { id = uptimekuma_monitor_docker.nanomq.id },
+        { id = uptimekuma_monitor_tcp_port.nanomq_mqtt.id },
+        { id = uptimekuma_monitor_tcp_port.nanomq_ws.id },
+      ]
+    },
+
     # ───────────────── Misc ───────────────────────────────
     {
       name   = "Misc"
-      weight = 8
+      weight = 9
 
       monitor_list = [
         { id = uptimekuma_monitor_docker.static_sites.id },
