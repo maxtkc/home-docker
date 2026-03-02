@@ -1,4 +1,4 @@
-FROM traefik:v3.0
+FROM traefik:v3.6.9
 
 # Copy static configuration
 COPY traefik.yml /etc/traefik/traefik.yml
