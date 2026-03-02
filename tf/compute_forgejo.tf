@@ -55,6 +55,7 @@ resource "docker_container" "forgejo" {
     "FORGEJO__mailer__PASSWD=${var.smtp_password}",
     "FORGEJO__mailer__FROM=${var.smtp_email}",
     "FORGEJO__mailer__PROTOCOL=smtp+starttls",
+    "FORGEJO__markdown__ENABLE_HARD_LINE_BREAK_IN_COMMENTS=false",
   ]
 
   ports {
