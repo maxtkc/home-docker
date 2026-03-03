@@ -7,7 +7,7 @@ resource "docker_container" "backup" {
   env = [
     "BACKUP_FILENAME=homeserver-backup-%Y%m%d-%H%M%S.tar.gz",
     "BACKUP_CRON_EXPRESSION=0 2 * * *",
-    "BACKUP_RETENTION_DAYS=2",
+    "BACKUP_RETENTION_DAYS=1",
     "BACKUP_STOP_DURING_BACKUP_LABEL=backup.stop",
     "BACKUP_EXCLUDE_REGEXP=^/backup/tmp/|\\.tmp$|/backup/immich_upload/backups/",
     "LOG_LEVEL=debug",
@@ -56,7 +56,7 @@ resource "docker_container" "backup_weekly" {
   env = [
     "BACKUP_FILENAME=homeserver-backup-%Y%m%d-%H%M%S.tar.gz",
     "BACKUP_CRON_EXPRESSION=0 3 * * 0",
-    "BACKUP_RETENTION_DAYS=7",
+    "BACKUP_RETENTION_DAYS=6",
     "BACKUP_STOP_DURING_BACKUP_LABEL=backup.stop",
     "BACKUP_EXCLUDE_REGEXP=^/backup/tmp/|\\.tmp$|/backup/immich_upload/backups/",
     "LOG_LEVEL=debug",
@@ -105,7 +105,7 @@ resource "docker_container" "backup_monthly" {
   env = [
     "BACKUP_FILENAME=homeserver-backup-%Y%m%d-%H%M%S.tar.gz",
     "BACKUP_CRON_EXPRESSION=0 4 1 * *",
-    "BACKUP_RETENTION_DAYS=32",
+    "BACKUP_RETENTION_DAYS=28",
     "BACKUP_STOP_DURING_BACKUP_LABEL=backup.stop",
     "BACKUP_EXCLUDE_REGEXP=^/backup/tmp/|\\.tmp$",
     "LOG_LEVEL=debug",
