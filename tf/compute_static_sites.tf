@@ -19,7 +19,10 @@ resource "docker_container" "static_sites" {
   }
   labels {
     label = "traefik.http.routers.static-sites.rule"
-    value = join(" || ", [for s in var.static_sites : "Host(`${s}.${local.domain}`)"])
+    value = join(" || ", concat(
+      [for s in var.static_sites : "Host(`${s}.${local.domain}`)"],
+      [for d in var.external_static_sites : "Host(`${d}`)"],
+    ))
   }
   labels {
     label = "traefik.http.routers.static-sites.entrypoints"
