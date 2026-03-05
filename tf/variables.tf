@@ -65,6 +65,12 @@ variable "static_sites" {
   default     = []
 }
 
+variable "external_static_sites" {
+  type        = set(string)
+  description = "Full domain names (e.g. gtfs.zone) to serve from the static-sites container; DNS records must be managed externally"
+  default     = []
+}
+
 # Image versions — pin these to specific digests or tags for reproducible deployments.
 
 variable "cadvisor_version" {
