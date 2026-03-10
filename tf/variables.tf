@@ -195,6 +195,20 @@ variable "openproject_hocuspocus_secret" {
   default     = null
 }
 
+variable "forgejo_runners" {
+  type = map(object({
+    scope   = string
+    timeout = optional(string, "30m0s")
+    memory  = optional(string, "4g")
+    cpus    = optional(string, "4")
+  }))
+  description = "Forgejo Actions runner instances keyed by a short slug. Each runner is scoped to a Forgejo user or org."
+  default = {
+    maxtkc = { scope = "maxtkc" }
+    gtfs   = { scope = "gtfs.zone" }
+  }
+}
+
 variable "forgejo_disable_registration" {
   type        = bool
   description = "Disable public registration on Forgejo"

@@ -164,13 +164,21 @@ resource "docker_volume" "forgejo_data" {
   }
 }
 
-resource "docker_volume" "forgejo_runner_data" {
-  name = "nextcloud_forgejo_runner_data"
+resource "docker_volume" "forgejo_runner_volumes" {
+  for_each = var.forgejo_runners
+  name     = "nextcloud_forgejo_runner_${each.key}_data"
 
   lifecycle {
     prevent_destroy = true
     ignore_changes  = [labels]
   }
+}
+
+# Drop the original single-runner volume from state without destroying the Docker volume on disk.
+# The for_each resource above creates fresh per-runner volumes; the old one is simply orphaned.
+removed {
+  from = docker_volume.forgejo_runner_data
+  lifecycle { destroy = false }
 }
 
 resource "docker_volume" "static_sites" {

@@ -18,6 +18,8 @@ resource "uptimekuma_status_page" "main" {
       name   = "Public Services"
       weight = 1
 
+      # GrampsWeb and TGTG are excluded here — they are frequently down/idle
+      # and would create noise on the public status page.
       monitor_list = concat(
         [
           { id = uptimekuma_monitor_http_keyword.nextcloud_external.id, send_url = true },
@@ -77,11 +79,11 @@ resource "uptimekuma_status_page" "main" {
       name   = "Forgejo"
       weight = 5
 
+      # forgejo_runner is excluded — it is scaled by a variable and may not always be running
       monitor_list = [
         { id = uptimekuma_monitor_http.forgejo_internal.id },
         { id = uptimekuma_monitor_tcp_port.forgejo_ssh.id },
         { id = uptimekuma_monitor_docker.forgejo.id },
-        { id = uptimekuma_monitor_docker.forgejo_runner.id },
       ]
     },
 
@@ -101,22 +103,13 @@ resource "uptimekuma_status_page" "main" {
       ]
     },
 
-    # ───────────────── NanoMQ ────────────────────────────
-    {
-      name   = "NanoMQ"
-      weight = 8
-
-      monitor_list = [
-        { id = uptimekuma_monitor_docker.nanomq.id },
-        { id = uptimekuma_monitor_tcp_port.nanomq_mqtt.id },
-        { id = uptimekuma_monitor_tcp_port.nanomq_ws.id },
-      ]
-    },
+    # GrampsWeb and TGTG groups are omitted from the status page — they are
+    # frequently down/idle and would create noise on the public status page.
 
     # ───────────────── Misc ───────────────────────────────
     {
       name   = "Misc"
-      weight = 9
+      weight = 8
 
       monitor_list = [
         { id = uptimekuma_monitor_docker.static_sites.id },

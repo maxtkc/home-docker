@@ -8,9 +8,8 @@ resource "random_password" "forgejo_secret_key" {
   special = false
 }
 
-
 # 20 bytes = 40 hex characters, satisfying the Forgejo runner registration secret requirement
 resource "random_id" "forgejo_runner_secret" {
+  for_each    = var.forgejo_runners
   byte_length = 20
 }
-

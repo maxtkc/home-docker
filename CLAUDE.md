@@ -11,11 +11,12 @@ Services and their routes:
 - `im.kcfam.us` → Immich (photo management with AI/ML)
 - `gramps.kcfam.us` → GrampsWeb (genealogy)
 - `gf.kcfam.us` → Grafana (metrics dashboards)
-- `uptime.kcfam.us` → Uptime Kuma (status monitoring)
+- `uptime.kcfam.us` → Uptime Kuma (status monitoring, public status page at status.kcfam.us)
 - `git.kcfam.us` → Forgejo (git hosting with CI/CD runner)
+- `op.kcfam.us` → OpenProject (project management, toggleable via `var.run_openproject`)
 - `tgtg.kcfam.us` → Too Good To Go notifier
 
-**Traefik v3** handles reverse proxying and Let's Encrypt SSL. **Sablier** manages auto-scaling for low-traffic services (GrampsWeb): containers spin down after 1 minute of inactivity and wake on request.
+**Traefik v3** handles reverse proxying and Let's Encrypt SSL. **Sablier** manages auto-scaling for GrampsWeb: containers spin down after 1 minute of inactivity and wake on request. **OpenProject** is not Sablier-managed — it is entirely toggled on/off via `var.run_openproject` (Terraform `count`).
 
 ## Terraform Modules
 

@@ -445,38 +445,28 @@ resource "uptimekuma_monitor_docker" "uptime_kuma" {
   active           = true
 }
 
-# ─── NanoMQ ──────────────────────────────────────────────────────────────────
+# ─── TGTG ────────────────────────────────────────────────────────────────────
 
-resource "uptimekuma_monitor_docker" "nanomq" {
-  name             = "nanomq"
+resource "uptimekuma_monitor_http" "tgtg_external" {
+  name                  = "TGTG"
+  url                   = "https://tgtg.kcfam.us"
+  interval              = 60
+  max_retries           = 3
+  max_redirects         = 10
+  accepted_status_codes = ["200"]
+  notification_ids      = local.notification_ids
+  active                = true
+}
+
+resource "uptimekuma_monitor_docker" "tgtg" {
+  name             = "tgtg"
   docker_host_id   = uptimekuma_docker_host.local.id
-  docker_container = "nanomq"
+  docker_container = "tgtg"
   interval         = 60
   max_retries      = 3
   notification_ids = local.notification_ids
   active           = true
 }
-
-resource "uptimekuma_monitor_tcp_port" "nanomq_mqtt" {
-  name             = "NanoMQ MQTT (1883)"
-  hostname         = "nanomq"
-  port             = 1883
-  interval         = 30
-  max_retries      = 3
-  notification_ids = local.notification_ids
-  active           = true
-}
-
-resource "uptimekuma_monitor_tcp_port" "nanomq_ws" {
-  name             = "NanoMQ WebSocket (8083)"
-  hostname         = "nanomq"
-  port             = 8083
-  interval         = 30
-  max_retries      = 3
-  notification_ids = local.notification_ids
-  active           = true
-}
-
 
 # Misc
 resource "uptimekuma_monitor_docker" "static_sites" {
