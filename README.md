@@ -10,15 +10,17 @@ Home server stack managed with OpenTofu, deploying Docker containers to a remote
 | Immich | im.kcfam.us | Photo management with AI/ML |
 | GrampsWeb | gramps.kcfam.us | Genealogy, auto-scales with Sablier |
 | Grafana | gf.kcfam.us | Metrics dashboards |
-| Uptime Kuma | uptime.kcfam.us | Status monitoring |
-| Forgejo | git.kcfam.us | Git hosting (planned) |
+| Uptime Kuma | uptime.kcfam.us | Status monitoring at status.kcfam.us |
+| Forgejo | git.kcfam.us | Git hosting with CI/CD runner |
+| OpenProject | op.kcfam.us | Project management (toggleable) |
+| TGTG | tgtg.kcfam.us | Too Good To Go notifier |
 
 ## Infrastructure
 
 - **Traefik v3** — reverse proxy and Let's Encrypt SSL
 - **Sablier** — auto-scales low-traffic services (spin down after 1 min idle)
 - **Prometheus + Grafana** — metrics and dashboards
-- **Uptime Kuma** — health monitoring and status page at status.kcfam.us
+- **Uptime Kuma** — health monitoring and public status page at status.kcfam.us
 
 ## External Dependencies
 
