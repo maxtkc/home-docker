@@ -200,6 +200,24 @@ resource "docker_volume" "tgtg_tokens" {
 }
 
 
+resource "docker_volume" "homeassistant_config" {
+  name = "nextcloud_homeassistant_config"
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [labels]
+  }
+}
+
+resource "docker_volume" "music_assistant_data" {
+  name = "nextcloud_music_assistant_data"
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [labels]
+  }
+}
+
 resource "docker_volume" "openproject_pgdata" {
   name = "nextcloud_openproject_pgdata"
 
