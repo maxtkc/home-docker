@@ -26,6 +26,8 @@ resource "uptimekuma_status_page" "main" {
           { id = uptimekuma_monitor_http.immich_external.id,            send_url = true },
           { id = uptimekuma_monitor_http.grafana_external.id,           send_url = true },
           { id = uptimekuma_monitor_http.forgejo_external.id,           send_url = true },
+          { id = uptimekuma_monitor_http.homeassistant_external.id,    send_url = true },
+          { id = uptimekuma_monitor_http.musicassistant_external.id,  send_url = true },
         ],
         var.monitor_openproject ? [{ id = uptimekuma_monitor_http.openproject_external[0].id, send_url = true }] : [],
       )

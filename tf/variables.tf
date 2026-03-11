@@ -85,6 +85,12 @@ variable "docker_volume_backup_version" {
   default     = "latest"
 }
 
+variable "homeassistant_version" {
+  type        = string
+  description = "Home Assistant image tag"
+  default     = "stable"
+}
+
 variable "grampsweb_redis_version" {
   type        = string
   description = "Redis image tag used by GrampsWeb"
@@ -107,6 +113,12 @@ variable "immich_version" {
   type        = string
   description = "Immich server and machine-learning image tag"
   default     = "v2.3.1"
+}
+
+variable "music_assistant_version" {
+  type        = string
+  description = "Music Assistant image tag"
+  default     = "latest"
 }
 
 variable "node_exporter_version" {
