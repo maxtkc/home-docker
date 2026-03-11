@@ -468,6 +468,52 @@ resource "uptimekuma_monitor_docker" "tgtg" {
   active           = true
 }
 
+# ─── Home Assistant ───────────────────────────────────────────────────────────
+
+resource "uptimekuma_monitor_http" "homeassistant_external" {
+  name                  = "Home Assistant"
+  url                   = "https://ha.kcfam.us"
+  interval              = 60
+  max_retries           = 3
+  max_redirects         = 10
+  accepted_status_codes = ["200"]
+  notification_ids      = local.notification_ids
+  active                = true
+}
+
+resource "uptimekuma_monitor_docker" "homeassistant" {
+  name             = "homeassistant"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "homeassistant"
+  interval         = 60
+  max_retries      = 3
+  notification_ids = local.notification_ids
+  active           = true
+}
+
+# ─── Music Assistant ──────────────────────────────────────────────────────────
+
+resource "uptimekuma_monitor_http" "musicassistant_external" {
+  name                  = "Music Assistant"
+  url                   = "https://ma.kcfam.us"
+  interval              = 60
+  max_retries           = 3
+  max_redirects         = 10
+  accepted_status_codes = ["200"]
+  notification_ids      = local.notification_ids
+  active                = true
+}
+
+resource "uptimekuma_monitor_docker" "music_assistant" {
+  name             = "music-assistant"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "music-assistant"
+  interval         = 60
+  max_retries      = 3
+  notification_ids = local.notification_ids
+  active           = true
+}
+
 # Misc
 resource "uptimekuma_monitor_docker" "static_sites" {
   name             = "static-sites"
