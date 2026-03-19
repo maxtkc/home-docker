@@ -71,6 +71,12 @@ variable "external_static_sites" {
   default     = []
 }
 
+variable "external_domain_records" {
+  type        = map(string)
+  description = "CNAME records for subdomains under external Porkbun-managed domains; key = subdomain, value = root domain (e.g. { \"foo\" = \"otherdomain.com\" })"
+  default     = {}
+}
+
 # Image versions — pin these to specific digests or tags for reproducible deployments.
 
 variable "cadvisor_version" {
