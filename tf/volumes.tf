@@ -235,3 +235,21 @@ resource "docker_volume" "openproject_assets" {
     ignore_changes  = [labels]
   }
 }
+
+resource "docker_volume" "penpot_postgres" {
+  name = "nextcloud_penpot_postgres"
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [labels]
+  }
+}
+
+resource "docker_volume" "penpot_assets" {
+  name = "nextcloud_penpot_assets"
+
+  lifecycle {
+    prevent_destroy = true
+    ignore_changes  = [labels]
+  }
+}

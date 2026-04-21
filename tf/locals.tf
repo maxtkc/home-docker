@@ -5,7 +5,7 @@ locals {
   ttl    = 600
 
   dns_subdomains = toset([
-    "ssh", "nc", "im", "gramps", "gf", "uptime", "op", "git", "status", "tgtg", "ha", "ma",
+    "ssh", "nc", "im", "gramps", "gf", "uptime", "op", "git", "status", "tgtg", "ha", "ma", "penpot",
   ])
 
   # Non-sensitive database config (mirrors .env)
@@ -47,6 +47,12 @@ locals {
     "OPENPROJECT_SMTP__PASSWORD=${var.smtp_password}",
     "OPENPROJECT_SMTP__ENABLE__STARTTLS__AUTO=true",
   ], local.openproject_hocuspocus_app_env)
+
+  penpot_flags = join(" ", compact([
+    "enable-smtp",
+    "enable-prepl-server",
+    var.penpot_registration_enabled ? null : "disable-registration",
+  ]))
 
   # Shared environment variables for grampsweb and grampsweb_celery
   grampsweb_env = [
