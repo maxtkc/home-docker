@@ -387,3 +387,48 @@ variable "tgtg_telegram_cron" {
   nullable = true
   default  = null
 }
+
+variable "penpot_version" {
+  type        = string
+  description = "Penpot image tag"
+  default     = "latest"
+}
+
+variable "penpot_postgres_version" {
+  type        = string
+  description = "PostgreSQL image tag used by Penpot"
+  default     = "15"
+}
+
+variable "penpot_valkey_version" {
+  type        = string
+  description = "Valkey image tag used by Penpot"
+  default     = "8.1"
+}
+
+variable "penpot_db_password" {
+  type        = string
+  description = "PostgreSQL password for the Penpot database user"
+  sensitive   = true
+}
+
+variable "penpot_registration_enabled" {
+  type        = bool
+  description = "Allow open registration on Penpot; false = invite-only"
+  default     = false
+}
+
+variable "penpot_telemetry_enabled" {
+  type        = bool
+  description = "Send anonymous usage telemetry to the Penpot team"
+  default     = false
+}
+
+variable "penpot_admin_users" {
+  type = list(object({
+    email    = string
+    fullname = string
+  }))
+  description = "Admin users to create in Penpot on first deploy (passwords are auto-generated)"
+  default     = []
+}

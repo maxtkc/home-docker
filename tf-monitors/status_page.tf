@@ -26,8 +26,9 @@ resource "uptimekuma_status_page" "main" {
           { id = uptimekuma_monitor_http.immich_external.id,            send_url = true },
           { id = uptimekuma_monitor_http.grafana_external.id,           send_url = true },
           { id = uptimekuma_monitor_http.forgejo_external.id,           send_url = true },
-          { id = uptimekuma_monitor_http.homeassistant_external.id,    send_url = true },
-          { id = uptimekuma_monitor_http.musicassistant_external.id,  send_url = true },
+          { id = uptimekuma_monitor_http.homeassistant_external.id,   send_url = true },
+          { id = uptimekuma_monitor_http.musicassistant_external.id, send_url = true },
+          { id = uptimekuma_monitor_http.penpot_external.id,         send_url = true },
         ],
         var.monitor_openproject ? [{ id = uptimekuma_monitor_http.openproject_external[0].id, send_url = true }] : [],
       )
@@ -118,6 +119,23 @@ resource "uptimekuma_status_page" "main" {
         { id = uptimekuma_monitor_docker.backup_daily.id },
         { id = uptimekuma_monitor_docker.backup_weekly.id },
         { id = uptimekuma_monitor_docker.backup_monthly.id },
+      ]
+    },
+
+    # ───────────────── Penpot ────────────────────────────
+    {
+      name   = "Penpot"
+      weight = 9
+
+      monitor_list = [
+        { id = uptimekuma_monitor_http.penpot_external.id },
+        { id = uptimekuma_monitor_http.penpot_backend_internal.id },
+        { id = uptimekuma_monitor_tcp_port.penpot_postgres.id },
+        { id = uptimekuma_monitor_docker.penpot_frontend.id },
+        { id = uptimekuma_monitor_docker.penpot_backend.id },
+        { id = uptimekuma_monitor_docker.penpot_exporter.id },
+        { id = uptimekuma_monitor_docker.penpot_postgres.id },
+        { id = uptimekuma_monitor_docker.penpot_valkey.id },
       ]
     },
 
