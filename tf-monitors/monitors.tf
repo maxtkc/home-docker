@@ -622,3 +622,86 @@ resource "uptimekuma_monitor_docker" "openproject_cron" {
   notification_ids = local.notification_ids
   active           = true
 }
+
+# ─── Penpot ───────────────────────────────────────────────────────────────────
+
+resource "uptimekuma_monitor_http" "penpot_external" {
+  name                  = "Penpot"
+  url                   = "https://penpot.kcfam.us"
+  interval              = 60
+  max_retries           = 3
+  max_redirects         = 10
+  accepted_status_codes = ["200"]
+  notification_ids      = local.notification_ids
+  active                = true
+}
+
+resource "uptimekuma_monitor_http" "penpot_backend_internal" {
+  name                  = "Penpot Backend (internal)"
+  url                   = "http://penpot-backend:6060/api/rpc/command/get-profile"
+  interval              = 60
+  max_retries           = 3
+  accepted_status_codes = ["200", "401"]
+  notification_ids      = local.notification_ids
+  active                = true
+}
+
+resource "uptimekuma_monitor_tcp_port" "penpot_postgres" {
+  name             = "PostgreSQL (Penpot)"
+  hostname         = "penpot-postgres"
+  port             = 5432
+  interval         = 30
+  max_retries      = 3
+  notification_ids = local.notification_ids
+  active           = true
+}
+
+resource "uptimekuma_monitor_docker" "penpot_frontend" {
+  name             = "penpot-frontend"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "penpot-frontend"
+  interval         = 60
+  max_retries      = 3
+  notification_ids = local.notification_ids
+  active           = true
+}
+
+resource "uptimekuma_monitor_docker" "penpot_backend" {
+  name             = "penpot-backend"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "penpot-backend"
+  interval         = 60
+  max_retries      = 3
+  notification_ids = local.notification_ids
+  active           = true
+}
+
+resource "uptimekuma_monitor_docker" "penpot_exporter" {
+  name             = "penpot-exporter"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "penpot-exporter"
+  interval         = 60
+  max_retries      = 3
+  notification_ids = local.notification_ids
+  active           = true
+}
+
+resource "uptimekuma_monitor_docker" "penpot_postgres" {
+  name             = "penpot-postgres"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "penpot-postgres"
+  interval         = 60
+  max_retries      = 3
+  notification_ids = local.notification_ids
+  active           = true
+}
+
+resource "uptimekuma_monitor_docker" "penpot_valkey" {
+  name             = "penpot-valkey"
+  docker_host_id   = uptimekuma_docker_host.local.id
+  docker_container = "penpot-valkey"
+  interval         = 60
+  max_retries      = 3
+  notification_ids = local.notification_ids
+  active           = true
+}
