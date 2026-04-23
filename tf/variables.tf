@@ -77,6 +77,18 @@ variable "external_domain_records" {
   default     = {}
 }
 
+variable "cors_proxy_allowed_origins" {
+  type        = list(string)
+  description = "Origins allowed to call the CORS proxy (e.g. [\"https://app.kcfam.us\"])."
+  default     = []
+}
+
+variable "cors_proxy_domain_records" {
+  type        = map(string)
+  description = "CNAME records for the CORS proxy on external Porkbun-managed domains; key = subdomain, value = root domain (e.g. { \"cors\" = \"otherdomain.com\" })"
+  default     = {}
+}
+
 # Image versions — pin these to specific digests or tags for reproducible deployments.
 
 variable "cadvisor_version" {
