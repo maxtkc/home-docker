@@ -93,3 +93,16 @@ resource "docker_image" "static_sites" {
     dir_sha1 = sha1(join("", [for f in fileset("${path.cwd}/../static-sites", "**") : filesha1("${path.cwd}/../static-sites/${f}")]))
   }
 }
+
+resource "docker_image" "cors_proxy" {
+  name         = "kcfam/cors-proxy:local"
+  keep_locally = true
+
+  build {
+    context = "${path.cwd}/../cors-proxy"
+  }
+
+  triggers = {
+    dir_sha1 = sha1(join("", [for f in fileset("${path.cwd}/../cors-proxy", "**") : filesha1("${path.cwd}/../cors-proxy/${f}")]))
+  }
+}
