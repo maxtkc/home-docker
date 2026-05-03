@@ -20,7 +20,7 @@ function isPrivateHost(host) {
   }
 }
 
-corsAnywhere.createServer({
+const server = corsAnywhere.createServer({
   originWhitelist: allowedOrigins,
   removeHeaders: ['cookie', 'authorization'],
   requireHeader: ['origin'],
@@ -37,6 +37,14 @@ corsAnywhere.createServer({
     }
     return false;
   },
-}).listen(PORT, '0.0.0.0', () => {
+});
+
+// Browsers and Traefik collapse // in URL paths, turning /https://host into /https:/host.
+// Restore the double-slash before cors-anywhere parses the target.
+server.prependListener('request', (req) => {
+  req.url = req.url.replace(/^\/(https?:)\/(?!\/)/, '/$1//');
+});
+
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`cors-anywhere listening on port ${PORT}`);
 });
