@@ -16,8 +16,18 @@
 # path, not a new port, so no IngressRouteTCP and no extra entrypoint are needed.
 #
 # 172.18.0.1 is the **proxy-tier** bridge gateway (the network this Traefik is
-# attached to), not the 172.17.0.1 default-bridge gateway. Re-derive with:
-#   docker network inspect proxy-tier --format '{{range .IPAM.Config}}{{.Gateway}}{{end}}'
+# attached to), not the 172.17.0.1 default-bridge gateway. Re-derive it with
+# `docker network inspect proxy-tier` and read the IPAM gateway field.
+#
+# NB: do NOT put a Go-template expression here, not even inside a comment.
+# Traefik's file provider runs every dynamic file through text/template before
+# parsing the YAML, so a `--format` string in a comment gets executed as a real
+# template and takes the WHOLE FILE down:
+#   Error while building configuration (for the first time)
+#   .../gtfs-zone-passthrough.yml: template: :20:61: executing "" at
+#   <.IPAM.Config>: can't evaluate field IPAM in type bool
+# The failure is quiet from the outside — the router simply never appears in
+# `/api/tcp/routers` and every *.gtfs.zone name keeps being terminated locally.
 tcp:
   services:
     gtfs-k3s:
