@@ -1,0 +1,35 @@
+# *.gtfs.zone → k3s (TLS passthrough)
+#
+# The gtfs.zone stack moved off this Docker host onto the k3s cluster, whose
+# Traefik listens on host port 8443 (ServiceLB). This host keeps 80/443, so every
+# *.gtfs.zone connection is forwarded to k3s **unterminated** — cert-manager in
+# the cluster owns gtfs.zone certificates end to end, and nothing here needs a
+# certResolver entry for them.
+#
+# Because this is a TCP router matching on SNI, it takes precedence over HTTP
+# routers only for the names it matches. The bare apex `gtfs.zone` is deliberately
+# NOT matched (`^.+\.` requires at least one label), so the landing-zone static
+# site keeps being served locally with its own Let's Encrypt cert.
+#
+# One rule covers everything in the cluster, including Traccar's phone-report
+# endpoint at traccar.gtfs.zone/osmand — that is ordinary HTTPS distinguished by
+# path, not a new port, so no IngressRouteTCP and no extra entrypoint are needed.
+#
+# 172.18.0.1 is the **proxy-tier** bridge gateway (the network this Traefik is
+# attached to), not the 172.17.0.1 default-bridge gateway. Re-derive with:
+#   docker network inspect proxy-tier --format '{{range .IPAM.Config}}{{.Gateway}}{{end}}'
+tcp:
+  services:
+    gtfs-k3s:
+      loadBalancer:
+        servers:
+          - address: "172.18.0.1:8443"
+
+  routers:
+    gtfs-zone-passthrough:
+      rule: "HostSNIRegexp(`^.+\\.gtfs\\.zone$`)"
+      entryPoints:
+        - "websecure"
+      tls:
+        passthrough: true
+      service: "gtfs-k3s"
