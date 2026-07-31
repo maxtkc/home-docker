@@ -28,7 +28,7 @@ resource "docker_container" "forgejo_db_init" {
 
 resource "docker_container" "forgejo" {
   name    = "forgejo"
-  image   = "codeberg.org/forgejo/forgejo:14"
+  image   = "codeberg.org/forgejo/forgejo:16"
   restart = "always"
 
   env = [
@@ -56,6 +56,7 @@ resource "docker_container" "forgejo" {
     "FORGEJO__mailer__FROM=${var.smtp_email}",
     "FORGEJO__mailer__PROTOCOL=smtp+starttls",
     "FORGEJO__markdown__ENABLE_HARD_LINE_BREAK_IN_COMMENTS=false",
+    "FORGEJO__security__REVERSE_PROXY_TRUSTED_PROXIES=172.16.0.0/12,192.168.0.0/16,10.0.0.0/8",
   ]
 
   ports {

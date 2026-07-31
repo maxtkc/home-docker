@@ -112,7 +112,7 @@ variable "homeassistant_version" {
 variable "grampsweb_redis_version" {
   type        = string
   description = "Redis image tag used by GrampsWeb"
-  default     = "7.2.4-alpine"
+  default     = "8-alpine"
 }
 
 variable "grampsweb_version" {
@@ -123,14 +123,14 @@ variable "grampsweb_version" {
 
 variable "immich_postgres_version" {
   type        = string
-  description = "pgvecto-rs image tag used by Immich"
-  default     = "pg14-v0.2.0"
+  description = "VectorChord image tag used by Immich"
+  default     = "14-vectorchord1.1.1-pgvector0.8.5"
 }
 
 variable "immich_version" {
   type        = string
   description = "Immich server and machine-learning image tag"
-  default     = "v2.3.1"
+  default     = "v3.0.3"
 }
 
 variable "music_assistant_version" {
@@ -160,7 +160,7 @@ variable "redis_version" {
 variable "sablier_version" {
   type        = string
   description = "Sablier image tag"
-  default     = "1.10.1"
+  default     = "1.15.0"
 }
 
 variable "uptime_kuma_version" {
@@ -202,7 +202,7 @@ variable "openproject_hocuspocus_enabled" {
 variable "openproject_hocuspocus_version" {
   type        = string
   description = "OpenProject Hocuspocus image tag"
-  default     = "17.1.1"
+  default     = "17.6.0"
 }
 
 variable "openproject_db_password" {
@@ -415,7 +415,7 @@ variable "penpot_postgres_version" {
 variable "penpot_valkey_version" {
   type        = string
   description = "Valkey image tag used by Penpot"
-  default     = "8.1"
+  default     = "9.1.1"
 }
 
 variable "penpot_db_password" {
