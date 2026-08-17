@@ -36,8 +36,38 @@ tcp:
           - address: "172.18.0.1:8443"
 
   routers:
+    # Explicit priority, because the default is the rule's length (33 here) and
+    # the HTTPS routers Traefik derives from Docker labels join the same TCP
+    # muxer with a priority derived from THEIR rule length. The static-sites
+    # router's rule is longer, so without this the passthrough silently lost for
+    # every name that router also listed, and those names kept being terminated
+    # locally against a local certificate. gtfs.zone belongs to k3s: make that
+    # unconditional rather than a function of how long some other rule is.
+    #
+    # The consequence is that *.gtfs.zone has no local fallback if k3s is down.
+    # That was already true for rt.gtfs.zone and friends.
     gtfs-zone-passthrough:
       rule: "HostSNIRegexp(`^.+\\.gtfs\\.zone$`)"
+      priority: 1000
+      entryPoints:
+        - "websecure"
+      tls:
+        passthrough: true
+      service: "gtfs-k3s"
+
+    # The apex needs its own router: the regexp above requires at least one label
+    # in front of gtfs.zone. It was excluded while the landing page lived in the
+    # home-docker static-sites container; that site now runs in k3s
+    # (deploy-gtfs-rt sites/apex.yaml) with its own cert-manager certificate,
+    # so the apex passes through too.
+    #
+    # With this in place every gtfs.zone name terminates in exactly one cluster,
+    # which is also what kills the HTTP/2 coalescing bug: browsers were reusing a
+    # connection opened to a k3s host (wildcard *.gtfs.zone cert) for names this
+    # Traefik served, and k3s answered those with 404.
+    gtfs-zone-apex-passthrough:
+      rule: "HostSNI(`gtfs.zone`)"
+      priority: 1000
       entryPoints:
         - "websecure"
       tls:
