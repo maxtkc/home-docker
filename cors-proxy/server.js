@@ -43,6 +43,28 @@ const server = corsAnywhere.createServer({
 // Restore the double-slash before cors-anywhere parses the target.
 server.prependListener('request', (req) => {
   req.url = req.url.replace(/^\/(https?:)\/(?!\/)/, '/$1//');
+
+  // Some real browser requests (direct downloads, certain extensions) omit
+  // Origin even though the page making the request is one we trust. Fall
+  // back to Referer's origin so those aren't rejected by requireHeader.
+  if (!req.headers.origin && req.headers.referer) {
+    try {
+      const refererOrigin = new URL(req.headers.referer).origin;
+      if (allowedOrigins.includes(refererOrigin)) {
+        req.headers.origin = refererOrigin;
+      }
+    } catch (_) {
+      // ignore malformed referer
+    }
+  }
+
+  // Log enough context to diagnose the next missing-header rejection
+  // without needing to reproduce it live.
+  if (!req.headers.origin && !req.headers['x-requested-with']) {
+    console.log(
+      `[missing-origin] url=${req.url} referer=${req.headers.referer || '-'} ua=${req.headers['user-agent'] || '-'}`,
+    );
+  }
 });
 
 server.listen(PORT, '0.0.0.0', () => {
