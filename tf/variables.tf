@@ -79,7 +79,7 @@ variable "external_domain_records" {
 
 variable "cors_proxy_allowed_origins" {
   type        = list(string)
-  description = "Origins allowed to call the CORS proxy (e.g. [\"https://app.kcfam.us\"])."
+  description = "Public origins allowed to call the CORS proxy (e.g. [\"https://app.kcfam.us\"]). Localhost dev origins are appended separately from local.cors_proxy_dev_origins; do not re-add them here."
   default     = []
 }
 

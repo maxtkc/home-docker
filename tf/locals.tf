@@ -8,6 +8,17 @@ locals {
     "ssh", "nc", "im", "gramps", "gf", "uptime", "op", "git", "status", "tgtg", "ha", "ma", "penpot", "cors",
   ])
 
+  # Local dev origins for the CORS proxy. Vite falls through from its configured
+  # port when one is taken, and yard-master pins 8091, so whitelist the whole
+  # range rather than chasing individual ports. Not secret, so it lives here
+  # rather than in secrets.auto.tfvars.
+  cors_proxy_dev_origins = flatten([
+    for port in range(8080, 8092) : [
+      "http://localhost:${port}",
+      "http://127.0.0.1:${port}",
+    ]
+  ])
+
   # Non-sensitive database config (mirrors .env)
   nextcloud_db_name = "nextcloud"
   nextcloud_db_user = "nextcloud"

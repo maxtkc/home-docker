@@ -5,7 +5,7 @@ resource "docker_container" "cors_proxy" {
 
   env = [
     "PORT=8080",
-    "CORS_ALLOWED_ORIGINS=${join(",", var.cors_proxy_allowed_origins)}",
+    "CORS_ALLOWED_ORIGINS=${join(",", concat(var.cors_proxy_allowed_origins, local.cors_proxy_dev_origins))}",
   ]
 
   networks_advanced {
