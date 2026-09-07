@@ -1,0 +1,30 @@
+# Rendered by templatefile() and pushed to the container with an `upload` block
+# in tf/compute_monitoring.tf, NOT baked into an image like prometheus.yml is.
+#
+# A docker_image build context is static files on disk, so no Terraform variable
+# can reach it; the chat id has to arrive at container-create time. The bot token
+# is deliberately not here either, it is a second upload read via bot_token_file.
+
+route:
+  receiver: telegram
+  # Group by the alert and the filesystem it is about, so /srv and /mnt/backups
+  # page separately rather than collapsing into one message.
+  group_by: ['alertname', 'mountpoint']
+  group_wait: 30s
+  group_interval: 5m
+  # Disk pressure is not self-healing. Re-page every 4h until it is dealt with.
+  repeat_interval: 4h
+
+receivers:
+  - name: telegram
+    telegram_configs:
+      - bot_token_file: /etc/alertmanager/telegram_token
+        chat_id: ${chat_id}
+        parse_mode: HTML
+        send_resolved: true
+        message: |
+          <b>{{ .Status | toUpper }}: {{ .CommonLabels.alertname }}</b>
+          {{ range .Alerts }}
+          {{ .Annotations.summary }}
+          {{ .Annotations.description }}
+          {{ end }}

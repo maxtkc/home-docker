@@ -444,3 +444,33 @@ variable "penpot_admin_users" {
   description = "Admin users to create in Penpot on first deploy (passwords are auto-generated)"
   default     = []
 }
+
+variable "restic_version" {
+  type        = string
+  description = "mazzolino/restic image tag"
+  default     = "1.8.2"
+}
+
+variable "restic_password" {
+  type        = string
+  description = "Encryption passphrase for the restic repository at /mnt/backups/restic. Losing this loses every snapshot; there is no recovery path."
+  sensitive   = true
+}
+
+variable "alertmanager_version" {
+  type        = string
+  description = "prom/alertmanager image tag"
+  default     = "v0.34.0"
+}
+
+variable "alertmanager_telegram_token" {
+  type        = string
+  description = "Telegram bot token for Alertmanager (@kcfam_bot, same bot Uptime Kuma and the gtfs.zone Gatus use)"
+  sensitive   = true
+}
+
+variable "alertmanager_telegram_chat_id" {
+  type        = string
+  description = "Telegram chat id Alertmanager posts to"
+  sensitive   = true
+}

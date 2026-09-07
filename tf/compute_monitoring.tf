@@ -8,7 +8,16 @@ resource "docker_container" "node_exporter" {
     "--path.rootfs=/rootfs",
     "--path.sysfs=/host/sys",
     "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($|/)",
+    "--collector.textfile.directory=/textfile",
   ]
+
+  # restic-data writes its last-success metric here; this is what makes the
+  # BackupStale rule possible.
+  volumes {
+    volume_name    = docker_volume.textfile_collector.name
+    container_path = "/textfile"
+    read_only      = true
+  }
 
   volumes {
     host_path      = "/proc"
@@ -105,6 +114,41 @@ resource "docker_container" "prometheus" {
   }
 
   depends_on = [docker_container.node_exporter, docker_container.cadvisor]
+}
+
+# Internal only: on docker_network.default and NOT proxy_tier, so it is not
+# routable from the internet, same as Prometheus.
+#
+# Unlike prometheus, this is the upstream image rather than a locally built one.
+# Its config carries the Telegram chat id, which comes from a Terraform variable,
+# and a docker_image build context cannot see Terraform variables. Both the
+# config and the token therefore arrive as `upload` blocks at container-create
+# time, which also keeps the token out of an image layer.
+resource "docker_container" "alertmanager" {
+  name    = "alertmanager"
+  image   = "prom/alertmanager:${var.alertmanager_version}"
+  restart = "always"
+
+  command = [
+    "--config.file=/etc/alertmanager/alertmanager.yml",
+    "--storage.path=/alertmanager",
+  ]
+
+  upload {
+    content = templatefile("${path.cwd}/../alertmanager/alertmanager.yml.tftpl", {
+      chat_id = var.alertmanager_telegram_chat_id
+    })
+    file = "/etc/alertmanager/alertmanager.yml"
+  }
+
+  upload {
+    content = var.alertmanager_telegram_token
+    file    = "/etc/alertmanager/telegram_token"
+  }
+
+  networks_advanced {
+    name = docker_network.default.name
+  }
 }
 
 resource "docker_container" "grafana" {

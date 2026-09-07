@@ -1,0 +1,79 @@
+groups:
+  - name: disk
+    rules:
+      # df-based, so it counts deleted-but-still-open files. That is the whole
+      # point: the 2026-09-07 outage was 556G of unlinked tarballs that du and
+      # every docker prune could not see, and only avail_bytes showed it.
+      #
+      # /srv is shared by Docker and Longhorn, and Longhorn stops scheduling at
+      # 25% used-up, so /srv gets the earlier threshold of the two.
+      - alert: DiskSpaceLow
+        expr: |
+          node_filesystem_avail_bytes{mountpoint="/srv"}
+            / node_filesystem_size_bytes{mountpoint="/srv"} < 0.15
+          or
+          node_filesystem_avail_bytes{mountpoint="/mnt/backups"}
+            / node_filesystem_size_bytes{mountpoint="/mnt/backups"} < 0.10
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.mountpoint }} is low on space"
+          description: >-
+            {{ $labels.mountpoint }} is at
+            {{ $value | humanizePercentage }} free on {{ $labels.instance }}.
+            If this is /srv, Longhorn faults its replicas and the k3s stack
+            follows.
+
+      # Catches a fast fill before it reaches the static threshold, which a
+      # 188G backup staging file does in well under an hour.
+      - alert: DiskFillingFast
+        expr: |
+          predict_linear(
+            node_filesystem_avail_bytes{mountpoint="/srv"}[6h], 4 * 3600
+          ) < 0
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "/srv is filling and will be full within 4h"
+          description: >-
+            Extrapolating the last 6h, /srv on {{ $labels.instance }} runs out
+            of space within 4 hours. Currently
+            {{ with printf "node_filesystem_avail_bytes{mountpoint='/srv',instance='%s'}" $labels.instance | query }}
+            {{ . | first | value | humanize1024 }}B{{ end }} free.
+
+  - name: backups
+    rules:
+      # Fed by restic-data's POST_COMMANDS_SUCCESS hook through node-exporter's
+      # textfile collector. The metric only advances on a fully successful run,
+      # so a container that is up but failing every night still alerts.
+      - alert: BackupStale
+        expr: |
+          time() - homeserver_backup_last_success_timestamp_seconds > 36 * 3600
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No successful restic backup in over 36h"
+          description: >-
+            Last successful backup was
+            {{ $value | humanizeDuration }} ago. The daily run is 02:00, so this
+            means at least one run failed or did not start.
+
+      # The metric is absent, not stale: either the textfile collector is not
+      # reading the shared volume, or restic-data has never completed a run.
+      # Without this the alert above can never fire, because there is nothing
+      # for time() to subtract from.
+      - alert: BackupMetricMissing
+        expr: absent(homeserver_backup_last_success_timestamp_seconds)
+        for: 6h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Backup success metric is missing entirely"
+          description: >-
+            node-exporter is not exposing
+            homeserver_backup_last_success_timestamp_seconds. Check that
+            restic-data and node-exporter both mount the textfile_collector
+            volume and that a backup has completed at least once.
