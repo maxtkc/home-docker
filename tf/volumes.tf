@@ -253,3 +253,14 @@ resource "docker_volume" "penpot_assets" {
     ignore_changes  = [labels]
   }
 }
+
+# Scratch metrics directory shared by restic-data (writes) and node-exporter
+# (reads). Deliberately no prevent_destroy: it holds one .prom file that the
+# next successful backup rewrites, not data.
+resource "docker_volume" "textfile_collector" {
+  name = "nextcloud_textfile_collector"
+
+  lifecycle {
+    ignore_changes = [labels]
+  }
+}
