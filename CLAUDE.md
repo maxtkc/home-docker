@@ -91,6 +91,25 @@ Three automated backup tiers (daily 2 AM, weekly Sunday 3 AM, monthly 1st 4 AM) 
 - Always stop services using a volume before restoring it
 - Check timestamps after restore to confirm data was replaced
 
+### Never run `docker container prune` on this host
+
+It deletes every *stopped* container, and on this host "stopped" does not mean
+"unwanted". Three groups are routinely stopped and still load-bearing:
+
+- containers offen has stopped mid-run via `backup.stop` (`immich_postgres`,
+  `immich_server`, `nextcloud`, ...), which stay stopped if the backup dies
+- everything sablier has scaled to zero (`grampsweb`, `grampsweb_celery`,
+  `grampsweb_redis`)
+- `backup-daily` and `backup-weekly`, which sit `Exited (0)` between runs
+
+On 2026-09-07 a prune during the disk-full recovery removed `immich_postgres`
+while offen had it stopped. Its volume survived (`prevent_destroy`), but
+`im.kcfam.us` served 500s (`getaddrinfo ENOTFOUND immich_postgres`) for five
+hours. `tofu apply` recreates anything pruned; it is the recovery path, not a
+manual `docker run`. `docker volume prune` is equally unsafe here, for the same
+reason: 47 named compose volumes look dangling only because their containers are
+stopped.
+
 ### Manual backup
 ```bash
 docker run --rm \
