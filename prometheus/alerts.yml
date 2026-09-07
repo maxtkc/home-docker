@@ -77,3 +77,61 @@ groups:
             homeserver_backup_last_success_timestamp_seconds. Check that
             restic-data and node-exporter both mount the textfile_collector
             volume and that a backup has completed at least once.
+
+  - name: containers
+    rules:
+      # cadvisor labels a series with name/image only while its Docker factory
+      # is registered. That registration failed once against a busy daemon
+      # (context deadline on /var/run/docker.sock) and never retried, so every
+      # container series went nameless and stayed that way, unnoticed. Nothing
+      # below can work without it, so check it first.
+      - alert: CadvisorDockerFactoryDown
+        expr: absent(container_last_seen{name!=""})
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "cadvisor is reporting no named containers"
+          description: >-
+            cadvisor is up but no container_* series carry a name label, so its
+            Docker factory is not registered. Restart the cadvisor container and
+            look for "Registration of the docker container factory" in its log.
+
+      # An always-on container that vanished. docker container prune during the
+      # 2026-09-07 recovery deleted immich_postgres, which offen had stopped via
+      # its backup.stop label, and im.kcfam.us served 500s for five hours with
+      # nothing reporting it.
+      #
+      # The list is the maintained part: containers expected up at all times.
+      # Deliberately excluded are backup-daily/backup-weekly (exit 0 between
+      # runs) and anything sablier scales to zero.
+      - alert: ContainerMissing
+        expr: |
+          (
+            max by (name) (
+              label_replace(vector(1), "name", "traefik", "", "")
+              or label_replace(vector(1), "name", "db", "", "")
+              or label_replace(vector(1), "name", "redis", "", "")
+              or label_replace(vector(1), "name", "nextcloud", "", "")
+              or label_replace(vector(1), "name", "nextcloud-web", "", "")
+              or label_replace(vector(1), "name", "immich_postgres", "", "")
+              or label_replace(vector(1), "name", "immich_server", "", "")
+              or label_replace(vector(1), "name", "immich_microservices", "", "")
+              or label_replace(vector(1), "name", "forgejo", "", "")
+              or label_replace(vector(1), "name", "prometheus", "", "")
+              or label_replace(vector(1), "name", "alertmanager", "", "")
+              or label_replace(vector(1), "name", "node-exporter", "", "")
+              or label_replace(vector(1), "name", "restic-data", "", "")
+            )
+            unless on (name) container_last_seen
+          )
+          and on () (count(container_last_seen{name!=""}) > 0)
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container {{ $labels.name }} is not running"
+          description: >-
+            {{ $labels.name }} is expected to be up at all times and cadvisor
+            has not seen it for 10 minutes. It was stopped, removed, or is
+            crash-looping.
