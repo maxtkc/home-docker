@@ -83,7 +83,29 @@ Sensitive values live in `secrets.auto.tfvars` (gitignored) in each module direc
 
 ## Backup and Restore
 
-Three automated backup tiers (daily 2 AM, weekly Sunday 3 AM, monthly 1st 4 AM) write `.tar.gz` archives to `/mnt/backups` on the host.
+File data and databases are backed up separately.
+
+- **restic** (`restic-data`) backs up the `nextcloud` and `immich_upload` volumes
+  to a deduplicated, encrypted repository at `/mnt/backups/restic`, daily at
+  02:00, keeping 7 daily / 4 weekly / 6 monthly. `restic-check` verifies the
+  repository Sundays at 05:00. The passphrase is `var.restic_password` and has no
+  recovery path.
+- **offen tarballs** still cover the databases and the small volumes, because
+  resticker has no equivalent of `BACKUP_STOP_DURING_BACKUP_LABEL` and a Postgres
+  data directory copied while the server is writing to it is not a backup:
+  `backup-daily` (databases only, 01:30, `homeserver-db-*`), `backup-weekly`
+  (Sunday 03:00) and `backup-monthly` (1st at 04:00), all under `/mnt/backups`.
+
+`restic-data` and `restic-check` must not share a cron: resticker treats
+`BACKUP_CRON` and `CHECK_CRON` as mutually exclusive and exits if both are set in
+one container. Both cron values are **six-field with seconds first**; the
+five-field form the offen containers use is accepted and silently schedules the
+wrong time.
+
+Each offen tier sets `BACKUP_PRUNING_PREFIX`. Without it, a tier applies its
+retention window to every file in its `/archive` directory regardless of
+filename, so anything parked there for safekeeping disappears on that tier's
+clock.
 
 **Lessons learned:**
 - Use the backup container's tar (GNU tar), not Alpine's BusyBox tar — Alpine fails with exit code 125 on large files
@@ -109,6 +131,47 @@ hours. `tofu apply` recreates anything pruned; it is the recovery path, not a
 manual `docker run`. `docker volume prune` is equally unsafe here, for the same
 reason: 47 named compose volumes look dangling only because their containers are
 stopped.
+
+### `tofu plan` deletes stopped containers
+
+The pinned provider, kreuzwerker/docker **v3.9.0**, deletes a container during a
+plain *refresh* if it is not running and `must_run` is true (the default). From
+`resourceDockerContainerRead`:
+
+```go
+if !container.State.Running && d.Get("must_run").(bool) {
+    if err := resourceDockerContainerDelete(ctx, d, meta); err != nil { ... }
+```
+
+So `tofu plan` is **not read-only here**, and it hits exactly the containers the
+prune warning above lists. Anything offen has stopped via `backup.stop` gets
+deleted by a plan run during the 01:30-02:00 backup window. On 2026-09-11 a plan
+deleted `backup-daily` and `backup-weekly`, both sitting `Exited (0)` between
+runs. This is a strong candidate for the real cause of the 2026-09-07
+`immich_postgres` loss, which was attributed to a manual prune.
+
+Volumes are unaffected (`prevent_destroy`), and `tofu apply` recreates the
+container, so the damage is downtime rather than data loss. Avoid planning during
+the backup window, and check `docker ps -a --filter status=exited` first. Later
+provider versions only flag the drift in state instead of deleting; upgrading off
+3.9.0 is the actual fix.
+
+### Config that carries a secret uses `upload`, not the image
+
+Configuration is normally baked into a custom image, because the Docker host is
+remote and a bind mount would need the file to exist there. A `docker_image`
+build context is static files on disk, though, so no Terraform variable can reach
+it. Config that interpolates a variable therefore arrives as an `upload` block at
+container-create time, which also keeps the value out of an image layer.
+
+`docker_container.alertmanager` is the worked example: `alertmanager.yml` is
+rendered from `alertmanager/alertmanager.yml.tftpl` with the Telegram chat id and
+uploaded, and the bot token is a second upload read via `bot_token_file`. Contrast
+`prometheus.yml` and `alerts.yml`, which hold no secrets and stay baked into
+`prometheus/Dockerfile`.
+
+Note that `templatefile()` in `compute_monitoring.tf` uses `path.cwd`, so tofu
+must be run from inside `tf/`.
 
 ### Manual backup
 ```bash
