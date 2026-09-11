@@ -23,7 +23,6 @@ resource "docker_container" "restic_data" {
     "RESTIC_BACKUP_ARGS=--tag homeserver --exclude *.log --verbose",
     "RESTIC_FORGET_ARGS=--prune --keep-daily 7 --keep-weekly 4 --keep-monthly 6",
     "BACKUP_CRON=0 0 2 * * *",
-    "CHECK_CRON=0 0 5 * * 0",
     # Feeds node-exporter's textfile collector so BackupStale can alert on a
     # backup that stopped running. Written to a temp file and moved into place
     # because the collector reads whole files and would otherwise catch a
@@ -52,6 +51,37 @@ resource "docker_container" "restic_data" {
   volumes {
     volume_name    = docker_volume.textfile_collector.name
     container_path = "/textfile"
+  }
+
+  networks_advanced {
+    name = docker_network.default.name
+  }
+}
+
+# resticker rejects BACKUP_CRON and CHECK_CRON in the same container ("mutually
+# exclusive ... Exiting"), so the weekly integrity check runs as its own
+# container against the same repository. Sundays at 05:00, after the 02:00
+# backup.
+#
+# Six-field cron with SECONDS FIRST, same as restic_data.
+resource "docker_container" "restic_check" {
+  name    = "restic-check"
+  image   = "mazzolino/restic:${var.restic_version}"
+  restart = "always"
+
+  env = [
+    "RESTIC_REPOSITORY=/mnt/backups/restic",
+    "RESTIC_PASSWORD=${var.restic_password}",
+    "CHECK_CRON=0 0 5 * * 0",
+    # restic_data owns initialization. Two containers racing to init the same
+    # repository can corrupt it, which is what resticker's docs warn about.
+    "SKIP_INIT=true",
+  ]
+
+  # Repository only; the check reads the repo, never the source data.
+  volumes {
+    host_path      = "/mnt/backups"
+    container_path = "/mnt/backups"
   }
 
   networks_advanced {
