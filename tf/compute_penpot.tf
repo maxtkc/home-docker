@@ -126,6 +126,9 @@ resource "docker_container" "penpot_exporter" {
     "PENPOT_FLAGS=${local.penpot_flags}",
     "PENPOT_PUBLIC_URI=http://penpot-frontend:8080",
     "PENPOT_REDIS_URI=redis://penpot-valkey/0",
+    # Required: the exporter's config schema rejects a missing secret-key and
+    # the process exits. Must match penpot-backend's, they share sessions.
+    "PENPOT_SECRET_KEY=${random_password.penpot_secret_key.result}",
   ]
 
   networks_advanced {
