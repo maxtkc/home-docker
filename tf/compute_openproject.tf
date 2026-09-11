@@ -39,12 +39,12 @@ resource "docker_container" "openproject_cache" {
 }
 
 resource "docker_container" "openproject_seeder" {
-  count     = var.run_openproject ? 1 : 0
-  name      = "openproject_seeder"
-  image     = "openproject/openproject:${var.openproject_version}"
-  restart   = "on-failure"
-  must_run  = false
-  command   = ["./docker/prod/seeder"]
+  count    = var.run_openproject ? 1 : 0
+  name     = "openproject_seeder"
+  image    = "openproject/openproject:${var.openproject_version}"
+  restart  = "on-failure"
+  must_run = false
+  command  = ["./docker/prod/seeder"]
 
   env = local.openproject_env
 
