@@ -122,6 +122,7 @@ groups:
               or label_replace(vector(1), "name", "alertmanager", "", "")
               or label_replace(vector(1), "name", "node-exporter", "", "")
               or label_replace(vector(1), "name", "restic-data", "", "")
+              or label_replace(vector(1), "name", "restic-check", "", "")
             )
             unless on (name) container_last_seen
           )
