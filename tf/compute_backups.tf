@@ -19,6 +19,10 @@ resource "docker_container" "backup" {
     "BACKUP_FILENAME=homeserver-db-%Y%m%d-%H%M%S.tar.gz",
     "BACKUP_CRON_EXPRESSION=30 1 * * *",
     "BACKUP_RETENTION_DAYS=7",
+    # Without a prefix, offen applies the retention window to every file in
+    # /archive, not just the ones it wrote, so anything parked there for
+    # safekeeping disappears on this tier's clock.
+    "BACKUP_PRUNING_PREFIX=homeserver-db-",
     "BACKUP_STOP_DURING_BACKUP_LABEL=backup.stop",
     "BACKUP_EXCLUDE_REGEXP=^/backup/tmp/|\\.tmp$",
     "LOG_LEVEL=debug",
@@ -69,6 +73,7 @@ resource "docker_container" "backup_weekly" {
     "BACKUP_FILENAME=homeserver-backup-%Y%m%d-%H%M%S.tar.gz",
     "BACKUP_CRON_EXPRESSION=0 3 * * 0",
     "BACKUP_RETENTION_DAYS=6",
+    "BACKUP_PRUNING_PREFIX=homeserver-backup-",
     "BACKUP_STOP_DURING_BACKUP_LABEL=backup.stop",
     "BACKUP_EXCLUDE_REGEXP=^/backup/tmp/|\\.tmp$|\\.log$|/backup/immich_upload/backups/",
     "LOG_LEVEL=debug",
@@ -123,6 +128,7 @@ resource "docker_container" "backup_monthly" {
     "BACKUP_FILENAME=homeserver-backup-%Y%m%d-%H%M%S.tar.gz",
     "BACKUP_CRON_EXPRESSION=0 4 1 * *",
     "BACKUP_RETENTION_DAYS=28",
+    "BACKUP_PRUNING_PREFIX=homeserver-backup-",
     "BACKUP_STOP_DURING_BACKUP_LABEL=backup.stop",
     "BACKUP_EXCLUDE_REGEXP=^/backup/tmp/|\\.tmp$",
     "LOG_LEVEL=debug",
