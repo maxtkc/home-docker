@@ -117,7 +117,6 @@ resource "uptimekuma_status_page" "main" {
       monitor_list = [
         { id = uptimekuma_monitor_docker.static_sites.id },
         { id = uptimekuma_monitor_docker.backup_daily.id },
-        { id = uptimekuma_monitor_docker.backup_weekly.id },
         { id = uptimekuma_monitor_docker.backup_monthly.id },
       ]
     },

@@ -535,16 +535,6 @@ resource "uptimekuma_monitor_docker" "backup_daily" {
   active           = true
 }
 
-resource "uptimekuma_monitor_docker" "backup_weekly" {
-  name             = "backup-weekly"
-  docker_host_id   = uptimekuma_docker_host.local.id
-  docker_container = "backup-weekly"
-  interval         = 60
-  max_retries      = 3
-  notification_ids = local.notification_ids
-  active           = true
-}
-
 resource "uptimekuma_monitor_docker" "backup_monthly" {
   name             = "backup-monthly"
   docker_host_id   = uptimekuma_docker_host.local.id

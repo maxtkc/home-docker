@@ -64,61 +64,6 @@ resource "docker_container" "backup" {
   }
 }
 
-resource "docker_container" "backup_weekly" {
-  name    = "backup-weekly"
-  image   = "offen/docker-volume-backup:${var.docker_volume_backup_version}"
-  restart = "always"
-
-  env = [
-    "BACKUP_FILENAME=homeserver-backup-%Y%m%d-%H%M%S.tar.gz",
-    "BACKUP_CRON_EXPRESSION=0 3 * * 0",
-    "BACKUP_RETENTION_DAYS=6",
-    "BACKUP_PRUNING_PREFIX=homeserver-backup-",
-    "BACKUP_STOP_DURING_BACKUP_LABEL=backup.stop",
-    "BACKUP_EXCLUDE_REGEXP=^/backup/tmp/|\\.tmp$|\\.log$|/backup/immich_upload/backups/",
-    "LOG_LEVEL=debug",
-    "BACKUP_COMPRESSION=gz",
-  ]
-
-  volumes {
-    volume_name    = docker_volume.nextcloud.name
-    container_path = "/backup/nextcloud"
-    read_only      = true
-  }
-
-  volumes {
-    volume_name    = docker_volume.immich_upload.name
-    container_path = "/backup/immich_upload"
-    read_only      = true
-  }
-
-  volumes {
-    volume_name    = docker_volume.immich_postgres.name
-    container_path = "/backup/immich_postgres"
-    read_only      = true
-  }
-
-  volumes {
-    host_path      = "/mnt/backups/tmp"
-    container_path = "/tmp"
-  }
-
-  volumes {
-    host_path      = "/mnt/backups/weekly"
-    container_path = "/archive"
-  }
-
-  volumes {
-    host_path      = "/var/run/docker.sock"
-    container_path = "/var/run/docker.sock"
-    read_only      = true
-  }
-
-  networks_advanced {
-    name = docker_network.default.name
-  }
-}
-
 resource "docker_container" "backup_monthly" {
   name    = "backup-monthly"
   image   = "offen/docker-volume-backup:${var.docker_volume_backup_version}"
