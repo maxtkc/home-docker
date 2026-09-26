@@ -22,7 +22,7 @@ function isPrivateHost(host) {
 
 const server = corsAnywhere.createServer({
   originWhitelist: allowedOrigins,
-  removeHeaders: ['cookie', 'authorization'],
+  removeHeaders: ['cookie', 'authorization', 'origin', 'referer'],
   requireHeader: ['origin'],
   handleInitialRequest: (req, res, location) => {
     if (!location) {
