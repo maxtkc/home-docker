@@ -227,10 +227,14 @@ Current host state:
   tofu definition. **Not in tofu state.** Left **stopped** on purpose (see below).
 - `tgtg_old_v1.25`: the container tofu state still points at (renamed, restart
   policy set to `no`, stopped). Kept only as a rollback.
+- `tgtg_try`: throwaway test container (restart `no`, stopped). Safe to remove.
+- In `nextcloud_tgtg_tokens`, the old `datadome` cookie was renamed to
+  `datadome.bak-20261001`, so the next start fetches a fresh one. The access and
+  refresh tokens were left alone.
 
 To reconcile:
-1. `ssh kcfam docker rm tgtg tgtg_old_v1.25`. Only the containers go; the tokens
-   live in the `prevent_destroy` volume.
+1. `ssh kcfam docker rm tgtg tgtg_old_v1.25 tgtg_try`. Only the containers go; the
+   tokens live in the `prevent_destroy` volume.
 2. `cd tf && tofu apply`. It recreates `docker_container.tgtg` from config.
 
 If `tgtg_old_v1.25` is left in place, the refresh will delete it anyway (stopped +
@@ -243,7 +247,11 @@ captcha interstitials since 2026-09-25 (last notification 2026-09-29 13:32).
 v1.25 looped on `Too many captcha Errors!`, hit a `RecursionError` on 2026-09-30
 and then ran two poll loops at once. v1.26.0 gets a 403 on its first request and
 exits, so `restart=always` retried every minute and kept the block alive. The
-block is on the IP/account, not the client version. After a cool-off (hours), start
+block is on the IP/account, not the client version. On 2026-10-01 each of these
+still got a 403 on the first request: a custom `TGTG_USER_AGENT`,
+`TGTG_APK_VERSION=26.2.10`, and a fresh DataDome cookie. Upstream has no fix yet:
+ahivert/tgtg-python#403 reports that TGTG moved to `api.toogoodtogo.com/api/`
+with stricter bot detection. After a 24-48h cool-off, start
 it with a longer `tgtg_sleep_time` (for example 180) and watch for `Scanner started`
 vs `TGTG API Error: (403`. If v1.26 asks for `Enter Pin`, finish the login at
 `https://tgtg.kcfam.us`.
