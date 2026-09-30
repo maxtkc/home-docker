@@ -172,7 +172,7 @@ variable "uptime_kuma_version" {
 variable "tgtg_version" {
   type        = string
   description = "derhenning/tgtg image tag"
-  default     = "latest-alpine"
+  default     = "v1.26.0-alpine"
 }
 
 variable "openproject_version" {
