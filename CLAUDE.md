@@ -213,3 +213,44 @@ cd tf && tofu apply
 - **internal**: Internal service communication (DB, Redis, app containers)
 
 Immich has **read-only** access to the Nextcloud volume for photo library integration.
+
+## Pending: tgtg state drift
+
+On 2026-10-01 `tgtg` was recreated by hand on the host, not through tofu, because
+the state was not on the machine doing the work. `tf/variables.tf` already pins
+`tgtg_version = "v1.26.0-alpine"` (commit `44898e0`); the host matches that, but
+the state does not.
+
+Current host state:
+- `tgtg`: new container on `derhenning/tgtg:v1.26.0-alpine`, same env, volume
+  (`nextcloud_tgtg_tokens:/tokens`) and networks (`proxy-tier`, `internal`) as the
+  tofu definition. **Not in tofu state.** Left **stopped** on purpose (see below).
+- `tgtg_old_v1.25`: the container tofu state still points at (renamed, restart
+  policy set to `no`, stopped). Kept only as a rollback.
+
+To reconcile:
+1. `ssh kcfam docker rm tgtg tgtg_old_v1.25`. Only the containers go; the tokens
+   live in the `prevent_destroy` volume.
+2. `cd tf && tofu apply`. It recreates `docker_container.tgtg` from config.
+
+If `tgtg_old_v1.25` is left in place, the refresh will delete it anyway (stopped +
+`must_run`, see "`tofu plan` deletes stopped containers"). If the hand-made `tgtg`
+is left in place, the apply fails on the name conflict. Either remove it first, or
+`tofu import docker_container.tgtg <id>` it and let the plan settle the diff.
+
+Why tgtg is stopped: TGTG's DataDome anti-bot layer has been returning 403
+captcha interstitials since 2026-09-25 (last notification 2026-09-29 13:32).
+v1.25 looped on `Too many captcha Errors!`, hit a `RecursionError` on 2026-09-30
+and then ran two poll loops at once. v1.26.0 gets a 403 on its first request and
+exits, so `restart=always` retried every minute and kept the block alive. The
+block is on the IP/account, not the client version. After a cool-off (hours), start
+it with a longer `tgtg_sleep_time` (for example 180) and watch for `Scanner started`
+vs `TGTG API Error: (403`. If v1.26 asks for `Enter Pin`, finish the login at
+`https://tgtg.kcfam.us`.
+
+Related: floating tags like `latest-alpine` are never re-pulled, because
+`docker_container.image` is a plain string and the provider only pulls when the
+image is missing locally. That is how tgtg sat on v1.25 for seven weeks after
+v1.26 shipped. Pin explicit versions.
+
+Once reconciled, delete this section.
