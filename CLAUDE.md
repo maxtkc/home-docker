@@ -16,6 +16,8 @@ Services and their routes:
 - `op.kcfam.us` → OpenProject (project management, toggleable via `var.run_openproject`)
 - `tgtg.kcfam.us` → Too Good To Go notifier
 
+`gluetun` (internal only, `tf/compute_vpn.tf`) is a NordVPN tunnel exposed as an HTTP proxy on `gluetun:8888`. It exists only when `var.nordvpn_wireguard_private_key` is set, and tgtg uses it when `var.tgtg_use_vpn` is true. tgtg exports price metrics on `tgtg:8000`, and Prometheus alerts with `TgtgPriceAtLow` when an in-stock bag is at its 14-day low.
+
 **Traefik v3** handles reverse proxying and Let's Encrypt SSL. **Sablier** manages auto-scaling for GrampsWeb: containers spin down after 1 minute of inactivity and wake on request. **OpenProject** is not Sablier-managed — it is entirely toggled on/off via `var.run_openproject` (Terraform `count`).
 
 ## Terraform Modules
@@ -216,45 +218,51 @@ Immich has **read-only** access to the Nextcloud volume for photo library integr
 
 ## Pending: tgtg state drift
 
-On 2026-10-01 `tgtg` was recreated by hand on the host, not through tofu, because
-the state was not on the machine doing the work. `tf/variables.tf` already pins
-`tgtg_version = "v1.26.0-alpine"` (commit `44898e0`); the host matches that, but
-the state does not.
+`tgtg` and `gluetun` were created by hand on the host, not through tofu, because
+the state was not on the machine doing the work (2026-10-01, then again on
+2026-10-07). The host matches the config in `tf/`; the state does not.
 
 Current host state:
-- `tgtg`: new container on `derhenning/tgtg:v1.26.0-alpine`, same env, volume
-  (`nextcloud_tgtg_tokens:/tokens`) and networks (`proxy-tier`, `internal`) as the
-  tofu definition. **Not in tofu state.** Left **stopped** on purpose (see below).
-- `tgtg_old_v1.25`: the container tofu state still points at (renamed, restart
-  policy set to `no`, stopped). Kept only as a rollback.
-- `tgtg_try`: throwaway test container (restart `no`, stopped). Safe to remove.
-- In `nextcloud_tgtg_tokens`, the old `datadome` cookie was renamed to
-  `datadome.bak-20261001`, so the next start fetches a fresh one. The access and
-  refresh tokens were left alone.
+- `tgtg`: hand-made, **running**, on `derhenning/tgtg:v1.26.0-alpine` with the
+  tofu env plus `SLEEP_TIME=180`, `METRICS=true`, `METRICS_PORT=8000`,
+  `PRICE_MONITORING=true`, `HTTPS_PROXY=http://gluetun:8888` and
+  `NO_PROXY=api.telegram.org,localhost`. Same volume and networks as the tofu
+  definition. **Not in tofu state.**
+- `gluetun`: hand-made, `qmcgaw/gluetun:v3.41.3`, NordVPN WireGuard exiting in the
+  United States, on `internal` only. **Not in tofu state.**
+- `prometheus`: still the container in state, but `prometheus.yml` and
+  `alerts.yml` were copied in and hot-reloaded (`/-/reload`) instead of rebuilding
+  the image. The next apply rebuilds `docker_image.prometheus` with the same files.
+- `tgtg_old_v1.25`: the container tofu state still points at (stopped, restart
+  `no`). Kept only as a rollback.
+- `tgtg_try`: throwaway test container (stopped). Safe to remove.
+- In `nextcloud_tgtg_tokens`, DataDome cookies from the blocked IPs are parked as
+  `datadome.bak-20261001` and `datadome.bak-20261007-homeip`.
+- The NordVPN access token, NordLynx private key and gluetun control API key are in
+  `~/tfstate/home-tf/nordvpn.secrets` on kcfam (mode 600, tfvars format).
 
 To reconcile:
-1. `ssh kcfam docker rm tgtg tgtg_old_v1.25 tgtg_try`. Only the containers go; the
-   tokens live in the `prevent_destroy` volume.
-2. `cd tf && tofu apply`. It recreates `docker_container.tgtg` from config.
+1. Append `nordvpn.secrets` (minus `nordvpn_access_token`, which is not a tf
+   variable) to `secrets.auto.tfvars`, and set `tgtg_use_vpn = true`,
+   `tgtg_sleep_time = 180`, `nordvpn_server_countries = "United States"`.
+2. `ssh kcfam docker rm -f tgtg gluetun tgtg_old_v1.25 tgtg_try`. Only the
+   containers go; the tokens live in the `prevent_destroy` volume.
+3. `cd tf && tofu apply`. It recreates `docker_container.tgtg` and creates
+   `docker_container.gluetun` from config.
 
 If `tgtg_old_v1.25` is left in place, the refresh will delete it anyway (stopped +
 `must_run`, see "`tofu plan` deletes stopped containers"). If the hand-made `tgtg`
-is left in place, the apply fails on the name conflict. Either remove it first, or
-`tofu import docker_container.tgtg <id>` it and let the plan settle the diff.
+or `gluetun` is left in place, the apply fails on the name conflict.
 
-Why tgtg is stopped: TGTG's DataDome anti-bot layer has been returning 403
-captcha interstitials since 2026-09-25 (last notification 2026-09-29 13:32).
-v1.25 looped on `Too many captcha Errors!`, hit a `RecursionError` on 2026-09-30
-and then ran two poll loops at once. v1.26.0 gets a 403 on its first request and
-exits, so `restart=always` retried every minute and kept the block alive. The
-block is on the IP/account, not the client version. On 2026-10-01 each of these
-still got a 403 on the first request: a custom `TGTG_USER_AGENT`,
-`TGTG_APK_VERSION=26.2.10`, and a fresh DataDome cookie. Upstream has no fix yet:
-ahivert/tgtg-python#403 reports that TGTG moved to `api.toogoodtogo.com/api/`
-with stricter bot detection. After a 24-48h cool-off, start
-it with a longer `tgtg_sleep_time` (for example 180) and watch for `Scanner started`
-vs `TGTG API Error: (403`. If v1.26 asks for `Enter Pin`, finish the login at
-`https://tgtg.kcfam.us`.
+Why tgtg goes through gluetun: TGTG's DataDome anti-bot layer returned 403
+captcha interstitials to the home IP from 2026-09-25 on. A custom
+`TGTG_USER_AGENT`, `TGTG_APK_VERSION=26.2.10`, a fresh DataDome cookie and a
+four-day cool-off (still 403 on 2026-10-05) did not help. Through the NordVPN exit
+on 2026-10-07, with a fresh cookie, scanning worked on the first try. If the VPN IP
+gets blocked too, reconnect to a new server through the gluetun control server
+(`PUT /v1/vpn/status` `{"status":"stopped"}` then `{"status":"running"}`, header
+`X-API-Key`), park the `datadome` file, and restart tgtg. Don't rotate on a
+schedule: DataDome binds its cookie to the IP.
 
 Related: floating tags like `latest-alpine` are never re-pulled, because
 `docker_container.image` is a plain string and the provider only pulls when the

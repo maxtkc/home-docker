@@ -136,3 +136,21 @@ groups:
             {{ $labels.name }} is expected to be up at all times and cadvisor
             has not seen it for 10 minutes. It was stopped, removed, or is
             crash-looping.
+
+  - name: tgtg
+    rules:
+      # A bag in stock at its lowest price of the last 14 days. The second
+      # clause drops bags whose price never moved, which would otherwise always
+      # sit at their own minimum.
+      - alert: TgtgPriceAtLow
+        expr: |
+          (tgtg_item_count > 0)
+          and on (item_id) (tgtg_item_price <= min_over_time(tgtg_item_price[14d]))
+          and on (item_id) (tgtg_item_price < max_over_time(tgtg_item_price[14d]))
+        labels:
+          severity: info
+        annotations:
+          summary: "{{ $labels.display_name }} is at its 14-day low"
+          description: >-
+            {{ $labels.display_name }} is in stock at {{ $value }}, its lowest
+            price in 14 days.

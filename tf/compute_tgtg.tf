@@ -23,6 +23,9 @@ resource "docker_container" "tgtg" {
     var.tgtg_telegram_disable_commands != null ? "TELEGRAM_DISABLE_COMMANDS=${var.tgtg_telegram_disable_commands}" : "",
     var.tgtg_telegram_only_reservations != null ? "TELEGRAM_ONLY_RESERVATIONS=${var.tgtg_telegram_only_reservations}" : "",
     var.tgtg_telegram_cron != null ? "TELEGRAM_CRON=${var.tgtg_telegram_cron}" : "",
+    # TGTG API requests through gluetun; Telegram stays direct
+    var.tgtg_use_vpn ? "HTTPS_PROXY=http://gluetun:8888" : "",
+    var.tgtg_use_vpn ? "NO_PROXY=api.telegram.org,localhost" : "",
   ])
 
   volumes {
@@ -36,5 +39,12 @@ resource "docker_container" "tgtg" {
 
   networks_advanced {
     name = docker_network.default.name
+  }
+
+  lifecycle {
+    precondition {
+      condition     = !var.tgtg_use_vpn || length(docker_container.gluetun) > 0
+      error_message = "tgtg_use_vpn needs nordvpn_wireguard_private_key to be set."
+    }
   }
 }

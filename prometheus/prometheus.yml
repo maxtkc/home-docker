@@ -23,6 +23,11 @@ scrape_configs:
     static_configs:
       - targets: ['cadvisor:8080']
 
+  - job_name: 'tgtg'
+    scrape_interval: 60s
+    static_configs:
+      - targets: ['tgtg:8000']
+
 
   # Monitor nginx-proxy if it exposes metrics (future enhancement)
   # - job_name: 'nginx-proxy'

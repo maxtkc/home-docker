@@ -175,6 +175,12 @@ variable "tgtg_version" {
   default     = "v1.26.0-alpine"
 }
 
+variable "gluetun_version" {
+  type        = string
+  description = "qmcgaw/gluetun image tag"
+  default     = "v3.41.3"
+}
+
 variable "openproject_version" {
   type        = string
   description = "OpenProject image tag"
@@ -321,13 +327,13 @@ variable "tgtg_port" {
 variable "tgtg_metrics" {
   type     = bool
   nullable = true
-  default  = null
+  default  = true
 }
 
 variable "tgtg_metrics_port" {
   type     = number
   nullable = true
-  default  = null
+  default  = 8000
 }
 
 variable "tgtg_disable_tests" {
@@ -352,7 +358,7 @@ variable "tgtg_schedule_cron" {
 variable "tgtg_price_monitoring" {
   type     = bool
   nullable = true
-  default  = null
+  default  = true
 }
 
 # Telegram notifier
@@ -398,6 +404,12 @@ variable "tgtg_telegram_cron" {
   type     = string
   nullable = true
   default  = null
+}
+
+variable "tgtg_use_vpn" {
+  type        = bool
+  description = "Send tgtg's TGTG API requests through the gluetun proxy"
+  default     = false
 }
 
 variable "penpot_version" {
@@ -473,4 +485,27 @@ variable "alertmanager_telegram_chat_id" {
   type        = string
   description = "Telegram chat id Alertmanager posts to"
   sensitive   = true
+}
+
+# NordVPN (gluetun)
+variable "nordvpn_wireguard_private_key" {
+  type        = string
+  description = "NordLynx private key; gluetun is only created when set"
+  sensitive   = true
+  nullable    = true
+  default     = null
+}
+
+variable "nordvpn_server_countries" {
+  type        = string
+  description = "Comma-separated NordVPN server countries for gluetun"
+  default     = "United States"
+}
+
+variable "gluetun_control_apikey" {
+  type        = string
+  description = "API key for the gluetun control server"
+  sensitive   = true
+  nullable    = true
+  default     = null
 }
