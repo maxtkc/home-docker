@@ -16,7 +16,7 @@ Services and their routes:
 - `op.kcfam.us` → OpenProject (project management, toggleable via `var.run_openproject`)
 - `tgtg.kcfam.us` → Too Good To Go notifier
 
-`gluetun` (internal only, `tf/compute_vpn.tf`) is a NordVPN tunnel exposed as an HTTP proxy on `gluetun:8888`. It exists only when `var.nordvpn_wireguard_private_key` is set, and tgtg uses it when `var.tgtg_use_vpn` is true. tgtg exports price metrics on `tgtg:8000`, and Prometheus alerts with `TgtgPriceAtLow` when an in-stock bag is at its 14-day low.
+`gluetun` (internal only, `tf/compute_vpn.tf`) is a NordVPN tunnel exposed as an HTTP proxy on `gluetun:8888`. It exists only when `var.nordvpn_wireguard_private_key` is set, and tgtg uses it when `var.tgtg_use_vpn` is true. tgtg exports price and scan-health metrics on `tgtg:8000`. Prometheus alerts with `TgtgPriceAtLow` when an in-stock bag is at its 14-day low, and with `TgtgScanStale` when no scan has succeeded for an hour. The tgtg bot itself posts a notice after three failed scans in a row (e.g. DataDome 403s), with buttons to move the VPN exit; `/vpn`, `/vpn new` and `/vpn <country>[, city]` do the same by command.
 
 **Traefik v3** handles reverse proxying and Let's Encrypt SSL. **Sablier** manages auto-scaling for GrampsWeb: containers spin down after 1 minute of inactivity and wake on request. **OpenProject** is not Sablier-managed — it is entirely toggled on/off via `var.run_openproject` (Terraform `count`).
 
@@ -267,10 +267,11 @@ captcha interstitials to the home IP from 2026-09-25 on. A custom
 `TGTG_USER_AGENT`, `TGTG_APK_VERSION=26.2.10`, a fresh DataDome cookie and a
 four-day cool-off (still 403 on 2026-10-05) did not help. Through the NordVPN exit
 on 2026-10-07, with a fresh cookie, scanning worked on the first try. If the VPN IP
-gets blocked too, reconnect to a new server through the gluetun control server
-(`PUT /v1/vpn/status` `{"status":"stopped"}` then `{"status":"running"}`, header
-`X-API-Key`), park the `datadome` file, and restart tgtg. Don't rotate on a
-schedule: DataDome binds its cookie to the IP.
+gets blocked too, the bot says so and offers buttons; `/vpn new` (same country) or
+`/vpn Germany` moves the exit through the gluetun control server and parks the
+`datadome` file. A country change made this way lasts until gluetun restarts;
+`nordvpn_server_countries` is the persistent default. Don't rotate on a schedule:
+DataDome binds its cookie to the IP.
 
 Related: floating tags like `latest-alpine` are never re-pulled, because
 `docker_container.image` is a plain string and the provider only pulls when the

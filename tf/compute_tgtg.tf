@@ -29,7 +29,9 @@ resource "docker_container" "tgtg" {
     var.tgtg_telegram_cron != null ? "TELEGRAM_CRON=${var.tgtg_telegram_cron}" : "",
     # TGTG API requests through gluetun; Telegram stays direct
     var.tgtg_use_vpn ? "HTTPS_PROXY=http://gluetun:8888" : "",
-    var.tgtg_use_vpn ? "NO_PROXY=api.telegram.org,localhost" : "",
+    var.tgtg_use_vpn ? "NO_PROXY=api.telegram.org,localhost,gluetun" : "",
+    # Telegram /vpn controls gluetun
+    var.tgtg_use_vpn && var.gluetun_control_apikey != null ? "GLUETUN_API_KEY=${var.gluetun_control_apikey}" : "",
   ])
 
   volumes {
