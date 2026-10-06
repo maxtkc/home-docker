@@ -406,6 +406,34 @@ variable "tgtg_telegram_cron" {
   default  = null
 }
 
+variable "tgtg_fork_path" {
+  type        = string
+  description = "Local checkout of the tgtg fork to build; null uses derhenning/tgtg:tgtg_version"
+  nullable    = true
+  default     = null
+}
+
+variable "tgtg_travel_radius" {
+  type        = number
+  description = "Default travel mode search radius in km"
+  nullable    = true
+  default     = null
+}
+
+variable "tgtg_travel_min_rating" {
+  type        = number
+  description = "Default minimum bag rating in travel mode"
+  nullable    = true
+  default     = null
+}
+
+variable "tgtg_travel_skip_favorites" {
+  type        = bool
+  description = "Stop scanning favorites while travel mode is on"
+  nullable    = true
+  default     = null
+}
+
 variable "tgtg_use_vpn" {
   type        = bool
   description = "Send tgtg's TGTG API requests through the gluetun proxy"

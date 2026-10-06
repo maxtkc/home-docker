@@ -43,6 +43,10 @@ Configuration files are **baked into images** (not volume-mounted) because we us
 - `grafana/` — Grafana with provisioning and dashboards
 - `forgejo_runner/` — Forgejo CI/CD runner
 - `static-sites/` — nginx serving static sites
+- `kcfam/tgtg:local` - built from a local checkout of the tgtg fork
+  (github.com/maxtkc/tgtg, branch `travel-mode`) when `var.tgtg_fork_path` is set;
+  otherwise tgtg runs `derhenning/tgtg:${var.tgtg_version}`. The provider's buildx
+  path fails over an ssh host, so the build block leaves `builder` unset.
 
 ## Common Commands
 
@@ -223,8 +227,9 @@ the state was not on the machine doing the work (2026-10-01, then again on
 2026-10-07). The host matches the config in `tf/`; the state does not.
 
 Current host state:
-- `tgtg`: hand-made, **running**, on `derhenning/tgtg:v1.26.0-alpine` with the
-  tofu env plus `SLEEP_TIME=180`, `METRICS=true`, `METRICS_PORT=8000`,
+- `tgtg`: hand-made, **running**, on `kcfam/tgtg:local` (the fork with travel
+  mode, built with `docker -H ssh://kcfam build -f docker/Dockerfile.alpine`) with
+  the tofu env plus `SLEEP_TIME=180`, `METRICS=true`, `METRICS_PORT=8000`,
   `PRICE_MONITORING=true`, `HTTPS_PROXY=http://gluetun:8888` and
   `NO_PROXY=api.telegram.org,localhost`. Same volume and networks as the tofu
   definition. **Not in tofu state.**
@@ -235,6 +240,8 @@ Current host state:
   the image. The next apply rebuilds `docker_image.prometheus` with the same files.
 - `tgtg_old_v1.25`: the container tofu state still points at (stopped, restart
   `no`). Kept only as a rollback.
+- `tgtg_prev_upstream`: the 2026-10-07 container on `derhenning/tgtg:v1.26.0-alpine`
+  (stopped, restart `no`). Rollback for the fork image.
 - `tgtg_try`: throwaway test container (stopped). Safe to remove.
 - In `nextcloud_tgtg_tokens`, DataDome cookies from the blocked IPs are parked as
   `datadome.bak-20261001` and `datadome.bak-20261007-homeip`.
@@ -244,8 +251,9 @@ Current host state:
 To reconcile:
 1. Append `nordvpn.secrets` (minus `nordvpn_access_token`, which is not a tf
    variable) to `secrets.auto.tfvars`, and set `tgtg_use_vpn = true`,
-   `tgtg_sleep_time = 180`, `nordvpn_server_countries = "United States"`.
-2. `ssh kcfam docker rm -f tgtg gluetun tgtg_old_v1.25 tgtg_try`. Only the
+   `tgtg_sleep_time = 180`, `nordvpn_server_countries = "United States"`, and
+   `tgtg_fork_path` to a checkout of the fork's `travel-mode` branch.
+2. `ssh kcfam docker rm -f tgtg gluetun tgtg_old_v1.25 tgtg_prev_upstream tgtg_try`. Only the
    containers go; the tokens live in the `prevent_destroy` volume.
 3. `cd tf && tofu apply`. It recreates `docker_container.tgtg` and creates
    `docker_container.gluetun` from config.

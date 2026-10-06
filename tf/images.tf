@@ -106,3 +106,28 @@ resource "docker_image" "cors_proxy" {
     dir_sha1 = sha1(join("", [for f in fileset("${path.cwd}/../cors-proxy", "**") : filesha1("${path.cwd}/../cors-proxy/${f}")]))
   }
 }
+
+# tgtg built from a local checkout of the fork (travel mode). Only the files the
+# image's .dockerignore lets through feed the trigger, so .git and .venv are ignored.
+locals {
+  tgtg_fork_files = var.tgtg_fork_path == null ? [] : concat(
+    tolist(fileset(var.tgtg_fork_path, "tgtg_scanner/**")),
+    tolist(fileset(var.tgtg_fork_path, "docker/**")),
+    ["pyproject.toml", "poetry.lock", "requirements.txt", "README.md"],
+  )
+}
+
+resource "docker_image" "tgtg" {
+  count        = var.tgtg_fork_path != null ? 1 : 0
+  name         = "kcfam/tgtg:local"
+  keep_locally = true
+
+  build {
+    context    = var.tgtg_fork_path
+    dockerfile = "docker/Dockerfile.alpine"
+  }
+
+  triggers = {
+    dir_sha1 = sha1(join("", [for f in local.tgtg_fork_files : filesha1("${var.tgtg_fork_path}/${f}")]))
+  }
+}

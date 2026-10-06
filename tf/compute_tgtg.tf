@@ -1,6 +1,6 @@
 resource "docker_container" "tgtg" {
   name    = "tgtg"
-  image   = "derhenning/tgtg:${var.tgtg_version}"
+  image   = var.tgtg_fork_path != null ? one(docker_image.tgtg[*].image_id) : "derhenning/tgtg:${var.tgtg_version}"
   restart = "always"
 
   env = compact([
@@ -15,6 +15,10 @@ resource "docker_container" "tgtg" {
     var.tgtg_quiet != null ? "QUIET=${var.tgtg_quiet}" : "",
     var.tgtg_schedule_cron != null ? "SCHEDULE_CRON=${var.tgtg_schedule_cron}" : "",
     var.tgtg_price_monitoring != null ? "PRICE_MONITORING=${var.tgtg_price_monitoring}" : "",
+    # Travel mode (fork image only)
+    var.tgtg_travel_radius != null ? "TRAVEL_RADIUS=${var.tgtg_travel_radius}" : "",
+    var.tgtg_travel_min_rating != null ? "TRAVEL_MIN_RATING=${var.tgtg_travel_min_rating}" : "",
+    var.tgtg_travel_skip_favorites != null ? "TRAVEL_SKIP_FAVORITES=${var.tgtg_travel_skip_favorites}" : "",
     # Telegram notifier
     var.tgtg_telegram != null ? "TELEGRAM=${var.tgtg_telegram}" : "",
     var.tgtg_telegram_token != null ? "TELEGRAM_TOKEN=${var.tgtg_telegram_token}" : "",
