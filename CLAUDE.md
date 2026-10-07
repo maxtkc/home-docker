@@ -248,6 +248,11 @@ ArgoCD from this repo's `main` branch.
   source access live in its database (PVC), not the ConfigMap.
   `migration/files-rsync.sh` copies Nextcloud user files in and compares sha256
   manifests.
+- Files cut over 2026-10-07: `files.kcfam.us` and `nc.kcfam.us` (a pointer page,
+  `home/nc-pointer`) pass through to k3s. Nextcloud is in maintenance mode and
+  `nextcloud-web` is stopped by hand with restart policy `no` (its Traefik router
+  otherwise beats the passthrough); `nextcloud`, `nextcloud-cron`, `db`, `redis`
+  still run as the rollback.
 - `home/backup` runs restic into the same `/mnt/backups/restic` repo as
   `restic-data`, as host `home-k8s`, daily 03:30, with a 5% read check Saturdays
   at 05:00. It `pg_dump`s the Immich DB to `/srv/backup-dumps` first.
