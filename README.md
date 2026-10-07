@@ -11,7 +11,6 @@ Home server stack managed with OpenTofu, deploying Docker containers to a remote
 | GrampsWeb | gramps.kcfam.us | Genealogy, auto-scales with Sablier |
 | Grafana | gf.kcfam.us | Metrics dashboards |
 | Uptime Kuma | uptime.kcfam.us | Status monitoring at status.kcfam.us |
-| Forgejo | git.kcfam.us | Git hosting with CI/CD runner |
 | OpenProject | op.kcfam.us | Project management (toggleable) |
 | TGTG | tgtg.kcfam.us | Too Good To Go notifier |
 

@@ -33,13 +33,6 @@ tf-dns/.terraform.tfstate.lock.info
 tf-dns/.terraform/
 tf-dns/*.tfplan
 tf-dns/secrets.auto.tfvars
-tf-forgejo/terraform.tfstate
-tf-forgejo/terraform.tfstate.backup
-tf-forgejo/terraform.tfstate.*.backup
-tf-forgejo/.terraform.tfstate.lock.info
-tf-forgejo/.terraform/
-tf-forgejo/*.tfplan
-tf-forgejo/secrets.auto.tfvars
 
 # SOPS age private key
 age.key

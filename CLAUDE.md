@@ -12,7 +12,6 @@ Services and their routes:
 - `gramps.kcfam.us` → GrampsWeb (genealogy)
 - `gf.kcfam.us` → Grafana (metrics dashboards)
 - `uptime.kcfam.us` → Uptime Kuma (status monitoring, public status page at status.kcfam.us)
-- `git.kcfam.us` → Forgejo (git hosting with CI/CD runner)
 - `op.kcfam.us` → OpenProject (project management, toggleable via `var.run_openproject`)
 - `tgtg.kcfam.us` → Too Good To Go notifier
 
@@ -41,8 +40,6 @@ Configuration files are **baked into images** (not volume-mounted) because we us
 - `traefik/` — Traefik with static config and dynamic routing rules
 - `prometheus/` — Prometheus with scrape config
 - `grafana/` — Grafana with provisioning and dashboards
-- `forgejo_runner/` — Forgejo CI/CD runner
-- `static-sites/` — nginx serving static sites
 - `kcfam/tgtg:local` - built from a local checkout of the tgtg fork
   (github.com/maxtkc/tgtg, branch `travel-mode`) when `var.tgtg_fork_path` is set;
   otherwise tgtg runs `derhenning/tgtg:${var.tgtg_version}`. The provider's buildx
@@ -266,8 +263,8 @@ ArgoCD from this repo's `main` branch.
     alerts labelled `notify=telegram` page.
   - `gramps.kcfam.us`: GrampsWeb web, celery, redis on one Longhorn PVC. Always
     on; Sablier is stopped.
-  - `max.kcfam.us`: nginx over the `nextcloud_static_sites` Docker volume, which
-    the personal-site Forgejo workflow still writes. Keep that volume.
+  - `max.kcfam.us`: GitHub Pages, built by Actions in `maxtkc/personal-site`;
+    a CNAME to `maxtkc.github.io`, nothing on kcfam. Forgejo is gone.
   - `cors.kcfam.us`: cors-anywhere, `server.js` in `home/cors-proxy`.
 - A Docker HTTP router (container label or file in `traefik/dynamic`) beats a
   passthrough for the same host, so a cutover also stops the container and

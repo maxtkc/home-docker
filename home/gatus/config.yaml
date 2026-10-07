@@ -150,25 +150,6 @@ endpoints:
       - type: telegram
 
   # Still on Docker
-  - name: Forgejo
-    group: Docker
-    url: https://git.kcfam.us/api/healthz
-    interval: 60s
-    conditions:
-      - "[STATUS] == 200"
-      - "[CERTIFICATE_EXPIRATION] > 240h"
-    alerts:
-      - type: telegram
-
-  - name: Forgejo SSH
-    group: Docker
-    url: tcp://git.kcfam.us:2222
-    interval: 120s
-    conditions:
-      - "[CONNECTED] == true"
-    alerts:
-      - type: telegram
-
   - name: Home Assistant
     group: Docker
     url: https://ha.kcfam.us/
