@@ -253,6 +253,14 @@ ArgoCD from this repo's `main` branch.
 - `home/backup` runs restic into the same `/mnt/backups/restic` repo as
   `restic-data`, as host `home-k8s`, daily 03:30, with a 5% read check Saturdays
   at 05:00. It `pg_dump`s the Immich DB to `/srv/backup-dumps` first.
+- `restic-offsite` (daily 06:00) copies the `home-k8s` snapshots to B2,
+  `s3:s3.us-east-005.backblazeb2.com/kcfam-restic`, and forgets with the same
+  policy as `restic-backup` (a different policy makes `copy` re-upload snapshots
+  B2 already forgot). Same passphrase as the local repo; key in
+  `home/backup/restic-b2.enc.yaml`. The bucket must keep only the last file
+  version, or pruned data stays billed. `restic-offsite-check` reads 2% on the
+  1st. Docker `restic-data` snapshots are not copied. `copy` locks the source
+  repo, so it is mounted read-write.
 - Phase 4 cut over 2026-10-07; each Docker original is stopped with restart
   policy `no` as the rollback:
   - `status.kcfam.us`: Gatus (`home/gatus/config.yaml`), Telegram alerts,
