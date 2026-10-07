@@ -16,7 +16,7 @@ Services and their routes:
 - `op.kcfam.us` → OpenProject (project management, toggleable via `var.run_openproject`)
 - `tgtg.kcfam.us` → Too Good To Go notifier
 
-`gluetun` (internal only, `tf/compute_vpn.tf`) is a NordVPN tunnel exposed as an HTTP proxy on `gluetun:8888`. It exists only when `var.nordvpn_wireguard_private_key` is set, and tgtg uses it when `var.tgtg_use_vpn` is true. tgtg exports price and scan-health metrics on `tgtg:8000`. The bot notifies on restocks, and on price drops only once a bag reaches about 1/3 of its value (`PRICE_MONITORING`). Prometheus alerts with `TgtgScanStale` when no scan has succeeded for an hour. The tgtg bot itself posts a notice after three failed scans in a row (e.g. DataDome 403s), with buttons to move the VPN exit; `/vpn`, `/vpn new` and `/vpn <country>[, city]` do the same by command.
+tgtg and `gluetun` now run in k3s (see "tgtg on k3s"). `gluetun` is a NordVPN tunnel exposed as an HTTP proxy on `gluetun:8888`. tgtg exports price and scan-health metrics on `tgtg:8000`. The bot notifies on restocks, and on price drops only once a bag reaches about 1/3 of its value (`PRICE_MONITORING`). Prometheus alerts with `TgtgScanStale` when no scan has succeeded for an hour. The tgtg bot itself posts a notice after three failed scans in a row (e.g. DataDome 403s), with buttons to move the VPN exit; `/vpn`, `/vpn new` and `/vpn <country>[, city]` do the same by command.
 
 **Traefik v3** handles reverse proxying and Let's Encrypt SSL. **Sablier** manages auto-scaling for GrampsWeb: containers spin down after 1 minute of inactivity and wake on request. **OpenProject** is not Sablier-managed — it is entirely toggled on/off via `var.run_openproject` (Terraform `count`).
 
@@ -256,6 +256,24 @@ ArgoCD from this repo's `main` branch.
 - `home/backup` runs restic into the same `/mnt/backups/restic` repo as
   `restic-data`, as host `home-k8s`, daily 03:30, with a 5% read check Saturdays
   at 05:00. It `pg_dump`s the Immich DB to `/srv/backup-dumps` first.
+- Phase 4 cut over 2026-10-07; each Docker original is stopped with restart
+  policy `no` as the rollback:
+  - `status.kcfam.us`: Gatus (`home/gatus/config.yaml`), Telegram alerts,
+    replaces Uptime Kuma. Restart it after a cutover; it keeps keep-alive
+    connections to the old backend.
+  - `gf.kcfam.us`: kube-prometheus-stack (`apps/home-monitoring.yaml`, values in
+    `home/monitoring/values.yaml`). Rules in `home/monitoring/rules.yaml`; only
+    alerts labelled `notify=telegram` page.
+  - `gramps.kcfam.us`: GrampsWeb web, celery, redis on one Longhorn PVC. Always
+    on; Sablier is stopped.
+  - `max.kcfam.us`: nginx over the `nextcloud_static_sites` Docker volume, which
+    the personal-site Forgejo workflow still writes. Keep that volume.
+  - `cors.kcfam.us`: cors-anywhere, `server.js` in `home/cors-proxy`.
+- A Docker HTTP router (container label or file in `traefik/dynamic`) beats a
+  passthrough for the same host, so a cutover also stops the container and
+  removes its dynamic file.
+- k3s's containerd store is `/srv/k3s/containerd`, bind-mounted over
+  `/var/lib/rancher/k3s/agent/containerd` (fstab). `/var` is too small for it.
 
 ## Network Architecture
 
@@ -265,47 +283,18 @@ ArgoCD from this repo's `main` branch.
 The k3s Immich mounts `/srv/photos` read-write. Those files are hardlinks into the
 Nextcloud volume, so a delete in Immich removes only the `/srv/photos` link.
 
-## Pending: tgtg state drift
+## tgtg on k3s
 
-`tgtg` and `gluetun` were created by hand on the host, not through tofu, because
-the state was not on the machine doing the work (2026-10-01, then again on
-2026-10-07). The host matches the config in `tf/`; the state does not.
-
-Current host state:
-- `tgtg`: hand-made, **running**, on `kcfam/tgtg:local` (the fork with travel
-  mode, built with `docker -H ssh://kcfam build -f docker/Dockerfile.alpine`) with
-  the tofu env plus `SLEEP_TIME=180`, `METRICS=true`, `METRICS_PORT=8000`,
-  `PRICE_MONITORING=true`, `HTTPS_PROXY=http://gluetun:8888`,
-  `NO_PROXY=api.telegram.org,localhost,gluetun` and `GLUETUN_API_KEY`. Same volume
-  and networks as the tofu definition. **Not in tofu state.** The previous fork
-  build is tagged `kcfam/tgtg:prev-20261007` as a rollback.
-- `gluetun`: hand-made, `qmcgaw/gluetun:v3.41.3`, NordVPN WireGuard exiting in the
-  United States, on `internal` only. **Not in tofu state.**
-- `prometheus`: still the container in state, but `prometheus.yml` and
-  `alerts.yml` were copied in and hot-reloaded (`/-/reload`) instead of rebuilding
-  the image. The next apply rebuilds `docker_image.prometheus` with the same files.
-- `tgtg_old_v1.25`: the container tofu state still points at (stopped, restart
-  `no`). Kept only as a rollback.
-- `tgtg_prev_upstream`: the 2026-10-07 container on `derhenning/tgtg:v1.26.0-alpine`
-  (stopped, restart `no`). Rollback for the fork image.
-- In `nextcloud_tgtg_tokens`, DataDome cookies from the blocked IPs are parked as
-  `datadome.bak-20261001` and `datadome.bak-20261007-homeip`.
-- The NordVPN access token, NordLynx private key and gluetun control API key are in
-  `~/tfstate/home-tf/nordvpn.secrets` on kcfam (mode 600, tfvars format).
-
-To reconcile:
-1. Append `nordvpn.secrets` (minus `nordvpn_access_token`, which is not a tf
-   variable) to `secrets.auto.tfvars`, and set `tgtg_use_vpn = true`,
-   `tgtg_sleep_time = 180`, `nordvpn_server_countries = "United States"`, and
-   `tgtg_fork_path` to a checkout of the fork's `travel-mode` branch.
-2. `ssh kcfam docker rm -f tgtg gluetun tgtg_old_v1.25 tgtg_prev_upstream`. Only the
-   containers go; the tokens live in the `prevent_destroy` volume.
-3. `cd tf && tofu apply`. It recreates `docker_container.tgtg` and creates
-   `docker_container.gluetun` from config.
-
-If `tgtg_old_v1.25` is left in place, the refresh will delete it anyway (stopped +
-`must_run`, see "`tofu plan` deletes stopped containers"). If the hand-made `tgtg`
-or `gluetun` is left in place, the apply fails on the name conflict.
+`home/tgtg` runs `ghcr.io/maxtkc/tgtg:travel-mode-<sha>`, built by
+`.github/workflows/ghcr.yml` on the fork's `travel-mode` branch
+(github.com/maxtkc/tgtg) on every push; bump the tag in `home/tgtg/tgtg.yaml`.
+Tokens, including the parked `datadome.bak-*` cookies, are on the `tgtg-tokens`
+PVC. `gluetun` is a separate Deployment and Service (proxy `:8888`, control
+server `:8000`), not a sidecar, so only TGTG API requests use the tunnel and
+Telegram stays direct. Keys are in `home/tgtg/*.enc.yaml`; the NordVPN access
+token is also in `~/tfstate/home-tf/nordvpn.secrets` on kcfam. Never run two
+scanners on one token. The Docker `tgtg`, `gluetun`, `tgtg_old_v1.25` and
+`tgtg_prev_upstream` are stopped with restart policy `no`.
 
 Why tgtg goes through gluetun: TGTG's DataDome anti-bot layer returned 403
 captcha interstitials to the home IP from 2026-09-25 on. A custom
@@ -315,12 +304,10 @@ on 2026-10-07, with a fresh cookie, scanning worked on the first try. If the VPN
 gets blocked too, the bot says so and offers buttons; `/vpn new` (same country) or
 `/vpn Germany` moves the exit through the gluetun control server and parks the
 `datadome` file. A country change made this way lasts until gluetun restarts;
-`nordvpn_server_countries` is the persistent default. Don't rotate on a schedule:
+`SERVER_COUNTRIES` in `home/tgtg/tgtg.yaml` is the persistent default. Don't rotate on a schedule:
 DataDome binds its cookie to the IP.
 
 Related: floating tags like `latest-alpine` are never re-pulled, because
 `docker_container.image` is a plain string and the provider only pulls when the
 image is missing locally. That is how tgtg sat on v1.25 for seven weeks after
 v1.26 shipped. Pin explicit versions.
-
-Once reconciled, delete this section.
