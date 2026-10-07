@@ -242,6 +242,12 @@ ArgoCD from this repo's `main` branch.
   The Docker `immich_server` and `immich_microservices` are stopped by hand with
   restart policy `no`, kept as the rollback until decommission;
   `immich_postgres` and `immich_machine_learning` still run.
+- Files: `home/files` runs Syncthing (`sync.new.kcfam.us`, sync on host port
+  22000) and File Browser Quantum (`files.new.kcfam.us`) over
+  `/srv/files/{maxtkc,stkchristy,shared}`, all uid 1000. File Browser users and
+  source access live in its database (PVC), not the ConfigMap.
+  `migration/files-rsync.sh` copies Nextcloud user files in and compares sha256
+  manifests.
 - `home/backup` runs restic into the same `/mnt/backups/restic` repo as
   `restic-data`, as host `home-k8s`, daily 03:30, with a 5% read check Saturdays
   at 05:00. It `pg_dump`s the Immich DB to `/srv/backup-dumps` first.
