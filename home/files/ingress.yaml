@@ -15,3 +15,35 @@ spec:
           port: 80
   tls:
     secretName: new-kcfam-us-tls
+---
+## files.kcfam.us is reached through a per-host passthrough in Docker Traefik.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: files
+  namespace: home
+  annotations:
+    external-dns.alpha.kubernetes.io/target: kcfam.us
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`files.kcfam.us`)
+      kind: Rule
+      services:
+        - name: filebrowser
+          port: 80
+  tls:
+    secretName: files-kcfam-us-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: files-kcfam-us-tls
+  namespace: home
+spec:
+  secretName: files-kcfam-us-tls
+  dnsNames:
+    - files.kcfam.us
+  issuerRef:
+    name: letsencrypt-porkbun
+    kind: ClusterIssuer

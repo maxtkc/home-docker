@@ -96,3 +96,34 @@ spec:
           port: 80
   tls:
     secretName: new-kcfam-us-tls
+---
+## nc.kcfam.us is reached through a per-host passthrough in Docker Traefik. Its
+## CNAME predates external-dns, so this route carries no target annotation.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: nc-pointer
+  namespace: home
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`nc.kcfam.us`)
+      kind: Rule
+      services:
+        - name: nc-pointer
+          port: 80
+  tls:
+    secretName: nc-kcfam-us-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: nc-kcfam-us-tls
+  namespace: home
+spec:
+  secretName: nc-kcfam-us-tls
+  dnsNames:
+    - nc.kcfam.us
+  issuerRef:
+    name: letsencrypt-porkbun
+    kind: ClusterIssuer

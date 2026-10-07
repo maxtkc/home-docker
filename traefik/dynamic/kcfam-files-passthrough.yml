@@ -1,0 +1,14 @@
+# files.kcfam.us -> k3s (TLS passthrough), File Browser.
+# Uses the kcfam-k3s service from kcfam-new-passthrough.yml.
+#
+# No Go-template expressions in this file, comments included.
+tcp:
+  routers:
+    kcfam-files-passthrough:
+      rule: "HostSNI(`files.kcfam.us`)"
+      priority: 1000
+      entryPoints:
+        - "websecure"
+      tls:
+        passthrough: true
+      service: "kcfam-k3s"
