@@ -33,7 +33,7 @@ spec:
     spec:
       containers:
         - name: tgtg
-          image: ghcr.io/maxtkc/tgtg:travel-mode-43f44dd
+          image: ghcr.io/maxtkc/tgtg:travel-mode-797e484
           envFrom:
             - configMapRef:
                 name: tgtg-env
