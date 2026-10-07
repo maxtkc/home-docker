@@ -1,0 +1,48 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: gatus-new
+  namespace: home
+  annotations:
+    external-dns.alpha.kubernetes.io/target: kcfam.us
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`status.new.kcfam.us`)
+      kind: Rule
+      services:
+        - name: gatus
+          port: 8080
+  tls:
+    secretName: new-kcfam-us-tls
+---
+## status.kcfam.us is reached through a per-host passthrough in Docker Traefik. Its
+## CNAME predates external-dns, so this route carries no target annotation.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: gatus
+  namespace: home
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`status.kcfam.us`)
+      kind: Rule
+      services:
+        - name: gatus
+          port: 8080
+  tls:
+    secretName: status-kcfam-us-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: status-kcfam-us-tls
+  namespace: home
+spec:
+  secretName: status-kcfam-us-tls
+  dnsNames:
+    - status.kcfam.us
+  issuerRef:
+    name: letsencrypt-porkbun
+    kind: ClusterIssuer

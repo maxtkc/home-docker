@@ -1,0 +1,162 @@
+# Gatus check set for kcfam.us, ported from tf-monitors/monitors.tf. Hash-suffixed
+# into a ConfigMap, so editing it rolls the Deployment.
+#
+# Public hostnames are checked by their real URL so DNS, the Docker Traefik
+# passthrough, k3s Traefik and the certificate are all exercised. Docker
+# container monitors became HTTP or TCP checks on the service, or were dropped.
+storage:
+  type: memory
+
+# An endpoint alerts only if it also carries `alerts: - type: telegram`;
+# default-alert is the template for that block.
+alerting:
+  telegram:
+    token: "${TELEGRAM_BOT_TOKEN}"
+    id: "${TELEGRAM_CHAT_ID}"
+    default-alert:
+      enabled: true
+      failure-threshold: 3
+      success-threshold: 2
+      send-on-resolved: true
+
+ui:
+  title: kcfam.us status
+  header: kcfam.us
+  description: Status of the kcfam.us home services.
+
+endpoints:
+  # Apps on k3s
+  - name: Immich
+    group: Apps
+    url: https://im.kcfam.us/api/server/ping
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].res == pong"
+      - "[CERTIFICATE_EXPIRATION] > 240h"
+    alerts:
+      - type: telegram
+
+  - name: Files
+    group: Apps
+    url: https://files.kcfam.us/
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 240h"
+    alerts:
+      - type: telegram
+
+  - name: Nextcloud pointer
+    group: Apps
+    url: https://nc.kcfam.us/
+    interval: 300s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY] == pat(*Nextcloud has moved*)"
+      - "[CERTIFICATE_EXPIRATION] > 240h"
+    alerts:
+      - type: telegram
+
+  - name: GrampsWeb
+    group: Apps
+    url: https://gramps.kcfam.us/api/metadata/
+    interval: 300s
+    conditions:
+      # 401 without a token; anything else means the API is not answering.
+      - "[STATUS] == 401"
+      - "[CERTIFICATE_EXPIRATION] > 240h"
+    alerts:
+      - type: telegram
+
+  - name: Grafana
+    group: Apps
+    url: https://gf.kcfam.us/api/health
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].database == ok"
+      - "[CERTIFICATE_EXPIRATION] > 240h"
+    alerts:
+      - type: telegram
+
+  - name: max.kcfam.us
+    group: Apps
+    url: https://max.kcfam.us/
+    interval: 120s
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 240h"
+    alerts:
+      - type: telegram
+
+  - name: CORS proxy
+    group: Apps
+    url: https://cors.kcfam.us/
+    interval: 120s
+    conditions:
+      # The proxy answers a request with no target URL with 400.
+      - "[STATUS] == 400"
+      - "[BODY] == pat(*invalid or missing target URL*)"
+      - "[CERTIFICATE_EXPIRATION] > 240h"
+    alerts:
+      - type: telegram
+
+  # Internal
+  - name: Immich machine learning
+    group: Internal
+    url: http://immich-machine-learning.home.svc:3003/ping
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: telegram
+
+  - name: Immich Postgres
+    group: Internal
+    url: tcp://immich-postgres.home.svc:5432
+    interval: 60s
+    conditions:
+      - "[CONNECTED] == true"
+    alerts:
+      - type: telegram
+
+  # Still on Docker
+  - name: Forgejo
+    group: Docker
+    url: https://git.kcfam.us/api/healthz
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 240h"
+    alerts:
+      - type: telegram
+
+  - name: Forgejo SSH
+    group: Docker
+    url: tcp://git.kcfam.us:2222
+    interval: 120s
+    conditions:
+      - "[CONNECTED] == true"
+    alerts:
+      - type: telegram
+
+  - name: Home Assistant
+    group: Docker
+    url: https://ha.kcfam.us/
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 240h"
+    alerts:
+      - type: telegram
+
+  - name: Music Assistant
+    group: Docker
+    url: https://ma.kcfam.us/
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+      - "[CERTIFICATE_EXPIRATION] > 240h"
+    alerts:
+      - type: telegram

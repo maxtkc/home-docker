@@ -1,0 +1,24 @@
+apiVersion: ENC[AES256_GCM,data:Y/M=,iv:euclZl93xKRxlvjwu+ZBcylby2KFkyZujAwFdB1o5S8=,tag:21Z5Jw/E0u8rr84Pbmml7w==,type:str]
+kind: ENC[AES256_GCM,data:ZfF+W1Wp,iv:gAWAbMMurMlRXCk6CJ6hQk8xd1rEYk3qUCeZxzlwn4o=,tag:2cdRx4uk/AXjUrOVFrsqGw==,type:str]
+metadata:
+    name: ENC[AES256_GCM,data:G8iNuv6iCNXBapMpGg==,iv:0CpintwqrB1ht/dUKoz8HbTSD4z+vDBiHEGtGRr0H5w=,tag:8ObEbXXyRJiwvQxA6cmiAw==,type:str]
+    namespace: ENC[AES256_GCM,data:4lM54w==,iv:lYLKp88Lk2BcV9KO+K/iw6Zl6w1RYXD/XgvPfFi2KDU=,tag:1mxryEs7T97EgGp8/RqbWA==,type:str]
+type: ENC[AES256_GCM,data:elxGE3ul,iv:vEsgKxhiU/hqn6xIusv0sre0lygFwR6ATf+SGHsSePQ=,tag:4VZtyNvoKkzgcJpiZa0avQ==,type:str]
+stringData:
+    TELEGRAM_BOT_TOKEN: ENC[AES256_GCM,data:U7mtPX1mRI4YTCNLFBpsUtVWQdpS2XNwwR8rlfNSvJERUQWJETe5lHI8DdGnWg==,iv:JjN/CMUaWn2c5k1SPyTrTFSEIh7gKjojBElyVR9pxBQ=,tag:qdkMaQw8qGJrVg2pb3ZNpw==,type:str]
+    TELEGRAM_CHAT_ID: ENC[AES256_GCM,data:FOBTaY91gLVpNQ==,iv:z9B+xPPJAXPsED36Rx3FRuuL6CPrlABc7LWqL1H8DEE=,tag:a3NhwIDgjZuCujxS6bxH7w==,type:str]
+sops:
+    age:
+        - recipient: age1dhdj62dpal4r3kyy3v0g7d6cpupye3g33r5pl4csngs4fkh94eeqzn8puy
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBFbmIxK2VZaWhJVHRmYU5U
+            VXZPai9FMFVFS0ptbDVWdXAvcDdqSWxGRFNrCllRaWJ2S1BwY0FESjdRT1hlN2ZH
+            a2VhSk1RbFpTSjBoOWR2aU0wL0w4dWMKLS0tIDk2OTVvR0pPNDAxeUR4VXhrZ3BZ
+            MEJKLzViWS9xaXNNdDh4V253UFdtdEEK1eRwAFqPxtX8prEolsl7E0x5KFKKIElK
+            P+PiVszjpb1VE3XogLiblJ15V+sOENEupQodwPcIhZjyX3E98ptgkQ==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-10-07T08:19:33Z"
+    mac: ENC[AES256_GCM,data:TMYCK4LZ8BMAf/3VRPZWQL25QzQoiZhM6Qf74/pY9yku+np+qLI1mQRRndSrMnQs9kKFy54LrZj8YuLfPUp+5FCGByJzsSvYugDbFMkGt9hu1oHfz3CacwKnPjzJSBT+dlNO57gcFZ+rVfmCRuDmLLILMLKc0u/J/b0JApXWnYM=,iv:h7rPKalXmMJSq0eSiysy65XLWCNZT814nsNRJ0viLF8=,tag:P3wsffEGq867sSfNbPXQYQ==,type:str]
+    unencrypted_suffix: _unencrypted
+    version: 3.11.0

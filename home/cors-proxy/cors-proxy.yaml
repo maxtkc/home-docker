@@ -1,0 +1,86 @@
+## cors-anywhere proxy for the gtfs.zone editors. server.js comes from the
+## ConfigMap; an init container installs the pinned deps next to it.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cors-proxy
+  namespace: home
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cors-proxy
+  template:
+    metadata:
+      labels:
+        app: cors-proxy
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      initContainers:
+        - name: install
+          image: node:22.23.3-alpine
+          workingDir: /app
+          command: [sh, -c]
+          args:
+            - cp /src/server.js /app/ && npm install --omit=dev --no-audit --no-fund --cache /tmp/npm cors-anywhere@0.4.4 ipaddr.js@2.5.0
+          volumeMounts:
+            - { name: app, mountPath: /app }
+            - { name: src, mountPath: /src }
+            - { name: tmp, mountPath: /tmp }
+      containers:
+        - name: cors-proxy
+          image: node:22.23.3-alpine
+          workingDir: /app
+          command: [node, server.js]
+          env:
+            - name: PORT
+              value: "8080"
+            - name: CORS_ALLOWED_ORIGINS
+              valueFrom:
+                configMapKeyRef:
+                  name: cors-proxy
+                  key: allowed-origins
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            tcpSocket:
+              port: http
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 10m
+              memory: 48Mi
+            limits:
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - { name: app, mountPath: /app, readOnly: true }
+      volumes:
+        - name: app
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        - name: src
+          configMap:
+            name: cors-proxy
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cors-proxy
+  namespace: home
+spec:
+  selector:
+    app: cors-proxy
+  ports:
+    - port: 80
+      targetPort: http
