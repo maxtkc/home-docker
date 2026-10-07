@@ -121,6 +121,24 @@ endpoints:
     alerts:
       - type: telegram
 
+  - name: Prometheus
+    group: Internal
+    url: http://kube-prometheus-stack-prometheus.home.svc:9090/-/healthy
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: telegram
+
+  - name: Alertmanager
+    group: Internal
+    url: http://kube-prometheus-stack-alertmanager.home.svc:9093/-/healthy
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: telegram
+
   # Still on Docker
   - name: Forgejo
     group: Docker
