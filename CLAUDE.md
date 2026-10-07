@@ -235,9 +235,15 @@ ArgoCD from this repo's `main` branch.
   records only. An IngressRoute gets a CNAME to the apex by carrying
   `external-dns.alpha.kubernetes.io/target: kcfam.us`. Records it did not
   create are left alone; never declare the apex.
+- Immich runs in `home` (`home/immich`) and owns `im.kcfam.us` via
+  `traefik/dynamic/kcfam-im-passthrough.yml`. Originals are hardlinks under
+  `/srv/photos` (mounted read-only), uploads/thumbnails in `/srv/immich/upload`.
+  The Docker `immich_server` and `immich_microservices` are stopped by hand with
+  restart policy `no`, kept as the rollback until decommission;
+  `immich_postgres` and `immich_machine_learning` still run.
 - `home/backup` runs restic into the same `/mnt/backups/restic` repo as
   `restic-data`, as host `home-k8s`, daily 03:30, with a 5% read check Saturdays
-  at 05:00.
+  at 05:00. It `pg_dump`s the Immich DB to `/srv/backup-dumps` first.
 
 ## Network Architecture
 

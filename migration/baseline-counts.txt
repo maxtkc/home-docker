@@ -41,3 +41,28 @@ asset_edit|0
 users|2
 user REDACTED|24364
 user REDACTED|802
+
+# Phase 2 cutover, 2026-10-07 (kcfam 2026-10-06 21:13 EDT). k8s DB restored from
+# immich-final-2c-2026-10-07.dump (sha256 068cea66...) after the path rewrite. Equal to the
+# Docker DB at dump time except the path split: 25098 assets moved from /mnt/nextcloud/data
+# to /mnt/photos.
+
+## phase-2 k8s
+assets total|25166
+assets not soft-deleted|25163
+assets offline|3
+assets external|0
+assets under /mnt/photos|25098
+assets native|68
+asset_exif|25166
+asset_face|21844
+named people|261
+albums|4
+album_asset|269
+shared_link|7
+memory|172
+tag|0
+asset_edit|0
+users|2
+user REDACTED|24364
+user REDACTED|802

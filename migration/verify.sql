@@ -2,6 +2,7 @@ SELECT 'assets total', count(*) FROM asset;
 SELECT 'assets not soft-deleted', count(*) FROM asset WHERE "deletedAt" IS NULL;
 SELECT 'assets offline', count(*) FROM asset WHERE "isOffline";
 SELECT 'assets external', count(*) FROM asset WHERE "originalPath" LIKE '/mnt/nextcloud/data/%';
+SELECT 'assets under /mnt/photos', count(*) FROM asset WHERE "originalPath" LIKE '/mnt/photos/%';
 SELECT 'assets native', count(*) FROM asset WHERE "originalPath" LIKE '/usr/src/app/%';
 SELECT 'asset_exif', count(*) FROM asset_exif;
 SELECT 'asset_face', count(*) FROM asset_face;
