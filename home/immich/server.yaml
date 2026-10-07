@@ -1,5 +1,6 @@
 ## One container runs both the API and the microservices worker.
-## Originals from the old Nextcloud tree are mounted read-only at /mnt/photos;
+## Originals from the old Nextcloud tree are mounted read-write at /mnt/photos
+## (deleting an asset removes its file; otherwise the next scan re-imports it);
 ## Immich's own uploads, thumbnails and encoded video live in /srv/immich/upload.
 apiVersion: apps/v1
 kind: Deployment
@@ -54,7 +55,7 @@ spec:
               memory: 4Gi
           volumeMounts:
             - { name: upload, mountPath: /usr/src/app/upload }
-            - { name: photos, mountPath: /mnt/photos, readOnly: true }
+            - { name: photos, mountPath: /mnt/photos }
       volumes:
         - name: upload
           hostPath: { path: /srv/immich/upload, type: Directory }

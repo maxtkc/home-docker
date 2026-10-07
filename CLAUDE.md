@@ -237,7 +237,8 @@ ArgoCD from this repo's `main` branch.
   create are left alone; never declare the apex.
 - Immich runs in `home` (`home/immich`) and owns `im.kcfam.us` via
   `traefik/dynamic/kcfam-im-passthrough.yml`. Originals are hardlinks under
-  `/srv/photos` (mounted read-only), uploads/thumbnails in `/srv/immich/upload`.
+  `/srv/photos` (mounted read-write, so deletes remove the file),
+  uploads/thumbnails in `/srv/immich/upload`.
   The Docker `immich_server` and `immich_microservices` are stopped by hand with
   restart policy `no`, kept as the rollback until decommission;
   `immich_postgres` and `immich_machine_learning` still run.
@@ -250,7 +251,8 @@ ArgoCD from this repo's `main` branch.
 - **proxy-tier**: External-facing services (Traefik, Sablier, GrampsWeb, Immich)
 - **internal**: Internal service communication (DB, Redis, app containers)
 
-Immich has **read-only** access to the Nextcloud volume for photo library integration.
+The k3s Immich mounts `/srv/photos` read-write. Those files are hardlinks into the
+Nextcloud volume, so a delete in Immich removes only the `/srv/photos` link.
 
 ## Pending: tgtg state drift
 
