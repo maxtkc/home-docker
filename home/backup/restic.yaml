@@ -141,3 +141,131 @@ spec:
               hostPath: { path: /mnt/backups/restic, type: Directory }
             - name: cache
               hostPath: { path: /srv/restic-cache, type: DirectoryOrCreate }
+---
+## Copies home-k8s snapshots from the local repo to B2. Retention matches
+## restic-backup exactly, so copy never re-uploads a snapshot B2 already forgot.
+## The B2 repo shares the local repo's passphrase and chunker params, so the
+## copy deduplicates.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: restic-offsite
+  namespace: home
+spec:
+  schedule: "0 6 * * *"
+  timeZone: America/New_York
+  suspend: true
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: restic
+              image: restic/restic:0.18.1
+              command: ["/bin/sh", "-ec"]
+              args:
+                - |
+                  restic cat config >/dev/null 2>&1 || restic init --copy-chunker-params
+                  restic copy --host home-k8s --retry-lock 3h
+                  restic forget --host home-k8s --retry-lock 3h --prune \
+                    --keep-daily 7 --keep-weekly 4 --keep-monthly 6
+              env:
+                - name: RESTIC_REPOSITORY
+                  value: s3:s3.us-east-005.backblazeb2.com/kcfam-restic
+                - name: RESTIC_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: restic
+                      key: RESTIC_PASSWORD
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: restic-b2
+                      key: AWS_ACCESS_KEY_ID
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: restic-b2
+                      key: AWS_SECRET_ACCESS_KEY
+                - name: RESTIC_FROM_REPOSITORY
+                  value: /mnt/backups/restic
+                - name: RESTIC_FROM_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: restic
+                      key: RESTIC_PASSWORD
+                - name: RESTIC_CACHE_DIR
+                  value: /cache
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 512Mi
+                limits:
+                  memory: 2Gi
+              volumeMounts:
+                - { name: repo, mountPath: /mnt/backups/restic, readOnly: true }
+                - { name: cache, mountPath: /cache }
+          volumes:
+            - name: repo
+              hostPath: { path: /mnt/backups/restic, type: Directory }
+            - name: cache
+              hostPath: { path: /srv/restic-cache, type: DirectoryOrCreate }
+---
+## Reads back 2% of the B2 repo's pack data each month.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: restic-offsite-check
+  namespace: home
+spec:
+  schedule: "0 7 1 * *"
+  timeZone: America/New_York
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: restic
+              image: restic/restic:0.18.1
+              args: ["check", "--retry-lock", "3h", "--read-data-subset=2%"]
+              env:
+                - name: RESTIC_REPOSITORY
+                  value: s3:s3.us-east-005.backblazeb2.com/kcfam-restic
+                - name: RESTIC_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: restic
+                      key: RESTIC_PASSWORD
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: restic-b2
+                      key: AWS_ACCESS_KEY_ID
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: restic-b2
+                      key: AWS_SECRET_ACCESS_KEY
+                - name: RESTIC_CACHE_DIR
+                  value: /cache
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 512Mi
+                limits:
+                  memory: 2Gi
+              volumeMounts:
+                - { name: cache, mountPath: /cache }
+          volumes:
+            - name: cache
+              hostPath: { path: /srv/restic-cache, type: DirectoryOrCreate }
