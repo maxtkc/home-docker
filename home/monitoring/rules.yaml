@@ -46,30 +46,33 @@ spec:
 
     - name: backups
       rules:
-        # restic-backup runs daily at 03:30.
+        # restic-backup runs daily at 03:30, restic-offsite (to B2) at 06:00.
         - alert: BackupStale
           expr: |
-            time() - kube_cronjob_status_last_successful_time{namespace="home", cronjob="restic-backup"} > 36 * 3600
+            time() - kube_cronjob_status_last_successful_time{namespace="home", cronjob=~"restic-backup|restic-offsite"} > 36 * 3600
           for: 10m
           labels:
             severity: critical
             notify: telegram
           annotations:
-            summary: "No successful restic backup in over 36h"
+            summary: "No successful {{ $labels.cronjob }} run in over 36h"
             description: >-
-              restic-backup last succeeded {{ $value | humanizeDuration }} ago.
+              {{ $labels.cronjob }} last succeeded {{ $value | humanizeDuration }} ago.
 
         - alert: BackupMetricMissing
-          expr: absent(kube_cronjob_status_last_successful_time{namespace="home", cronjob="restic-backup"})
+          expr: |
+            absent(kube_cronjob_status_last_successful_time{namespace="home", cronjob="restic-backup"})
+            or
+            absent(kube_cronjob_status_last_successful_time{namespace="home", cronjob="restic-offsite"})
           for: 6h
           labels:
             severity: warning
             notify: telegram
           annotations:
-            summary: "restic-backup has no recorded successful run"
+            summary: "{{ $labels.cronjob }} has no recorded successful run"
             description: >-
               kube-state-metrics reports no last successful time for the
-              restic-backup CronJob.
+              {{ $labels.cronjob }} CronJob.
 
         - alert: BackupJobFailed
           expr: kube_job_status_failed{namespace="home", job_name=~"restic-.*"} > 0
