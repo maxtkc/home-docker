@@ -242,8 +242,8 @@ ArgoCD from this repo's `main` branch.
   The Docker `immich_server` and `immich_microservices` are stopped by hand with
   restart policy `no`, kept as the rollback until decommission;
   `immich_postgres` and `immich_machine_learning` still run.
-- Files: `home/files` runs Syncthing (`sync.new.kcfam.us`, sync on host port
-  22000) and File Browser Quantum (`files.new.kcfam.us`) over
+- Files: `home/files` runs Syncthing (sync on host port 22000; GUI only by
+  ssh tunnel, see `home/files/syncthing.yaml`) and File Browser Quantum (`files.new.kcfam.us`) over
   `/srv/files/{maxtkc,stkchristy,shared}`, all uid 1000. File Browser users and
   source access live in its database (PVC), not the ConfigMap.
   `migration/files-rsync.sh` copies Nextcloud user files in and compares sha256

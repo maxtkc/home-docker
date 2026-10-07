@@ -1,7 +1,9 @@
 ## Syncthing over /srv/files, mounted at the same path so folder paths read the
 ## same inside and out. The entrypoint drops to uid 1000, the owner of /srv/files.
 ## The sync protocol is a host port (22000 tcp/udp, 21027/udp for LAN discovery);
-## only the GUI goes through Traefik.
+## the GUI has no route. Reach it at localhost:8384 through
+##   ssh -L 8384:localhost:8384 kcfam \
+##     'KUBECONFIG=/etc/rancher/k3s/k3s.yaml kubectl -n home port-forward deploy/syncthing 8384'
 ##
 ## The init container sets the GUI login from the Secret on every start; it keeps
 ## the existing device key and folders.
