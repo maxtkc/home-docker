@@ -1,0 +1,5 @@
+# SOPS + age rules. The private key is age.key (gitignored) locally and a second
+# identity in the argocd/sops-age Secret in-cluster.
+creation_rules:
+  - path_regex: ^home/.*\.enc\.yaml$
+    age: age1dhdj62dpal4r3kyy3v0g7d6cpupye3g33r5pl4csngs4fkh94eeqzn8puy

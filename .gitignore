@@ -40,3 +40,6 @@ tf-forgejo/.terraform.tfstate.lock.info
 tf-forgejo/.terraform/
 tf-forgejo/*.tfplan
 tf-forgejo/secrets.auto.tfvars
+
+# SOPS age private key
+age.key

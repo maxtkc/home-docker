@@ -1,0 +1,31 @@
+## Second hostname for argocd-server. SSO accepts it because it is in
+## `additionalUrls` (gtfs-zone-infra infra/argocd/values.yaml) and in the gtfs
+## realm's argocd client redirect URIs.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: argocd-kcfam-us-tls
+  namespace: argocd
+spec:
+  secretName: argocd-kcfam-us-tls
+  dnsNames:
+    - "argocd.kcfam.us"
+  issuerRef:
+    name: letsencrypt-porkbun
+    kind: ClusterIssuer
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: argocd-kcfam
+  namespace: argocd
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`argocd.kcfam.us`)
+      kind: Rule
+      services:
+        - name: argocd-server
+          port: 80
+  tls:
+    secretName: argocd-kcfam-us-tls

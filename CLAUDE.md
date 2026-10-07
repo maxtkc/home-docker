@@ -217,6 +217,24 @@ docker run --rm \
 cd tf && tofu apply
 ```
 
+## k3s side
+
+Services are moving to the k3s cluster on the same host, synced by the gtfs
+ArgoCD from this repo's `main` branch.
+
+- `apps/home-root.yaml` is the app of apps (applied once by hand); every other
+  file in `apps/` is an Application for one `home/<dir>`.
+- Secrets are `home/**/*.enc.yaml`, encrypted to the age key in `.sops.yaml`.
+  The private key is `age.key` (gitignored) and also sits in the `argocd/sops-age`
+  Secret alongside the gtfs key. Render before committing:
+  `PATH="$HOME/.local/bin:$PATH" SOPS_AGE_KEY_FILE=$PWD/age.key kustomize build --enable-alpha-plugins --enable-exec home/<dir>`
+- New services serve `<name>.new.kcfam.us` first (wildcard cert in `home/base`,
+  passthrough in `traefik/dynamic/kcfam-new-passthrough.yml`). A cutover is one
+  per-host passthrough file `docker cp`'d into the `traefik` container.
+- `home/backup` runs restic into the same `/mnt/backups/restic` repo as
+  `restic-data`, as host `home-k8s`, daily 03:30, with a 5% read check Saturdays
+  at 05:00.
+
 ## Network Architecture
 
 - **proxy-tier**: External-facing services (Traefik, Sablier, GrampsWeb, Immich)

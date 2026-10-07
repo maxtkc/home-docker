@@ -1,0 +1,25 @@
+## Namespace `home` and the *.new.kcfam.us wildcard certificate.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-base
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/maxtkc/home-docker.git
+    targetRevision: main
+    path: home/base
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: home
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

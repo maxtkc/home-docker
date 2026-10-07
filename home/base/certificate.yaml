@@ -1,0 +1,15 @@
+## Wildcard for the parallel run. Real kcfam.us names get per-host certs until
+## the edge moves, so browsers never coalesce a Docker-served name onto a k3s
+## connection.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: new-kcfam-us-tls
+  namespace: home
+spec:
+  secretName: new-kcfam-us-tls
+  dnsNames:
+    - "*.new.kcfam.us"
+  issuerRef:
+    name: letsencrypt-porkbun
+    kind: ClusterIssuer

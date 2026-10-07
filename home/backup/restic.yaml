@@ -1,0 +1,122 @@
+## restic into the existing /mnt/backups/restic repo, the one Docker's
+## restic-data also writes (same password). Snapshots carry host `home-k8s`, so
+## forget only ever selects this job's own snapshots.
+##
+## Sources are mounted at their host paths so snapshot paths match the host.
+## /dumps is where per-database pg_dump initContainers write; it is empty until
+## the first database moves into `home`.
+##
+## Times avoid restic-data (02:00 daily) and restic-check (Sunday 05:00).
+## --retry-lock waits out the other writer's exclusive lock during prune/check.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: restic-backup
+  namespace: home
+spec:
+  schedule: "30 3 * * *"
+  timeZone: America/New_York
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: restic
+              image: restic/restic:0.18.1
+              command: ["/bin/sh", "-ec"]
+              args:
+                - |
+                  restic backup --host home-k8s --tag home --retry-lock 2h \
+                    /srv/photos /srv/immich /srv/files /dumps
+                  restic forget --host home-k8s --retry-lock 2h --prune \
+                    --keep-daily 7 --keep-weekly 4 --keep-monthly 6
+              env:
+                - name: RESTIC_REPOSITORY
+                  value: /mnt/backups/restic
+                - name: RESTIC_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: restic
+                      key: RESTIC_PASSWORD
+                - name: RESTIC_CACHE_DIR
+                  value: /cache
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 512Mi
+                limits:
+                  memory: 2Gi
+              volumeMounts:
+                - { name: repo, mountPath: /mnt/backups/restic }
+                - { name: cache, mountPath: /cache }
+                - { name: dumps, mountPath: /dumps }
+                - { name: photos, mountPath: /srv/photos, readOnly: true }
+                - { name: immich, mountPath: /srv/immich, readOnly: true }
+                - { name: files, mountPath: /srv/files, readOnly: true }
+          volumes:
+            - name: repo
+              hostPath: { path: /mnt/backups/restic, type: Directory }
+            # Cache on /srv, not in an emptyDir on the tight /var.
+            - name: cache
+              hostPath: { path: /srv/restic-cache, type: DirectoryOrCreate }
+            - name: dumps
+              emptyDir: {}
+            - name: photos
+              hostPath: { path: /srv/photos, type: DirectoryOrCreate }
+            - name: immich
+              hostPath: { path: /srv/immich, type: DirectoryOrCreate }
+            - name: files
+              hostPath: { path: /srv/files, type: DirectoryOrCreate }
+---
+## Reads back 5% of pack data each week, so the whole repo is re-read about
+## every five months.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: restic-check
+  namespace: home
+spec:
+  schedule: "0 5 * * 6"
+  timeZone: America/New_York
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: restic
+              image: restic/restic:0.18.1
+              args: ["check", "--retry-lock", "2h", "--read-data-subset=5%"]
+              env:
+                - name: RESTIC_REPOSITORY
+                  value: /mnt/backups/restic
+                - name: RESTIC_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: restic
+                      key: RESTIC_PASSWORD
+                - name: RESTIC_CACHE_DIR
+                  value: /cache
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 512Mi
+                limits:
+                  memory: 2Gi
+              volumeMounts:
+                - { name: repo, mountPath: /mnt/backups/restic }
+                - { name: cache, mountPath: /cache }
+          volumes:
+            - name: repo
+              hostPath: { path: /mnt/backups/restic, type: Directory }
+            - name: cache
+              hostPath: { path: /srv/restic-cache, type: DirectoryOrCreate }

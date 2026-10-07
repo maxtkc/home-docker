@@ -1,0 +1,27 @@
+## App of apps for the kcfam.us stack. Applied once by hand
+## (`kubectl apply -f apps/home-root.yaml`); every other file in apps/ is a
+## child Application.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-root
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/maxtkc/home-docker.git
+    targetRevision: main
+    path: apps
+    directory:
+      recurse: false
+      include: "*.yaml"
+      exclude: "home-root.yaml"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
