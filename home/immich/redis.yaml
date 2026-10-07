@@ -1,0 +1,38 @@
+## Job queue only; nothing here needs to survive a restart.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: immich-redis
+  namespace: home
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: immich-redis
+  template:
+    metadata:
+      labels:
+        app: immich-redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:8.6.0-alpine
+          ports:
+            - containerPort: 6379
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: immich-redis
+  namespace: home
+spec:
+  selector:
+    app: immich-redis
+  ports:
+    - port: 6379

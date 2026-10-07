@@ -1,0 +1,17 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: immich-new
+  namespace: home
+  annotations:
+    external-dns.alpha.kubernetes.io/target: kcfam.us
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`im.new.kcfam.us`)
+      kind: Rule
+      services:
+        - name: immich-server
+          port: 2283
+  tls:
+    secretName: new-kcfam-us-tls

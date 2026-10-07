@@ -1,0 +1,83 @@
+## Immich's Postgres image (VectorChord + pgvector), so not CNPG.
+## PGDATA is a subdirectory because the Longhorn volume root holds lost+found.
+## That also leaves the image's include of /var/lib/postgresql/data/postgresql.conf
+## unresolved, so listen_addresses is set here.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: immich-postgres
+  namespace: home
+spec:
+  serviceName: immich-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: immich-postgres
+  template:
+    metadata:
+      labels:
+        app: immich-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: ghcr.io/immich-app/postgres:14-vectorchord1.1.1-pgvector0.8.5
+          args:
+            - postgres
+            - -c
+            - config_file=/etc/postgresql/postgresql.conf
+            - -c
+            - listen_addresses=*
+          env:
+            - name: POSTGRES_DB
+              value: immich
+            - name: POSTGRES_USER
+              value: immich
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: immich-db
+                  key: DB_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            - name: DB_STORAGE_TYPE
+              value: SSD
+          ports:
+            - containerPort: 5432
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "immich", "-d", "immich"]
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              memory: 2Gi
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/postgresql/data }
+            - { name: shm, mountPath: /dev/shm }
+      volumes:
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 128Mi
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: longhorn
+        resources:
+          requests:
+            storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: immich-postgres
+  namespace: home
+spec:
+  selector:
+    app: immich-postgres
+  ports:
+    - port: 5432
