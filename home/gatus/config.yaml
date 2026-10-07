@@ -139,6 +139,16 @@ endpoints:
     alerts:
       - type: telegram
 
+  - name: tgtg metrics
+    group: Internal
+    url: http://tgtg.home.svc:8000/
+    interval: 120s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY] == pat(*tgtg_last_scan_success_timestamp_seconds*)"
+    alerts:
+      - type: telegram
+
   # Still on Docker
   - name: Forgejo
     group: Docker
