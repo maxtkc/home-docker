@@ -1,0 +1,14 @@
+# max.kcfam.us -> k3s (TLS passthrough), static-sites (max.kcfam.us).
+# Uses the kcfam-k3s service from kcfam-new-passthrough.yml.
+#
+# No Go-template expressions in this file, comments included.
+tcp:
+  routers:
+    kcfam-max-passthrough:
+      rule: "HostSNI(`max.kcfam.us`)"
+      priority: 1000
+      entryPoints:
+        - "websecure"
+      tls:
+        passthrough: true
+      service: "kcfam-k3s"
