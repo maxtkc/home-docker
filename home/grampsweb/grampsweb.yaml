@@ -1,0 +1,184 @@
+## GrampsWeb: web, celery worker and redis. Always on (no Sablier). Web and
+## celery share one Longhorn volume, one subPath per former Docker volume.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grampsweb-data
+  namespace: home
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grampsweb-env
+  namespace: home
+data:
+  GRAMPSWEB_TREE: Kamenetsky-Meek Family
+  GRAMPSWEB_CELERY_CONFIG__broker_url: redis://grampsweb-redis:6379/0
+  GRAMPSWEB_CELERY_CONFIG__result_backend: redis://grampsweb-redis:6379/0
+  GRAMPSWEB_RATELIMIT_STORAGE_URI: redis://grampsweb-redis:6379/1
+  GUNICORN_NUM_WORKERS: "2"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grampsweb
+  namespace: home
+spec:
+  replicas: 0
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: grampsweb
+  template:
+    metadata:
+      labels:
+        app: grampsweb
+    spec:
+      containers:
+        - name: grampsweb
+          image: ghcr.io/gramps-project/grampsweb:26.7.0
+          envFrom:
+            - configMapRef:
+                name: grampsweb-env
+          ports:
+            - name: http
+              containerPort: 5000
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 50m
+              memory: 512Mi
+            limits:
+              memory: 2Gi
+          volumeMounts:
+            - { name: data, mountPath: /app/users, subPath: users }
+            - { name: data, mountPath: /app/indexdir, subPath: indexdir }
+            - { name: data, mountPath: /app/thumbnail_cache, subPath: thumbnail_cache }
+            - { name: data, mountPath: /app/cache, subPath: cache }
+            - { name: data, mountPath: /app/secret, subPath: secret }
+            - { name: data, mountPath: /root/.gramps/grampsdb, subPath: grampsdb }
+            - { name: data, mountPath: /app/media, subPath: media }
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: grampsweb-data
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grampsweb-celery
+  namespace: home
+spec:
+  replicas: 0
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: grampsweb-celery
+  template:
+    metadata:
+      labels:
+        app: grampsweb-celery
+    spec:
+      # Same node as grampsweb, so both can mount the RWO volume.
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: grampsweb
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: celery
+          image: ghcr.io/gramps-project/grampsweb:26.7.0
+          command: [celery, -A, gramps_webapi.celery, worker, --loglevel=INFO, --concurrency=2]
+          envFrom:
+            - configMapRef:
+                name: grampsweb-env
+          resources:
+            requests:
+              cpu: 20m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - { name: data, mountPath: /app/users, subPath: users }
+            - { name: data, mountPath: /app/indexdir, subPath: indexdir }
+            - { name: data, mountPath: /app/thumbnail_cache, subPath: thumbnail_cache }
+            - { name: data, mountPath: /app/cache, subPath: cache }
+            - { name: data, mountPath: /app/secret, subPath: secret }
+            - { name: data, mountPath: /root/.gramps/grampsdb, subPath: grampsdb }
+            - { name: data, mountPath: /app/media, subPath: media }
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: grampsweb-data
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grampsweb-redis
+  namespace: home
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grampsweb-redis
+  template:
+    metadata:
+      labels:
+        app: grampsweb-redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:8.6.0-alpine
+          args: [--save, "", --appendonly, "no"]
+          ports:
+            - containerPort: 6379
+          resources:
+            requests:
+              cpu: 5m
+              memory: 16Mi
+            limits:
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grampsweb-redis
+  namespace: home
+spec:
+  selector:
+    app: grampsweb-redis
+  ports:
+    - port: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grampsweb
+  namespace: home
+spec:
+  selector:
+    app: grampsweb
+  ports:
+    - port: 80
+      targetPort: http

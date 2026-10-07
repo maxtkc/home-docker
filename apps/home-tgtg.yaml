@@ -1,0 +1,27 @@
+## tgtg scanner and its gluetun VPN proxy. Wave 3, after home-monitoring has
+## installed the ServiceMonitor CRD. Holds *.enc.yaml, so it renders through the ksops CMP.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-tgtg
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/maxtkc/home-docker.git
+    targetRevision: main
+    path: home/tgtg
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: home
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true

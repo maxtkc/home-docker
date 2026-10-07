@@ -1,0 +1,161 @@
+## tgtg scanner (travel-mode fork) and the gluetun NordVPN proxy it sends TGTG
+## API requests through. Telegram stays direct (NO_PROXY). The bot's /vpn
+## commands drive gluetun's control server on gluetun:8000.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tgtg-tokens
+  namespace: home
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tgtg
+  namespace: home
+spec:
+  # One token, one session: never two scanners.
+  replicas: 0
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: tgtg
+  template:
+    metadata:
+      labels:
+        app: tgtg
+    spec:
+      containers:
+        - name: tgtg
+          image: ghcr.io/maxtkc/tgtg:travel-mode-43f44dd
+          envFrom:
+            - configMapRef:
+                name: tgtg-env
+            - secretRef:
+                name: tgtg-secrets
+          ports:
+            - name: metrics
+              containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /
+              port: metrics
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
+          volumeMounts:
+            - { name: tokens, mountPath: /tokens }
+      volumes:
+        - name: tokens
+          persistentVolumeClaim:
+            claimName: tgtg-tokens
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tgtg
+  namespace: home
+  labels:
+    app: tgtg
+spec:
+  selector:
+    app: tgtg
+  ports:
+    - name: metrics
+      port: 8000
+      targetPort: metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: tgtg
+  namespace: home
+spec:
+  selector:
+    matchLabels:
+      app: tgtg
+  endpoints:
+    - port: metrics
+      interval: 15s
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gluetun
+  namespace: home
+spec:
+  replicas: 0
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: gluetun
+  template:
+    metadata:
+      labels:
+        app: gluetun
+    spec:
+      containers:
+        - name: gluetun
+          image: qmcgaw/gluetun:v3.41.3
+          env:
+            - { name: VPN_SERVICE_PROVIDER, value: nordvpn }
+            - { name: VPN_TYPE, value: wireguard }
+            - { name: SERVER_COUNTRIES, value: United States }
+            - { name: HTTPPROXY, value: "on" }
+            # Accept the proxy and control server from other pods.
+            - { name: FIREWALL_INPUT_PORTS, value: "8888,8000" }
+            - { name: HEALTH_SERVER_ADDRESS, value: ":9999" }
+            - { name: TZ, value: America/New_York }
+          envFrom:
+            # WIREGUARD_PRIVATE_KEY, HTTP_CONTROL_SERVER_AUTH_DEFAULT_ROLE
+            - secretRef:
+                name: gluetun-secrets
+          ports:
+            - { name: proxy, containerPort: 8888 }
+            - { name: control, containerPort: 8000 }
+            - { name: health, containerPort: 9999 }
+          readinessProbe:
+            httpGet:
+              path: /
+              port: health
+            periodSeconds: 30
+          livenessProbe:
+            httpGet:
+              path: /
+              port: health
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            failureThreshold: 5
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          securityContext:
+            capabilities:
+              add: [NET_ADMIN]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gluetun
+  namespace: home
+spec:
+  selector:
+    app: gluetun
+  ports:
+    - { name: proxy, port: 8888, targetPort: proxy }
+    - { name: control, port: 8000, targetPort: control }

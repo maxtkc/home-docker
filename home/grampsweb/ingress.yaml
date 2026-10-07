@@ -1,0 +1,48 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: grampsweb-new
+  namespace: home
+  annotations:
+    external-dns.alpha.kubernetes.io/target: kcfam.us
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`gramps.new.kcfam.us`)
+      kind: Rule
+      services:
+        - name: grampsweb
+          port: 80
+  tls:
+    secretName: new-kcfam-us-tls
+---
+## gramps.kcfam.us is reached through a per-host passthrough in Docker Traefik. Its
+## CNAME predates external-dns, so this route carries no target annotation.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: grampsweb
+  namespace: home
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`gramps.kcfam.us`)
+      kind: Rule
+      services:
+        - name: grampsweb
+          port: 80
+  tls:
+    secretName: gramps-kcfam-us-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: gramps-kcfam-us-tls
+  namespace: home
+spec:
+  secretName: gramps-kcfam-us-tls
+  dnsNames:
+    - gramps.kcfam.us
+  issuerRef:
+    name: letsencrypt-porkbun
+    kind: ClusterIssuer

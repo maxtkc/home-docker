@@ -1,0 +1,26 @@
+apiVersion: ENC[AES256_GCM,data:HxM=,iv:0855W1a5ogdD6DWLjG58nmCZAgnRCt+utPKkRpOZxMs=,tag:o7xAFh2y3bYru6/qyiYHUw==,type:str]
+kind: ENC[AES256_GCM,data:WRuAh0B2,iv:3/vkt0q9nGu6z+te+A36bl+hjjUDm7ZogbriRYC0uJY=,tag:t2UBJUw/KiAFHxpQpEwWMw==,type:str]
+metadata:
+    name: ENC[AES256_GCM,data:W94Q/7IcfXr7pZqS,iv:ZxwC971l1YhJC9E0e/tvIUEQJ41eumkPegWXyIZnQAE=,tag:fRB0U7x99uwwpjK96PIvaQ==,type:str]
+    namespace: ENC[AES256_GCM,data:8HAHog==,iv:cVLJyYaIKwZDUGZg58BY+CHBbCy5yRZKVGBS6n+psfE=,tag:BnGAKepL3mr/W0fJ+xE+bA==,type:str]
+type: ENC[AES256_GCM,data:oXvEQ07Y,iv:QAE/GIyc8252h+xX9tWvXzsSPpAGUKMBZlgswO3lQ24=,tag:roo4eoagXc5yb8toq7+cIg==,type:str]
+stringData:
+    TGTG_USERNAME: ENC[AES256_GCM,data:YNHEF1MiHBerSX+YyQFSrIQpckmGPMwh,iv:FWkDa+2F1iZEnk8dDL/V5HOLeBeAPXwf7i6rBcKUlTQ=,tag:vJwrUmUgJOIz6XJmpWJ42g==,type:str]
+    TELEGRAM_TOKEN: ENC[AES256_GCM,data:iLvCRwZn9ruUocplVGS8adV7UPpinwGkUCPUl7be2AT66McwXMwWJ6SqrCMNZw==,iv:kCJqgmcD1lUMM0rZ6hpuWbhthmeixdwpOtUVOI+n0ms=,tag:IvonUvQQS/P7wLkmzoGvWg==,type:str]
+    TELEGRAM_CHAT_IDS: ENC[AES256_GCM,data:u8D6GHCZEpGbvw==,iv:NJqJcNCiWrmiEGfKrALC0TMpwXRrMPWPvGIAmFhtiQI=,tag:s58SFODYVcDzS+DsjIxpwg==,type:str]
+    GLUETUN_API_KEY: ENC[AES256_GCM,data:fIfj7IZAGqBMlFhE/MQFmdjbigYI6OKPgITUQJITvFV27sqZ0P1mjk2qFz7J0DmW,iv:/OfZfxW39h1Oon4IDZj417SUcy57T9KVOqW5nGldArw=,tag:+YXNo/YNXGHE2dfJsDQ5wA==,type:str]
+sops:
+    age:
+        - recipient: age1dhdj62dpal4r3kyy3v0g7d6cpupye3g33r5pl4csngs4fkh94eeqzn8puy
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBiVHFCdnFIR2tPNkhrWGp4
+            QkJ1dXRkVUloY0VJeEpsRDVPMy9VWTl5M0VJCkgydDNLeDllckNac0RJNGtpU3V4
+            L1lHV2FOT0pqT2JkaGdjSU1hb091SjgKLS0tIHpxUi9WY2g0V3JncFdZOUp5akNr
+            MDRBK093ZFRuWFJtTGNPcSt4bURXbWsKB6hQkp2EwAYi3nrsLBOf72r9zhT/osa5
+            GsiDbi/rpWbEE9peVtUQ4g7Rld7W6hPMZIp2vOeM3ong9FBW1vsDeA==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-10-07T08:19:33Z"
+    mac: ENC[AES256_GCM,data:TP7ixoTcReuEWGMqg+4FnoBlBwdIPw/sFVrzSIqZ1EhUDxH4denU2PBqu/yQKJAV8QeIho0XzRGYFfeEugoELD8NFjWoXmYHOBtQt0MvOI7PcsWgBxULdz7JcPntWsMLhBb9d5//zPU/NHt7f+o6GzmBDI8dY/N3dmuNulVdBDc=,iv:ERGrQVJl8f5nBYEs/Iwvqg8fN2YBMT9zE4OMJ/7sfN8=,tag:lnq+/bery4QSGoahC/lZjQ==,type:str]
+    unencrypted_suffix: _unencrypted
+    version: 3.11.0
