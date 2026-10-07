@@ -141,21 +141,22 @@ groups:
 
   - name: tgtg
     rules:
-      # A bag in stock at its lowest price of the last 14 days. The second
-      # clause drops bags whose price never moved, which would otherwise always
-      # sit at their own minimum. The price stays leftmost so $value is the price.
+      # A dynamic bag in stock at about 1/3 of its value, the last step of its
+      # daily price drop. The second clause keeps out fixed-price bags, which
+      # never move. 0.34 allows for cent rounding. The price stays leftmost so
+      # $value is the price.
       - alert: TgtgPriceAtLow
         expr: |
-          (tgtg_item_price <= min_over_time(tgtg_item_price[14d]))
+          (tgtg_item_price <= 0.34 * tgtg_item_value)
           and on (item_id) (tgtg_item_price < max_over_time(tgtg_item_price[14d]))
           and on (item_id) (tgtg_item_count > 0)
         labels:
           severity: info
         annotations:
-          summary: "{{ $labels.display_name }} is at its 14-day low"
+          summary: "{{ $labels.display_name }} is at 1/3 price"
           description: >-
-            {{ $labels.display_name }} is in stock at {{ $value }}, its lowest
-            price in 14 days.
+            {{ $labels.display_name }} is in stock at {{ $value }}, a third
+            of its value.
 
       # Backstop for the tgtg bot's own block notice, for when the bot cannot
       # send it: crash loop, stuck scanner, or a scan that never returns.

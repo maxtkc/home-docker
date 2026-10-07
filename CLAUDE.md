@@ -16,7 +16,7 @@ Services and their routes:
 - `op.kcfam.us` → OpenProject (project management, toggleable via `var.run_openproject`)
 - `tgtg.kcfam.us` → Too Good To Go notifier
 
-`gluetun` (internal only, `tf/compute_vpn.tf`) is a NordVPN tunnel exposed as an HTTP proxy on `gluetun:8888`. It exists only when `var.nordvpn_wireguard_private_key` is set, and tgtg uses it when `var.tgtg_use_vpn` is true. tgtg exports price and scan-health metrics on `tgtg:8000`. Prometheus alerts with `TgtgPriceAtLow` when an in-stock bag is at its 14-day low, and with `TgtgScanStale` when no scan has succeeded for an hour. The tgtg bot itself posts a notice after three failed scans in a row (e.g. DataDome 403s), with buttons to move the VPN exit; `/vpn`, `/vpn new` and `/vpn <country>[, city]` do the same by command.
+`gluetun` (internal only, `tf/compute_vpn.tf`) is a NordVPN tunnel exposed as an HTTP proxy on `gluetun:8888`. It exists only when `var.nordvpn_wireguard_private_key` is set, and tgtg uses it when `var.tgtg_use_vpn` is true. tgtg exports price and scan-health metrics on `tgtg:8000`. Prometheus alerts with `TgtgPriceAtLow` when an in-stock dynamic-price bag drops to about 1/3 of its value, and with `TgtgScanStale` when no scan has succeeded for an hour. The tgtg bot itself posts a notice after three failed scans in a row (e.g. DataDome 403s), with buttons to move the VPN exit; `/vpn`, `/vpn new` and `/vpn <country>[, city]` do the same by command.
 
 **Traefik v3** handles reverse proxying and Let's Encrypt SSL. **Sablier** manages auto-scaling for GrampsWeb: containers spin down after 1 minute of inactivity and wake on request. **OpenProject** is not Sablier-managed — it is entirely toggled on/off via `var.run_openproject` (Terraform `count`).
 
