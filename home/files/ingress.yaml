@@ -1,0 +1,35 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: files-new
+  namespace: home
+  annotations:
+    external-dns.alpha.kubernetes.io/target: kcfam.us
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`files.new.kcfam.us`)
+      kind: Rule
+      services:
+        - name: filebrowser
+          port: 80
+  tls:
+    secretName: new-kcfam-us-tls
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: syncthing-new
+  namespace: home
+  annotations:
+    external-dns.alpha.kubernetes.io/target: kcfam.us
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`sync.new.kcfam.us`)
+      kind: Rule
+      services:
+        - name: syncthing
+          port: 8384
+  tls:
+    secretName: new-kcfam-us-tls

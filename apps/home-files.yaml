@@ -1,0 +1,25 @@
+## Syncthing and File Browser Quantum over /srv/files. Holds *.enc.yaml, so it renders through the ksops CMP.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-files
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/maxtkc/home-docker.git
+    targetRevision: main
+    path: home/files
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: home
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

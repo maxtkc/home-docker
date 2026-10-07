@@ -1,0 +1,138 @@
+## File Browser Quantum over /srv/files, as uid 1000 like Syncthing.
+## maxtkc is the admin. The two per-user sources are off for new users; access is
+## granted per user in Settings -> Users (stkchristy: stkchristy and shared).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: filebrowser
+  namespace: home
+data:
+  config.yaml: |
+    server:
+      port: 80
+      database: /home/filebrowser/data/database.db
+      logging:
+        - levels: "info|warning|error"
+      sources:
+        - path: /srv/files/maxtkc
+          name: maxtkc
+          config:
+            defaultEnabled: false
+        - path: /srv/files/stkchristy
+          name: stkchristy
+          config:
+            defaultEnabled: false
+        - path: /srv/files/shared
+          name: shared
+          config:
+            defaultEnabled: true
+    auth:
+      adminUsername: maxtkc
+      methods:
+        password:
+          enabled: true
+          minLength: 8
+          signup: false
+    userDefaults:
+      account:
+        permissions:
+          api: false
+          admin: false
+          modify: true
+          share: true
+          realtime: false
+          delete: true
+          create: true
+          download: true
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: filebrowser-data
+  namespace: home
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: filebrowser
+  namespace: home
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: filebrowser
+  template:
+    metadata:
+      labels:
+        app: filebrowser
+      annotations:
+        # Restart on config change; bump with the ConfigMap.
+        config-revision: "1"
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: filebrowser
+          image: gtstef/filebrowser:1.5.8-stable
+          env:
+            - name: FILEBROWSER_CONFIG
+              value: /home/filebrowser/config/config.yaml
+            - name: FILEBROWSER_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: files
+                  key: FILEBROWSER_ADMIN_PASSWORD
+            - name: FILEBROWSER_JWT_TOKEN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: files
+                  key: FILEBROWSER_JWT_TOKEN_SECRET
+            - name: TZ
+              value: America/New_York
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - { name: config, mountPath: /home/filebrowser/config, readOnly: true }
+            - { name: data, mountPath: /home/filebrowser/data }
+            - { name: files, mountPath: /srv/files }
+      volumes:
+        - name: config
+          configMap:
+            name: filebrowser
+        - name: data
+          persistentVolumeClaim:
+            claimName: filebrowser-data
+        - name: files
+          hostPath: { path: /srv/files, type: Directory }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: filebrowser
+  namespace: home
+spec:
+  selector:
+    app: filebrowser
+  ports:
+    - port: 80

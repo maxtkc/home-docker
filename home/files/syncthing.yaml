@@ -1,0 +1,98 @@
+## Syncthing over /srv/files, mounted at the same path so folder paths read the
+## same inside and out. The entrypoint drops to uid 1000, the owner of /srv/files.
+## The sync protocol is a host port (22000 tcp/udp, 21027/udp for LAN discovery);
+## only the GUI goes through Traefik.
+##
+## The init container sets the GUI login from the Secret on every start; it keeps
+## the existing device key and folders.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: syncthing-config
+  namespace: home
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: syncthing
+  namespace: home
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: syncthing
+  template:
+    metadata:
+      labels:
+        app: syncthing
+    spec:
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+        - name: gui-login
+          image: syncthing/syncthing:2.1.6
+          command: ["/bin/sh", "-ec"]
+          args:
+            - exec /bin/syncthing generate --home=/var/syncthing/config
+                --gui-user=maxtkc --gui-password="$GUI_PASSWORD"
+          env:
+            - name: GUI_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: files
+                  key: SYNCTHING_GUI_PASSWORD
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+          volumeMounts:
+            - { name: config, mountPath: /var/syncthing }
+      containers:
+        - name: syncthing
+          image: syncthing/syncthing:2.1.6
+          env:
+            - name: TZ
+              value: America/New_York
+          ports:
+            - { name: gui, containerPort: 8384 }
+            - { name: sync-tcp, containerPort: 22000, hostPort: 22000, protocol: TCP }
+            - { name: sync-udp, containerPort: 22000, hostPort: 22000, protocol: UDP }
+            - { name: discovery, containerPort: 21027, hostPort: 21027, protocol: UDP }
+          readinessProbe:
+            httpGet:
+              path: /rest/noauth/health
+              port: 8384
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - { name: config, mountPath: /var/syncthing }
+            - { name: files, mountPath: /srv/files }
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: syncthing-config
+        - name: files
+          hostPath: { path: /srv/files, type: Directory }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: syncthing
+  namespace: home
+spec:
+  selector:
+    app: syncthing
+  ports:
+    - port: 8384
