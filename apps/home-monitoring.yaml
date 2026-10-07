@@ -1,0 +1,33 @@
+## kube-prometheus-stack (values in home/monitoring/values.yaml). Wave 2, so the
+## CRDs exist before home-monitoring-config and home-tgtg sync.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-monitoring
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-prometheus-stack
+      targetRevision: 92.0.0
+      helm:
+        releaseName: kube-prometheus-stack
+        valueFiles:
+          - $values/home/monitoring/values.yaml
+    - repoURL: https://github.com/maxtkc/home-docker.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: home
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

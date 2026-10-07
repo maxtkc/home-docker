@@ -1,0 +1,129 @@
+## Alerts ported from prometheus/alerts.yml. Only alerts with notify=telegram
+## reach Telegram (see alertmanager-home.enc.yaml).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: home
+  namespace: home
+spec:
+  groups:
+    - name: disk
+      rules:
+        # df-based, so it counts deleted-but-still-open files. /srv holds
+        # Longhorn, which stops scheduling at 25% free, so it alerts earliest.
+        - alert: DiskSpaceLow
+          expr: |
+            node_filesystem_avail_bytes{mountpoint="/srv"}
+              / node_filesystem_size_bytes{mountpoint="/srv"} < 0.15
+            or
+            node_filesystem_avail_bytes{mountpoint=~"/|/var|/mnt/backups"}
+              / node_filesystem_size_bytes{mountpoint=~"/|/var|/mnt/backups"} < 0.10
+          for: 10m
+          labels:
+            severity: critical
+            notify: telegram
+          annotations:
+            summary: "{{ $labels.mountpoint }} is low on space"
+            description: >-
+              {{ $labels.mountpoint }} is at
+              {{ $value | humanizePercentage }} free on {{ $labels.instance }}.
+              /var holds the k3s image store; /srv holds Docker and Longhorn.
+
+        - alert: DiskFillingFast
+          expr: |
+            predict_linear(
+              node_filesystem_avail_bytes{mountpoint=~"/var|/srv"}[6h], 4 * 3600
+            ) < 0
+          for: 30m
+          labels:
+            severity: warning
+            notify: telegram
+          annotations:
+            summary: "{{ $labels.mountpoint }} is filling and will be full within 4h"
+            description: >-
+              Extrapolating the last 6h, {{ $labels.mountpoint }} on
+              {{ $labels.instance }} runs out of space within 4 hours.
+
+    - name: backups
+      rules:
+        # restic-backup runs daily at 03:30.
+        - alert: BackupStale
+          expr: |
+            time() - kube_cronjob_status_last_successful_time{namespace="home", cronjob="restic-backup"} > 36 * 3600
+          for: 10m
+          labels:
+            severity: critical
+            notify: telegram
+          annotations:
+            summary: "No successful restic backup in over 36h"
+            description: >-
+              restic-backup last succeeded {{ $value | humanizeDuration }} ago.
+
+        - alert: BackupMetricMissing
+          expr: absent(kube_cronjob_status_last_successful_time{namespace="home", cronjob="restic-backup"})
+          for: 6h
+          labels:
+            severity: warning
+            notify: telegram
+          annotations:
+            summary: "restic-backup has no recorded successful run"
+            description: >-
+              kube-state-metrics reports no last successful time for the
+              restic-backup CronJob.
+
+        - alert: BackupJobFailed
+          expr: kube_job_status_failed{namespace="home", job_name=~"restic-.*"} > 0
+          for: 10m
+          labels:
+            severity: warning
+            notify: telegram
+          annotations:
+            summary: "Job {{ $labels.job_name }} failed"
+            description: >-
+              kubectl -n home logs job/{{ $labels.job_name }}
+
+    - name: pods
+      rules:
+        - alert: HomePodNotReady
+          expr: |
+            sum by (pod) (kube_pod_status_ready{namespace="home", condition="false"}) > 0
+            unless on (pod) kube_pod_status_phase{namespace="home", phase="Succeeded"} > 0
+          for: 15m
+          labels:
+            severity: warning
+            notify: telegram
+          annotations:
+            summary: "{{ $labels.pod }} is not ready"
+            description: >-
+              {{ $labels.pod }} in home has not been ready for 15 minutes.
+
+    - name: tgtg
+      rules:
+        # A bag in stock at its lowest price of the last 14 days. The second
+        # clause drops bags whose price never moved. The price stays leftmost so
+        # $value is the price.
+        - alert: TgtgPriceAtLow
+          expr: |
+            (tgtg_item_price <= min_over_time(tgtg_item_price[14d]))
+            and on (item_id) (tgtg_item_price < max_over_time(tgtg_item_price[14d]))
+            and on (item_id) (tgtg_item_count > 0)
+          labels:
+            severity: info
+            notify: telegram
+          annotations:
+            summary: "{{ $labels.display_name }} is at its 14-day low"
+            description: >-
+              {{ $labels.display_name }} is in stock at {{ $value }}, its lowest
+              price in 14 days.
+
+        - alert: TgtgScanStale
+          expr: time() - tgtg_last_scan_success_timestamp_seconds > 3600
+          for: 5m
+          labels:
+            severity: warning
+            notify: telegram
+          annotations:
+            summary: "tgtg has not completed a scan in over an hour"
+            description: >-
+              Last successful TGTG request was {{ $value | humanizeDuration }} ago.
+              If the tgtg bot reports 403s, send it /vpn new or /vpn Germany.

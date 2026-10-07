@@ -1,0 +1,77 @@
+# kube-prometheus-stack for the home namespace (chart pinned in
+# apps/home-monitoring.yaml). Secrets, rules, the dashboard and routes are in
+# the home-monitoring-config app (this directory's kustomization).
+
+# k3s runs these inside the k3s binary; there is nothing to scrape.
+kubeEtcd:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+prometheus:
+  prometheusSpec:
+    # TgtgPriceAtLow looks back 14 days.
+    retention: 30d
+    retentionSize: 9GB
+    # Pick up every ServiceMonitor and PrometheusRule, not only the chart's.
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    resources:
+      requests:
+        cpu: 100m
+        memory: 512Mi
+      limits:
+        memory: 2Gi
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn
+          accessModes: [ReadWriteOnce]
+          resources:
+            requests:
+              storage: 10Gi
+
+alertmanager:
+  alertmanagerSpec:
+    # alertmanager.yaml and telegram_token, from alertmanager-home.enc.yaml. The
+    # config routes only notify=telegram alerts and reads the token from
+    # /etc/alertmanager/secrets/alertmanager-home/telegram_token.
+    configSecret: alertmanager-home
+    secrets:
+      - alertmanager-home
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: longhorn
+          accessModes: [ReadWriteOnce]
+          resources:
+            requests:
+              storage: 1Gi
+
+grafana:
+  admin:
+    existingSecret: grafana-admin
+  # GF_AUTH_GITHUB_CLIENT_ID and GF_AUTH_GITHUB_CLIENT_SECRET.
+  envFromSecret: grafana-github
+  persistence:
+    enabled: true
+    storageClassName: longhorn
+    size: 1Gi
+  grafana.ini:
+    server:
+      root_url: https://gf.kcfam.us
+    users:
+      allow_sign_up: false
+    auth.github:
+      enabled: true
+      scopes: user:email,read:org
+      allow_sign_up: true
+      allowed_users: maxtkc
+      skip_org_role_sync: true
+    auth:
+      oauth_allow_insecure_email_lookup: true
