@@ -30,7 +30,7 @@ metadata:
   name: grampsweb
   namespace: home
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -84,7 +84,7 @@ metadata:
   name: grampsweb-celery
   namespace: home
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:

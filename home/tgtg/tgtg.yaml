@@ -20,7 +20,7 @@ metadata:
   namespace: home
 spec:
   # One token, one session: never two scanners.
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -95,7 +95,7 @@ metadata:
   name: gluetun
   namespace: home
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
