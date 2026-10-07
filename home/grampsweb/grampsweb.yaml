@@ -106,7 +106,8 @@ spec:
       containers:
         - name: celery
           image: ghcr.io/gramps-project/grampsweb:26.7.0
-          command: [celery, -A, gramps_webapi.celery, worker, --loglevel=INFO, --concurrency=2]
+          # args, not command: the image entrypoint loads the secret key from /app/secret.
+          args: [celery, -A, gramps_webapi.celery, worker, --loglevel=INFO, --concurrency=2]
           envFrom:
             - configMapRef:
                 name: grampsweb-env
