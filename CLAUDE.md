@@ -15,7 +15,7 @@ Services and their routes:
 - `op.kcfam.us` → OpenProject (project management, toggleable via `var.run_openproject`)
 - `tgtg.kcfam.us` → Too Good To Go notifier
 
-tgtg and `gluetun` now run in k3s (see "tgtg on k3s"). `gluetun` is a NordVPN tunnel exposed as an HTTP proxy on `gluetun:8888`. tgtg exports price and scan-health metrics on `tgtg:8000`. The bot notifies on restocks, and on price drops only once a bag reaches about 1/3 of its value (`PRICE_MONITORING`). Prometheus alerts with `TgtgScanStale` when no scan has succeeded for an hour. The tgtg bot itself posts a notice after three failed scans in a row (e.g. DataDome 403s), with buttons to move the VPN exit; `/vpn`, `/vpn new` and `/vpn <country>[, city]` do the same by command.
+tgtg and `gluetun` now run in k3s (see "tgtg on k3s"). `gluetun` is a NordVPN tunnel exposed as an HTTP proxy on `gluetun:8888`. tgtg exports price and scan-health metrics on `tgtg:8000`. With `PRICE_MONITORING`, the bot notifies when a bag is in stock at its price floor, the lowest price/value ratio seen for it (kept in `price_floors.json` on the tokens PVC, reset to the current price if not reached for 7 days). Fixed-price bags notify on restock; a dynamic bag stays silent at 1/2 of value and notifies when it steps down to its floor. Prometheus alerts with `TgtgScanStale` when no scan has succeeded for an hour. The tgtg bot itself posts a notice after three failed scans in a row (e.g. DataDome 403s), with buttons to move the VPN exit; `/vpn`, `/vpn new` and `/vpn <country>[, city]` do the same by command.
 
 **Traefik v3** handles reverse proxying and Let's Encrypt SSL. **Sablier** manages auto-scaling for GrampsWeb: containers spin down after 1 minute of inactivity and wake on request. **OpenProject** is not Sablier-managed — it is entirely toggled on/off via `var.run_openproject` (Terraform `count`).
 
@@ -41,7 +41,7 @@ Configuration files are **baked into images** (not volume-mounted) because we us
 - `prometheus/` — Prometheus with scrape config
 - `grafana/` — Grafana with provisioning and dashboards
 - `kcfam/tgtg:local` - built from a local checkout of the tgtg fork
-  (github.com/maxtkc/tgtg, branch `travel-mode`) when `var.tgtg_fork_path` is set;
+  (github.com/maxtkc/tgtg, branch `main`) when `var.tgtg_fork_path` is set;
   otherwise tgtg runs `derhenning/tgtg:${var.tgtg_version}`. The provider's buildx
   path fails over an ssh host, so the build block leaves `builder` unset.
 
@@ -282,8 +282,8 @@ Nextcloud volume, so a delete in Immich removes only the `/srv/photos` link.
 
 ## tgtg on k3s
 
-`home/tgtg` runs `ghcr.io/maxtkc/tgtg:travel-mode-<sha>`, built by
-`.github/workflows/ghcr.yml` on the fork's `travel-mode` branch
+`home/tgtg` runs `ghcr.io/maxtkc/tgtg:main-<sha>`, built by
+`.github/workflows/ghcr.yml` on the fork's `main` branch
 (github.com/maxtkc/tgtg) on every push; bump the tag in `home/tgtg/tgtg.yaml`.
 Tokens, including the parked `datadome.bak-*` cookies, are on the `tgtg-tokens`
 PVC. `gluetun` is a separate Deployment and Service (proxy `:8888`, control

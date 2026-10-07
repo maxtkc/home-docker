@@ -1,4 +1,4 @@
-## tgtg scanner (travel-mode fork) and the gluetun NordVPN proxy it sends TGTG
+## tgtg scanner (maxtkc fork) and the gluetun NordVPN proxy it sends TGTG
 ## API requests through. Telegram stays direct (NO_PROXY). The bot's /vpn
 ## commands drive gluetun's control server on gluetun:8000.
 apiVersion: v1
@@ -33,7 +33,7 @@ spec:
     spec:
       containers:
         - name: tgtg
-          image: ghcr.io/maxtkc/tgtg:travel-mode-797e484
+          image: ghcr.io/maxtkc/tgtg:main-a3a21ce
           envFrom:
             - configMapRef:
                 name: tgtg-env
