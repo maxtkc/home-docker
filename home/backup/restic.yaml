@@ -208,7 +208,8 @@ spec:
                 limits:
                   memory: 2Gi
               volumeMounts:
-                - { name: repo, mountPath: /mnt/backups/restic, readOnly: true }
+                # Read-write: copy takes a lock in the source repo.
+                - { name: repo, mountPath: /mnt/backups/restic }
                 - { name: cache, mountPath: /cache }
           volumes:
             - name: repo
