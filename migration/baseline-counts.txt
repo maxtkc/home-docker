@@ -1,0 +1,43 @@
+# Immich baseline counts. Phase 0, 2026-10-07 (kcfam 2026-10-06 19:05 EDT), Immich v3.2.0
+# Live DB, and the restore of immich-2026-10-07.dump (sha256 7dd5837e...) into a
+# throwaway container on the laptop. Both outputs identical.
+# Change from the plan's table: the nightly library scan offlined/trashed 3 assets whose
+# files were deleted in Nextcloud on 2026-10-06, and the phone uploaded 2 new ones.
+
+## phase-0 live
+assets total|25166
+assets not soft-deleted|25163
+assets offline|3
+assets external|25098
+assets native|68
+asset_exif|25166
+asset_face|21844
+named people|261
+albums|4
+album_asset|269
+shared_link|7
+memory|172
+tag|0
+asset_edit|0
+users|2
+user REDACTED|24364
+user REDACTED|802
+
+## phase-0 restored
+assets total|25166
+assets not soft-deleted|25163
+assets offline|3
+assets external|25098
+assets native|68
+asset_exif|25166
+asset_face|21844
+named people|261
+albums|4
+album_asset|269
+shared_link|7
+memory|172
+tag|0
+asset_edit|0
+users|2
+user REDACTED|24364
+user REDACTED|802

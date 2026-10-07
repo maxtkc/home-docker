@@ -1,0 +1,16 @@
+SELECT 'assets total', count(*) FROM asset;
+SELECT 'assets not soft-deleted', count(*) FROM asset WHERE "deletedAt" IS NULL;
+SELECT 'assets offline', count(*) FROM asset WHERE "isOffline";
+SELECT 'assets external', count(*) FROM asset WHERE "originalPath" LIKE '/mnt/nextcloud/data/%';
+SELECT 'assets native', count(*) FROM asset WHERE "originalPath" LIKE '/usr/src/app/%';
+SELECT 'asset_exif', count(*) FROM asset_exif;
+SELECT 'asset_face', count(*) FROM asset_face;
+SELECT 'named people', count(*) FROM person WHERE name <> '';
+SELECT 'albums', count(*) FROM album;
+SELECT 'album_asset', count(*) FROM album_asset;
+SELECT 'shared_link', count(*) FROM shared_link;
+SELECT 'memory', count(*) FROM memory;
+SELECT 'tag', count(*) FROM tag;
+SELECT 'asset_edit', count(*) FROM asset_edit;
+SELECT 'users', count(*) FROM "user";
+SELECT 'user ' || u.email, count(a.id) FROM "user" u LEFT JOIN asset a ON a."ownerId" = u.id GROUP BY u.email ORDER BY u.email;

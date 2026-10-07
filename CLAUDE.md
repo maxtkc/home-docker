@@ -96,6 +96,10 @@ File data and databases are backed up separately.
   02:00, keeping 7 daily / 4 weekly / 6 monthly. `restic-check` verifies the
   repository Sundays at 05:00. The passphrase is `var.restic_password` and has no
   recovery path.
+  Snapshot `d3add526` (2026-10-06) is tagged `pre-migration`. On 2026-10-07
+  `restic-data` was recreated by hand with `--keep-tag pre-migration` appended to
+  `RESTIC_FORGET_ARGS` so retention keeps it; `tf/` does not have the flag. The
+  recreate kept hostname `dbedfab23807`, since restic groups snapshots by host.
 - **offen tarballs** still cover the databases and the small volumes, because
   resticker has no equivalent of `BACKUP_STOP_DURING_BACKUP_LABEL` and a Postgres
   data directory copied while the server is writing to it is not a backup:
