@@ -1,0 +1,32 @@
+## external-dns for kcfam.us (values in home/external-dns). Wave 1, after
+## home-base has created the porkbun-secret it reads.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-external-dns
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://kubernetes-sigs.github.io/external-dns
+      chart: external-dns
+      targetRevision: 1.16.1
+      helm:
+        valueFiles:
+          - $values/home/external-dns/values.yaml
+    - repoURL: https://github.com/maxtkc/home-docker.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: home
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

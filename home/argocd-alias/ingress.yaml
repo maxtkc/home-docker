@@ -19,6 +19,8 @@ kind: IngressRoute
 metadata:
   name: argocd-kcfam
   namespace: argocd
+  annotations:
+    external-dns.alpha.kubernetes.io/target: kcfam.us
 spec:
   entryPoints: [websecure]
   routes:

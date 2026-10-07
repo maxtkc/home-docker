@@ -231,6 +231,10 @@ ArgoCD from this repo's `main` branch.
 - New services serve `<name>.new.kcfam.us` first (wildcard cert in `home/base`,
   passthrough in `traefik/dynamic/kcfam-new-passthrough.yml`). A cutover is one
   per-host passthrough file `docker cp`'d into the `traefik` container.
+- DNS: `home-external-dns` (values in `home/external-dns`) manages `kcfam.us`
+  records only. An IngressRoute gets a CNAME to the apex by carrying
+  `external-dns.alpha.kubernetes.io/target: kcfam.us`. Records it did not
+  create are left alone; never declare the apex.
 - `home/backup` runs restic into the same `/mnt/backups/restic` repo as
   `restic-data`, as host `home-k8s`, daily 03:30, with a 5% read check Saturdays
   at 05:00.

@@ -1,0 +1,56 @@
+## external-dns for kcfam.us only. Same chart and Porkbun webhook as gtfs-zone-infra's
+## infra/external-dns (see its values.yaml for why each setting is needed), but a
+## separate instance: a failed record fails the whole zone's batch, so kcfam.us
+## and gtfs.zone must not share one.
+##
+## IngressRoutes opt in with `external-dns.alpha.kubernetes.io/target: kcfam.us`,
+## which makes a CNAME to the apex. Records made by tf or by hand carry no
+## ownership TXT, so `sync` leaves them alone. Never declare the apex here.
+provider:
+  name: webhook
+  webhook:
+    image:
+      repository: ghcr.io/konnektr-io/external-dns-porkbun-webhook
+      tag: v0.3.0
+    env:
+      - name: API_KEY
+        valueFrom:
+          secretKeyRef:
+            name: porkbun-secret
+            key: API_KEY
+      - name: API_SECRET
+        valueFrom:
+          secretKeyRef:
+            name: porkbun-secret
+            key: API_SECRET
+      # Required by the binary; keep in sync with domainFilters.
+      - name: DOMAIN_FILTER
+        value: kcfam.us
+      - name: LISTEN_ADDRESS
+        value: ":8080"
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      privileged: false
+      readOnlyRootFilesystem: true
+      runAsGroup: 65532
+      runAsNonRoot: true
+      runAsUser: 65532
+
+domainFilters:
+  - kcfam.us
+
+sources:
+  - traefik-proxy
+  - crd
+
+extraArgs:
+  - --traefik-disable-legacy
+  - --webhook-provider-url=http://localhost:8080
+  - --txt-new-format-only
+
+policy: sync
+registry: txt
+txtOwnerId: kcfam-k3s
