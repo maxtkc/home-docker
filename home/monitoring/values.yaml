@@ -14,7 +14,6 @@ kubeProxy:
 
 prometheus:
   prometheusSpec:
-    # TgtgPriceAtLow looks back 14 days.
     retention: 30d
     retentionSize: 9GB
     # Pick up every ServiceMonitor and PrometheusRule, not only the chart's.
