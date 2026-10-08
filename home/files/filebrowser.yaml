@@ -1,5 +1,8 @@
 ## File Browser Quantum over /srv/files, as uid 1000 like Syncthing.
-## maxtkc is the admin. The two per-user sources are off for new users; access is
+## Login is Keycloak (realm kcfam): users are matched by preferred_username and
+## must have login method "oidc"; `admins` members get admin. `admin` is a local
+## password user whose password is reset to FILEBROWSER_ADMIN_PASSWORD on every
+## start (break-glass). The two per-user sources are off for new users; access is
 ## granted per user in Settings -> Users (stkchristy: stkchristy and shared).
 apiVersion: v1
 kind: ConfigMap
@@ -27,12 +30,22 @@ data:
           config:
             defaultEnabled: true
     auth:
-      adminUsername: maxtkc
+      adminUsername: admin
       methods:
         password:
           enabled: true
           minLength: 8
           signup: false
+        oidc:
+          enabled: true
+          clientId: filebrowser
+          issuerUrl: https://id.kcfam.us/realms/kcfam
+          scopes: openid email profile
+          userIdentifier: preferred_username
+          groupsClaim: groups
+          adminGroup: admins
+          userGroups: [family]
+          logoutRedirectUrl: https://id.kcfam.us/realms/kcfam/protocol/openid-connect/logout
     userDefaults:
       account:
         permissions:
@@ -75,7 +88,7 @@ spec:
         app: filebrowser
       annotations:
         # Restart on config change; bump with the ConfigMap.
-        config-revision: "1"
+        config-revision: "2"
     spec:
       securityContext:
         runAsUser: 1000
@@ -92,6 +105,11 @@ spec:
                 secretKeyRef:
                   name: files
                   key: FILEBROWSER_ADMIN_PASSWORD
+            - name: FILEBROWSER_OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: files
+                  key: FILEBROWSER_OIDC_CLIENT_SECRET
             - name: FILEBROWSER_JWT_TOKEN_SECRET
               valueFrom:
                 secretKeyRef:
