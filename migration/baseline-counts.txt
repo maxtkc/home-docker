@@ -66,3 +66,27 @@ asset_edit|0
 users|2
 user REDACTED|24364
 user REDACTED|802
+
+# Phase 6 decommission, 2026-10-08, after nextcloud_nextcloud was deleted. Diffs from
+# phase-2 are Immich-side deletes since the cutover. Missing-originals check: 25160
+# checked, 0 missing.
+
+## phase-6 k8s
+assets total|25165
+assets not soft-deleted|25160
+assets offline|3
+assets external|0
+assets under /mnt/photos|25097
+assets native|68
+asset_exif|25165
+asset_face|21841
+named people|261
+albums|4
+album_asset|269
+shared_link|7
+memory|173
+tag|0
+asset_edit|0
+users|2
+user REDACTED|24363
+user REDACTED|802
