@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The `kcfam.us` home server (`kcfam`, `kcfam-deb`, 192.168.0.182). Almost
 everything runs in the single-node k3s cluster, synced by the ArgoCD shared with
-gtfs.zone (`../gtfs-zone-infra`) from this repo's `main` branch. Home Assistant
-and Music Assistant stay on Docker, in `docker/compose.yml`.
+gtfs.zone (`../gtfs-zone-infra`) from this repo's `main` branch. Nothing runs
+on Docker any more.
 
 Routes (namespace `home` unless noted):
 - `im.kcfam.us`: Immich (`home/immich`)
@@ -16,7 +16,6 @@ Routes (namespace `home` unless noted):
 - `gf.kcfam.us`: kube-prometheus-stack (`apps/home-monitoring.yaml`, `home/monitoring`)
 - `status.kcfam.us`: Gatus (`home/gatus/config.yaml`)
 - `cors.kcfam.us`: cors-anywhere (`home/cors-proxy`)
-- `ha.kcfam.us`, `ma.kcfam.us`: Docker services, routed by `home/docker-apps`
 - `argocd.kcfam.us`: alias of the gtfs ArgoCD (`home/argocd-alias`)
 - `max.kcfam.us`: GitHub Pages from `maxtkc/personal-site`, a CNAME to
   `maxtkc.github.io`, nothing on kcfam
@@ -29,13 +28,6 @@ k3s Traefik (`infra-traefik` in gtfs-zone-infra, values in
 ServiceLB, for both kcfam.us and gtfs.zone. Certificates are cert-manager DNS-01
 (ClusterIssuer `letsencrypt-porkbun`), one per host. `<name>.new.kcfam.us` routes
 use the wildcard cert from `home/base`.
-
-Docker services are reached through `ExternalName` Services pointing at
-`172.18.0.1`, the `proxy-tier` network gateway, where compose publishes their web
-ports. ArgoCD's `resource.exclusions` skip Endpoints and EndpointSlices, so
-selectorless Services get no backends; k3s Traefik has
-`allowExternalNameServices` on for this. Home Assistant lists `10.42.0.0/16` in
-`trusted_proxies`.
 
 ## Working on the cluster
 
@@ -59,17 +51,6 @@ selectorless Services get no backends; k3s Traefik has
   `/var/lib/rancher/k3s/agent/containerd` (fstab). `/var` is too small for it.
 - Pin image versions; floating tags are never re-pulled.
 
-## Docker services
-
-```bash
-docker -H ssh://kcfam compose -f docker/compose.yml up -d
-```
-
-Volumes `nextcloud_homeassistant_config` and `nextcloud_music_assistant_data`
-are `external: true` and keep their historical names. Music Assistant publishes
-4953 on all interfaces for Snapcast clients on the LAN. Never run
-`docker container prune` or `docker volume prune` on this host.
-
 ## Storage
 
 - Bulk data is static hostPath on `/srv`: `/srv/photos` (Immich external
@@ -85,7 +66,7 @@ are `external: true` and keep their historical names. Music Assistant publishes
 
 - `restic-backup` (`home/backup`, daily 03:30) writes `/mnt/backups/restic` as
   host `home-k8s`: `/srv/photos`, `/srv/immich` (minus model cache),
-  `/srv/files`, the HA and MA volume dirs, and a `pg_dump` of the Immich DB to
+  `/srv/files` and a `pg_dump` of the Immich DB to
   `/srv/backup-dumps` first. 7 daily / 4 weekly / 6 monthly. `restic-check`
   reads 5% Saturdays at 05:00.
 - `restic-offsite` (daily 06:00) copies the `home-k8s` snapshots to B2,
@@ -98,7 +79,9 @@ are `external: true` and keep their historical names. Music Assistant publishes
 - Docker-era snapshots stay local and are never forgotten: `d3add526`
   (`pre-migration`, host `dbedfab23807`) and `e214dddd` (`nextcloud-final`,
   host `docker-final`, 2026-10-08: every Nextcloud, Immich, GrampsWeb, Grafana,
-  Uptime Kuma and tgtg volume at decommission).
+  Uptime Kuma and tgtg volume at decommission) and `326609cb` (`ha-ma-final`,
+  host `ha-ma-final`, 2026-10-08: the Home Assistant and Music Assistant volumes
+  when they were removed).
 - Passphrase, B2 key and `age.key` are in the password manager and on paper.
 
 ## tgtg on k3s

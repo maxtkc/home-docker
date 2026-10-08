@@ -1,6 +1,6 @@
 ## restic into /mnt/backups/restic. Snapshots carry host `home-k8s`, so forget
 ## only ever selects this job's own snapshots; the Docker-era hosts
-## (`dbedfab23807`, `docker-final`) are never forgotten.
+## (`dbedfab23807`, `docker-final`, `ha-ma-final`) are never forgotten.
 ##
 ## Sources are mounted at their host paths so snapshot paths match the host.
 ## /dumps is where per-database pg_dump initContainers write. Dumps are
@@ -51,9 +51,7 @@ spec:
                 - |
                   restic backup --host home-k8s --tag home --retry-lock 2h \
                     --exclude /srv/immich/model-cache \
-                    /srv/photos /srv/immich /srv/files /dumps \
-                    /srv/docker/volumes/nextcloud_homeassistant_config/_data \
-                    /srv/docker/volumes/nextcloud_music_assistant_data/_data
+                    /srv/photos /srv/immich /srv/files /dumps
                   restic forget --host home-k8s --retry-lock 2h --prune \
                     --keep-daily 7 --keep-weekly 4 --keep-monthly 6
               env:
@@ -79,8 +77,6 @@ spec:
                 - { name: photos, mountPath: /srv/photos, readOnly: true }
                 - { name: immich, mountPath: /srv/immich, readOnly: true }
                 - { name: files, mountPath: /srv/files, readOnly: true }
-                - { name: homeassistant, mountPath: /srv/docker/volumes/nextcloud_homeassistant_config/_data, readOnly: true }
-                - { name: music-assistant, mountPath: /srv/docker/volumes/nextcloud_music_assistant_data/_data, readOnly: true }
           volumes:
             - name: repo
               hostPath: { path: /mnt/backups/restic, type: Directory }
@@ -96,11 +92,6 @@ spec:
               hostPath: { path: /srv/immich, type: DirectoryOrCreate }
             - name: files
               hostPath: { path: /srv/files, type: DirectoryOrCreate }
-            # Docker volumes of the compose services (docker/compose.yml).
-            - name: homeassistant
-              hostPath: { path: /srv/docker/volumes/nextcloud_homeassistant_config/_data, type: Directory }
-            - name: music-assistant
-              hostPath: { path: /srv/docker/volumes/nextcloud_music_assistant_data/_data, type: Directory }
 ---
 ## Reads back 5% of pack data each week, so the whole repo is re-read about
 ## every five months.
