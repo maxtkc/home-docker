@@ -1,22 +1,5 @@
-apiVersion: traefik.io/v1alpha1
-kind: IngressRoute
-metadata:
-  name: grampsweb-new
-  namespace: home
-  annotations:
-    external-dns.alpha.kubernetes.io/target: kcfam.us
-spec:
-  entryPoints: [websecure]
-  routes:
-    - match: Host(`gramps.new.kcfam.us`)
-      kind: Rule
-      services:
-        - name: grampsweb
-          port: 80
-  tls:
-    secretName: new-kcfam-us-tls
----
 ## gramps.kcfam.us's CNAME predates external-dns, so this route carries no target annotation.
+## GrampsWeb has no OIDC, so it sits behind oauth2-proxy and keeps its own login.
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
@@ -25,8 +8,17 @@ metadata:
 spec:
   entryPoints: [websecure]
   routes:
+    # oauth2-proxy's own endpoints bypass forwardAuth.
+    - match: Host(`gramps.kcfam.us`) && PathPrefix(`/oauth2/`)
+      kind: Rule
+      services:
+        - name: oauth2-proxy
+          port: 4180
     - match: Host(`gramps.kcfam.us`)
       kind: Rule
+      middlewares:
+        - name: oauth2-errors
+        - name: oauth2-family
       services:
         - name: grampsweb
           port: 80

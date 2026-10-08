@@ -55,8 +55,10 @@ alertmanager:
 grafana:
   admin:
     existingSecret: grafana-admin
-  # GF_AUTH_GITHUB_CLIENT_ID and GF_AUTH_GITHUB_CLIENT_SECRET.
-  envFromSecret: grafana-github
+  # GF_AUTH_GITHUB_CLIENT_ID/SECRET and GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET.
+  envFromSecrets:
+    - name: grafana-github
+    - name: grafana-oidc
   persistence:
     enabled: true
     storageClassName: longhorn
@@ -72,5 +74,21 @@ grafana:
       allow_sign_up: true
       allowed_users: maxtkc
       skip_org_role_sync: true
+    # Keycloak realm kcfam; only realm users get this far.
+    auth.generic_oauth:
+      enabled: true
+      name: kcfam
+      client_id: grafana
+      scopes: openid email profile
+      auth_url: https://id.kcfam.us/realms/kcfam/protocol/openid-connect/auth
+      token_url: https://id.kcfam.us/realms/kcfam/protocol/openid-connect/token
+      api_url: https://id.kcfam.us/realms/kcfam/protocol/openid-connect/userinfo
+      signout_redirect_url: https://id.kcfam.us/realms/kcfam/protocol/openid-connect/logout?client_id=grafana&post_logout_redirect_uri=https%3A%2F%2Fgf.kcfam.us%2Flogin
+      login_attribute_path: preferred_username
+      email_attribute_path: email
+      groups_attribute_path: groups
+      role_attribute_path: contains(groups[*], 'admins') && 'Admin' || 'Viewer'
+      allow_sign_up: true
+      use_pkce: true
     auth:
       oauth_allow_insecure_email_lookup: true
