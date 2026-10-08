@@ -7,7 +7,7 @@
 #
 # - Placeholders are filled by the render-realm init container from the `auth`
 #   Secret. Every placeholder needs a key there; no other dollar-brace sequence
-#   may appear in the file.
+#   may appear in the file. User emails are placeholders (KC_EMAIL_<USERNAME>).
 # - The three IdPs use the `link existing only` first-broker-login flow: a
 #   brokered login attaches to the realm user with the same email, anyone else
 #   is refused. New people are added as realm users first.

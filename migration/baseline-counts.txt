@@ -20,8 +20,8 @@ memory|172
 tag|0
 asset_edit|0
 users|2
-user REDACTED|24364
-user REDACTED|802
+user maxtkc|24364
+user stkchristy|802
 
 ## phase-0 restored
 assets total|25166
@@ -39,8 +39,8 @@ memory|172
 tag|0
 asset_edit|0
 users|2
-user REDACTED|24364
-user REDACTED|802
+user maxtkc|24364
+user stkchristy|802
 
 # Phase 2 cutover, 2026-10-07 (kcfam 2026-10-06 21:13 EDT). k8s DB restored from
 # immich-final-2c-2026-10-07.dump (sha256 068cea66...) after the path rewrite. Equal to the
@@ -64,8 +64,8 @@ memory|172
 tag|0
 asset_edit|0
 users|2
-user REDACTED|24364
-user REDACTED|802
+user maxtkc|24364
+user stkchristy|802
 
 # Phase 6 decommission, 2026-10-08, after nextcloud_nextcloud was deleted. Diffs from
 # phase-2 are Immich-side deletes since the cutover. Missing-originals check: 25160
@@ -88,5 +88,5 @@ memory|173
 tag|0
 asset_edit|0
 users|2
-user REDACTED|24363
-user REDACTED|802
+user maxtkc|24363
+user stkchristy|802

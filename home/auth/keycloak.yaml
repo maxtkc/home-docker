@@ -36,6 +36,8 @@ spec:
                 KC_GOOGLE_CLIENT_ID KC_GOOGLE_CLIENT_SECRET
                 KC_GITHUB_CLIENT_ID KC_GITHUB_CLIENT_SECRET
                 KC_LINKEDIN_CLIENT_ID KC_LINKEDIN_CLIENT_SECRET
+                KC_EMAIL_MAXTKC KC_EMAIL_STKCHRISTY KC_EMAIL_JANIE KC_EMAIL_MKC
+                KC_EMAIL_DMASSEY96 KC_EMAIL_EMILYMASSEY KC_EMAIL_ELLAGREAVES
               )
               text=$(cat /realm-template/kcfam-realm.json)
               for v in "${vars[@]}"; do

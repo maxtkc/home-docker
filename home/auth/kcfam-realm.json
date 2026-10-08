@@ -276,7 +276,7 @@
   "users": [
     {
       "username": "maxtkc",
-      "email": "REDACTED",
+      "email": "${KC_EMAIL_MAXTKC}",
       "emailVerified": true,
       "firstName": "Max",
       "lastName": "Katz-Christy",
@@ -292,7 +292,7 @@
     },
     {
       "username": "stkchristy",
-      "email": "REDACTED",
+      "email": "${KC_EMAIL_STKCHRISTY}",
       "emailVerified": true,
       "enabled": true,
       "groups": [
@@ -305,7 +305,7 @@
     },
     {
       "username": "janie",
-      "email": "REDACTED",
+      "email": "${KC_EMAIL_JANIE}",
       "emailVerified": true,
       "enabled": true,
       "groups": [
@@ -318,7 +318,7 @@
     },
     {
       "username": "mkc",
-      "email": "REDACTED",
+      "email": "${KC_EMAIL_MKC}",
       "emailVerified": true,
       "enabled": true,
       "groups": [
@@ -330,7 +330,7 @@
     },
     {
       "username": "dmassey96",
-      "email": "REDACTED",
+      "email": "${KC_EMAIL_DMASSEY96}",
       "emailVerified": true,
       "enabled": true,
       "groups": [
@@ -342,7 +342,7 @@
     },
     {
       "username": "emilymassey",
-      "email": "REDACTED",
+      "email": "${KC_EMAIL_EMILYMASSEY}",
       "emailVerified": true,
       "enabled": true,
       "groups": [
@@ -354,7 +354,7 @@
     },
     {
       "username": "ellagreaves",
-      "email": "REDACTED",
+      "email": "${KC_EMAIL_ELLAGREAVES}",
       "emailVerified": true,
       "enabled": true,
       "groups": [
