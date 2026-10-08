@@ -4,7 +4,8 @@
 ## Immich's own uploads, thumbnails and encoded video live in /srv/immich/upload.
 ## System settings, OAuth included, come from immich.yaml in the immich-config
 ## Secret (sops edit home/immich/immich-config.enc.yaml), so the admin UI shows
-## them read-only. Bump config-revision after editing it.
+## them read-only. Bump config-revision after editing it. Login is Keycloak only;
+## break-glass is setting passwordLogin.enabled there.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -22,7 +23,7 @@ spec:
       labels:
         app: immich-server
       annotations:
-        config-revision: "1"
+        config-revision: "2"
     spec:
       containers:
         - name: server

@@ -1,8 +1,8 @@
 ## File Browser Quantum over /srv/files, as uid 1000 like Syncthing.
 ## Login is Keycloak (realm kcfam): users are matched by preferred_username and
-## must have login method "oidc"; `admins` members get admin. `admin` is a local
-## password user whose password is reset to FILEBROWSER_ADMIN_PASSWORD on every
-## start (break-glass). The two per-user sources are off for new users; access is
+## must have login method "oidc"; `admins` members get admin. Password login is
+## off; break-glass is enabling it and logging in as `admin`, a local password
+## user reset to FILEBROWSER_ADMIN_PASSWORD on every start. The two per-user sources are off for new users; access is
 ## granted per user in Settings -> Users (stkchristy: stkchristy and shared).
 apiVersion: v1
 kind: ConfigMap
@@ -33,7 +33,7 @@ data:
       adminUsername: admin
       methods:
         password:
-          enabled: true
+          enabled: false
           minLength: 8
           signup: false
         oidc:
@@ -88,7 +88,7 @@ spec:
         app: filebrowser
       annotations:
         # Restart on config change; bump with the ConfigMap.
-        config-revision: "2"
+        config-revision: "3"
     spec:
       securityContext:
         runAsUser: 1000
