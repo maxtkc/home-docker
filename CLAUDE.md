@@ -101,7 +101,7 @@ password login. Status page and cors are public.
 
 - `restic-backup` (`home/backup`, daily 03:30) writes `/mnt/backups/restic` as
   host `home-k8s`: `/srv/photos`, `/srv/immich` (minus model cache),
-  `/srv/files` and a `pg_dump` of the Immich DB to
+  `/srv/files` and `pg_dump`s of the Immich and Keycloak DBs to
   `/srv/backup-dumps` first. 7 daily / 4 weekly / 6 monthly. `restic-check`
   reads 5% Saturdays at 05:00.
 - `restic-offsite` (daily 06:00) copies the `home-k8s` snapshots to B2,

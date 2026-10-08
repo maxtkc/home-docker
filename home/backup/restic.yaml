@@ -43,6 +43,25 @@ spec:
                   memory: 512Mi
               volumeMounts:
                 - { name: dumps, mountPath: /dumps }
+            # Keycloak user IDs are what Immich, File Browser and GrampsWeb link to.
+            - name: dump-keycloak
+              image: ghcr.io/cloudnative-pg/postgresql:18.3
+              command: ["pg_dump", "-h", "keycloak-pg-rw", "-U", "keycloak", "-d", "keycloak",
+                        "-Fc", "-Z0", "-f", "/dumps/keycloak.dump"]
+              env:
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: keycloak-pg
+                      key: password
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  memory: 512Mi
+              volumeMounts:
+                - { name: dumps, mountPath: /dumps }
           containers:
             - name: restic
               image: restic/restic:0.18.1
