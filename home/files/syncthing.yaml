@@ -44,9 +44,11 @@ spec:
           args:
             - |
               cfg=/var/syncthing/config/config.xml
-              sed -i -e '/<gui /,/<\/gui>/{/<user>/d;/<password>/d;/<insecureSkipHostcheck>/d;}' \
-                -e '/<address>0.0.0.0:8384<\/address>/a\        <insecureSkipHostcheck>true</insecureSkipHostcheck>' "$cfg"
+              # insecureAdminAccess only silences the GUI's no-password warning.
+              sed -i -e '/<gui /,/<\/gui>/{/<user>/d;/<password>/d;/<insecureSkipHostcheck>/d;/<insecureAdminAccess>/d;}' \
+                -e '/<address>0.0.0.0:8384<\/address>/a\        <insecureSkipHostcheck>true</insecureSkipHostcheck>\n        <insecureAdminAccess>true</insecureAdminAccess>' "$cfg"
               grep -q '<insecureSkipHostcheck>true' "$cfg"
+              grep -q '<insecureAdminAccess>true' "$cfg"
           securityContext:
             runAsUser: 1000
             runAsGroup: 1000
