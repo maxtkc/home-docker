@@ -1,4 +1,4 @@
-## GrampsWeb (web, celery, redis) at gramps.kcfam.us.
+## GrampsWeb (web, celery, redis) at gramps.kcfam.us. Holds *.enc.yaml, so it renders through the ksops CMP.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

@@ -23,6 +23,17 @@ data:
   GRAMPSWEB_CELERY_CONFIG__result_backend: redis://grampsweb-redis:6379/0
   GRAMPSWEB_RATELIMIT_STORAGE_URI: redis://grampsweb-redis:6379/1
   GUNICORN_NUM_WORKERS: "2"
+  GRAMPSWEB_BASE_URL: https://gramps.kcfam.us
+  # Keycloak realm kcfam is the only login. Accounts are bound to a Keycloak
+  # user ID in the user DB's oidc_accounts table, never by email; a new person
+  # needs a Keycloak user (group gramps) and an oidc_accounts row, or their
+  # first login creates a fresh disabled account.
+  GRAMPSWEB_OIDC_ENABLED: "true"
+  GRAMPSWEB_OIDC_ISSUER: https://id.kcfam.us/realms/kcfam
+  GRAMPSWEB_OIDC_CLIENT_ID: grampsweb
+  GRAMPSWEB_OIDC_NAME: kcfam
+  GRAMPSWEB_OIDC_DISABLE_LOCAL_AUTH: "true"
+  GRAMPSWEB_OIDC_AUTO_REDIRECT: "true"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -47,6 +58,9 @@ spec:
           envFrom:
             - configMapRef:
                 name: grampsweb-env
+            # GRAMPSWEB_OIDC_CLIENT_SECRET.
+            - secretRef:
+                name: grampsweb
           ports:
             - name: http
               containerPort: 5000
@@ -111,6 +125,9 @@ spec:
           envFrom:
             - configMapRef:
                 name: grampsweb-env
+            # GRAMPSWEB_OIDC_CLIENT_SECRET.
+            - secretRef:
+                name: grampsweb
           resources:
             requests:
               cpu: 20m

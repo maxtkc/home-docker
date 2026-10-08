@@ -213,6 +213,50 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "grampsweb",
+      "name": "Gramps Web",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "${KC_GRAMPSWEB_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "https://gramps.kcfam.us/api/oidc/callback/custom"
+      ],
+      "webOrigins": [
+        "https://gramps.kcfam.us"
+      ],
+      "attributes": {
+        "post.logout.redirect.uris": "https://gramps.kcfam.us/*"
+      },
+      "defaultClientScopes": [
+        "acr",
+        "basic",
+        "email",
+        "profile",
+        "roles",
+        "web-origins"
+      ],
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "groups",
+            "full.path": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
     }
   ],
   "groups": [
@@ -223,6 +267,10 @@
     {
       "name": "admins",
       "path": "/admins"
+    },
+    {
+      "name": "gramps",
+      "path": "/gramps"
     }
   ],
   "users": [
@@ -235,7 +283,8 @@
       "enabled": true,
       "groups": [
         "/family",
-        "/admins"
+        "/admins",
+        "/gramps"
       ],
       "realmRoles": [
         "default-roles-kcfam"
@@ -247,7 +296,68 @@
       "emailVerified": true,
       "enabled": true,
       "groups": [
-        "/family"
+        "/family",
+        "/gramps"
+      ],
+      "realmRoles": [
+        "default-roles-kcfam"
+      ]
+    },
+    {
+      "username": "janie",
+      "email": "REDACTED",
+      "emailVerified": true,
+      "enabled": true,
+      "groups": [
+        "/gramps"
+      ],
+      "realmRoles": [
+        "default-roles-kcfam"
+      ]
+    },
+    {
+      "username": "mollykc",
+      "email": "REDACTED",
+      "emailVerified": true,
+      "enabled": true,
+      "groups": [
+        "/gramps"
+      ],
+      "realmRoles": [
+        "default-roles-kcfam"
+      ]
+    },
+    {
+      "username": "dmassey96",
+      "email": "REDACTED",
+      "emailVerified": true,
+      "enabled": true,
+      "groups": [
+        "/gramps"
+      ],
+      "realmRoles": [
+        "default-roles-kcfam"
+      ]
+    },
+    {
+      "username": "emilymassey",
+      "email": "REDACTED",
+      "emailVerified": true,
+      "enabled": true,
+      "groups": [
+        "/gramps"
+      ],
+      "realmRoles": [
+        "default-roles-kcfam"
+      ]
+    },
+    {
+      "username": "ellagreaves",
+      "email": "REDACTED",
+      "emailVerified": true,
+      "enabled": true,
+      "groups": [
+        "/gramps"
       ],
       "realmRoles": [
         "default-roles-kcfam"

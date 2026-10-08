@@ -19,8 +19,9 @@
 #   (email, profile, roles), so the groups mapper sits on each client instead.
 # - Imported users get no default roles, so each lists default-roles-kcfam;
 #   without it the account console fails with "Something went wrong".
-# - Groups: `family` (oauth2-family), `admins` (oauth2-admins, Grafana Admin,
-#   File Browser admin).
+# - Groups: `family` (oauth2-family, Grafana Viewer, File Browser), `admins`
+#   (oauth2-admins, Grafana Admin, File Browser admin), `gramps` (GrampsWeb).
+#   Relatives with only a GrampsWeb account are in `gramps` alone.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 generators:
