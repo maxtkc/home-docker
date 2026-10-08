@@ -47,7 +47,7 @@ spec:
     name: letsencrypt-porkbun
     kind: ClusterIssuer
 ---
-## Syncthing GUI, `admins` only. Its own GUI login stays on behind this.
+## Syncthing GUI, `admins` only; it has no login of its own (syncthing.yaml).
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
