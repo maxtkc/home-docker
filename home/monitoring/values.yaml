@@ -55,10 +55,8 @@ alertmanager:
 grafana:
   admin:
     existingSecret: grafana-admin
-  # GF_AUTH_GITHUB_CLIENT_ID/SECRET and GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET.
-  envFromSecrets:
-    - name: grafana-github
-    - name: grafana-oidc
+  # GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET.
+  envFromSecret: grafana-oidc
   persistence:
     enabled: true
     storageClassName: longhorn
@@ -68,15 +66,12 @@ grafana:
       root_url: https://gf.kcfam.us
     users:
       allow_sign_up: false
-    auth.github:
-      enabled: true
-      scopes: user:email,read:org
-      allow_sign_up: true
-      allowed_users: maxtkc
-      skip_org_role_sync: true
-    # Keycloak realm kcfam; only realm users get this far.
+    # Keycloak realm kcfam is the only login; only realm users get this far.
+    # Break-glass: `grafana cli admin reset-admin-password` and the HTTP API
+    # with basic auth still work for the local admin.
     auth.generic_oauth:
       enabled: true
+      auto_login: true
       name: kcfam
       client_id: grafana
       scopes: openid email profile
@@ -87,8 +82,12 @@ grafana:
       login_attribute_path: preferred_username
       email_attribute_path: email
       groups_attribute_path: groups
-      role_attribute_path: contains(groups[*], 'admins') && 'Admin' || 'Viewer'
+      # admins -> Admin, family -> Viewer; other realm users (GrampsWeb-only
+      # relatives) are refused.
+      role_attribute_path: contains(groups[*], 'admins') && 'Admin' || contains(groups[*], 'family') && 'Viewer'
+      role_attribute_strict: true
       allow_sign_up: true
       use_pkce: true
     auth:
+      disable_login_form: true
       oauth_allow_insecure_email_lookup: true
