@@ -47,17 +47,6 @@ endpoints:
     alerts:
       - type: telegram
 
-  - name: Nextcloud pointer
-    group: Apps
-    url: https://nc.kcfam.us/
-    interval: 300s
-    conditions:
-      - "[STATUS] == 200"
-      - "[BODY] == pat(*Nextcloud has moved*)"
-      - "[CERTIFICATE_EXPIRATION] > 240h"
-    alerts:
-      - type: telegram
-
   - name: GrampsWeb
     group: Apps
     url: https://gramps.kcfam.us/api/metadata/
