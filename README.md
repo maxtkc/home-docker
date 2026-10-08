@@ -8,7 +8,8 @@ cluster on `kcfam`.
 | Service | URL | Where |
 |---------|-----|-------|
 | Immich | im.kcfam.us | `home/immich` |
-| File Browser Quantum, Syncthing | files.kcfam.us | `home/files` |
+| File Browser Quantum, Syncthing | files.kcfam.us, sync.kcfam.us | `home/files` |
+| Keycloak, oauth2-proxy | id.kcfam.us, auth.kcfam.us | `home/auth` |
 | GrampsWeb | gramps.kcfam.us | `home/grampsweb` |
 | Grafana, Prometheus, Alertmanager | gf.kcfam.us | `home/monitoring` |
 | Gatus | status.kcfam.us | `home/gatus` |

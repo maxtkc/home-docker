@@ -12,6 +12,8 @@ on Docker any more.
 Routes (namespace `home` unless noted):
 - `im.kcfam.us`: Immich (`home/immich`)
 - `files.kcfam.us`: File Browser Quantum; Syncthing on host port 22000 (`home/files`)
+- `sync.kcfam.us`: Syncthing GUI (`home/files`)
+- `id.kcfam.us`: Keycloak, realm `kcfam`; `auth.kcfam.us`: oauth2-proxy (`home/auth`)
 - `gramps.kcfam.us`: GrampsWeb (`home/grampsweb`)
 - `gf.kcfam.us`: kube-prometheus-stack (`apps/home-monitoring.yaml`, `home/monitoring`)
 - `status.kcfam.us`: Gatus (`home/gatus/config.yaml`)
@@ -51,13 +53,46 @@ use the wildcard cert from `home/base`.
   `/var/lib/rancher/k3s/agent/containerd` (fstab). `/var` is too small for it.
 - Pin image versions; floating tags are never re-pulled.
 
+## Login
+
+Every app logs in through Keycloak (`home/auth`, realm `kcfam`); no app keeps a
+password login. Status page and cors are public.
+
+- Realm users are created by hand (admin console or API). The IdPs (Google,
+  GitHub, LinkedIn) use the `link existing only` first-login flow: a login links
+  to the realm user with the same verified email, anyone else is refused. A
+  username needs at least 3 characters.
+- Groups: `family` (Files, Immich, Grafana Viewer), `admins` (Grafana Admin,
+  File Browser admin, Syncthing GUI), `gramps` (GrampsWeb, including relatives
+  who have nothing else).
+- `kcfam-realm.json` is imported only when the realm does not exist; later
+  changes go through the admin console or API and are mirrored into the file by
+  hand. It defines no `clientScopes` (that would skip the built-in email/profile
+  scopes), and users list `default-roles-kcfam` (imported users get no roles
+  otherwise).
+- Break-glass: master-realm `admin`, password `KEYCLOAK_ADMIN_PASSWORD` in
+  `home/auth/auth.enc.yaml`. App-side: File Browser local `admin` (enable the
+  password method), Immich `passwordLogin` in `home/immich/immich-config.enc.yaml`,
+  Grafana `grafana cli admin reset-admin-password`.
+- Immich: system settings come from `immich-config.enc.yaml`
+  (`IMMICH_CONFIG_FILE`), read-only in the UI; bump `config-revision` in
+  `server.yaml` after editing. Users link by email.
+- File Browser: matches `preferred_username` to its user, which must have login
+  method `oidc`.
+- GrampsWeb: native OIDC, bound by Keycloak user ID in the `oidc_accounts` table
+  of `/app/users/users.sqlite`, never by email. A new person needs a Keycloak
+  user in `gramps` plus that row (`create_oidc_account(guid, "custom", sub)`),
+  or their first login makes a fresh disabled account.
+- Syncthing GUI has no login of its own; oauth2-proxy (`admins`) and a
+  NetworkPolicy (Traefik only on :8384) guard it.
+
 ## Storage
 
 - Bulk data is static hostPath on `/srv`: `/srv/photos` (Immich external
   libraries), `/srv/immich/upload`, `/srv/immich/model-cache`,
   `/srv/files/{maxtkc,stkchristy,shared}` (uid 1000).
 - Small state is Longhorn PVCs (Postgres, GrampsWeb, Grafana, tgtg tokens,
-  Syncthing/File Browser config).
+  Syncthing/File Browser config, Keycloak's CNPG `keycloak-pg`).
 - Immich mounts `/srv/photos` read-write, so a delete in Immich removes the file.
 - File Browser users and source access live in its database (PVC), not the
   ConfigMap.
