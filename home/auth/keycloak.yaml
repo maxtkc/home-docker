@@ -1,0 +1,134 @@
+## Keycloak at id.kcfam.us, realm `kcfam`, with its own database.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: home
+spec:
+  replicas: 1
+  # One writer against the database during a schema upgrade.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      initContainers:
+        # Keycloak does not expand placeholders on realm import, so the realm is
+        # rendered here into the emptyDir it imports from. Fails on a value with a
+        # quote or backslash, or on any placeholder left over.
+        - name: render-realm
+          image: quay.io/keycloak/keycloak:26.7.5
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              set -euo pipefail
+              vars=(
+                KC_OAUTH2_PROXY_CLIENT_SECRET
+                KC_GRAFANA_CLIENT_SECRET
+                KC_FILEBROWSER_CLIENT_SECRET
+                KC_IMMICH_CLIENT_SECRET
+                KC_GOOGLE_CLIENT_ID KC_GOOGLE_CLIENT_SECRET
+                KC_GITHUB_CLIENT_ID KC_GITHUB_CLIENT_SECRET
+                KC_LINKEDIN_CLIENT_ID KC_LINKEDIN_CLIENT_SECRET
+              )
+              text=$(cat /realm-template/kcfam-realm.json)
+              for v in "${vars[@]}"; do
+                val=${!v?"$v is not set"}
+                case $val in
+                  *'"'*|*'\'*)
+                    echo "$v contains a quote or backslash" >&2
+                    exit 1 ;;
+                esac
+                text=${text//"\${$v}"/"$val"}
+              done
+              printf '%s' "$text" > /realm/kcfam-realm.json
+              if grep -q '\${' /realm/kcfam-realm.json; then
+                echo "unsubstituted placeholder left in realm JSON:" >&2
+                grep -n '\${' /realm/kcfam-realm.json >&2
+                exit 1
+              fi
+              echo "realm rendered"
+          envFrom:
+            - secretRef:
+                name: auth
+          volumeMounts:
+            - { name: realm-template, mountPath: /realm-template, readOnly: true }
+            - { name: realm, mountPath: /realm }
+      containers:
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:26.7.5
+          # --import-realm is create-only: an existing realm is never updated.
+          args: ["start", "--optimized=false", "--import-realm"]
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: KC_DB
+              value: postgres
+            - name: KC_DB_URL
+              value: jdbc:postgresql://keycloak-pg-rw:5432/keycloak
+            - name: KC_DB_USERNAME
+              valueFrom:
+                secretKeyRef: { name: keycloak-pg, key: username }
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: keycloak-pg, key: password }
+            # Issuer baked into every token.
+            - name: KC_HOSTNAME
+              value: https://id.kcfam.us
+            - name: KC_HTTP_ENABLED
+              value: "true"
+            - name: KC_PROXY_HEADERS
+              value: xforwarded
+            - name: KC_HEALTH_ENABLED
+              value: "true"
+            # Master-realm admin, the break-glass login.
+            - name: KC_BOOTSTRAP_ADMIN_USERNAME
+              value: admin
+            - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: auth, key: KEYCLOAK_ADMIN_PASSWORD }
+          volumeMounts:
+            - { name: realm, mountPath: /opt/keycloak/data/import, readOnly: true }
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 9000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 9000
+            initialDelaySeconds: 120
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              memory: 1Gi
+      volumes:
+        - name: realm-template
+          configMap:
+            name: keycloak-realm
+        - name: realm
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  namespace: home
+spec:
+  selector:
+    app: keycloak
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

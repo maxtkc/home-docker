@@ -1,0 +1,115 @@
+## oauth2-proxy for apps without OIDC of their own. Cookie on .kcfam.us, callback
+## on auth.kcfam.us, sessions in the cookie (no Redis). The errors middleware keeps
+## the 401 status, so the sign-in page shows a button rather than redirecting.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth2-proxy
+  namespace: home
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oauth2-proxy
+  template:
+    metadata:
+      labels:
+        app: oauth2-proxy
+    spec:
+      containers:
+        - name: oauth2-proxy
+          image: quay.io/oauth2-proxy/oauth2-proxy:v7.14.3
+          ports:
+            - name: http
+              containerPort: 4180
+          env:
+            - { name: OAUTH2_PROXY_HTTP_ADDRESS, value: "0.0.0.0:4180" }
+            - { name: OAUTH2_PROXY_REDIRECT_URL, value: https://auth.kcfam.us/oauth2/callback }
+            - { name: OAUTH2_PROXY_COOKIE_DOMAINS, value: .kcfam.us }
+            - { name: OAUTH2_PROXY_WHITELIST_DOMAINS, value: .kcfam.us }
+            - { name: OAUTH2_PROXY_COOKIE_SECURE, value: "true" }
+            - { name: OAUTH2_PROXY_EMAIL_DOMAINS, value: "*" }
+            - { name: OAUTH2_PROXY_REVERSE_PROXY, value: "true" }
+            - { name: OAUTH2_PROXY_SKIP_PROVIDER_BUTTON, value: "false" }
+            - { name: OAUTH2_PROXY_PROVIDER, value: oidc }
+            - { name: OAUTH2_PROXY_CLIENT_ID, value: oauth2-proxy }
+            - { name: OAUTH2_PROXY_OIDC_ISSUER_URL, value: https://id.kcfam.us/realms/kcfam }
+            - { name: OAUTH2_PROXY_OIDC_JWKS_URL, value: http://keycloak:8080/realms/kcfam/protocol/openid-connect/certs }
+            # `groups` is what the allowed_groups query on /oauth2/auth reads.
+            - { name: OAUTH2_PROXY_SCOPE, value: openid email profile groups }
+            - { name: OAUTH2_PROXY_USER_ID_CLAIM, value: sub }
+            - { name: OAUTH2_PROXY_CODE_CHALLENGE_METHOD, value: S256 }
+            # Ends the Keycloak session too on /oauth2/sign_out.
+            - name: OAUTH2_PROXY_BACKEND_LOGOUT_URL
+              value: http://keycloak:8080/realms/kcfam/protocol/openid-connect/logout?id_token_hint={id_token}
+            - { name: OAUTH2_PROXY_SET_XAUTHREQUEST, value: "true" }
+            - name: OAUTH2_PROXY_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef: { name: auth, key: KC_OAUTH2_PROXY_CLIENT_SECRET }
+            - name: OAUTH2_PROXY_COOKIE_SECRET
+              valueFrom:
+                secretKeyRef: { name: auth, key: OAUTH2_PROXY_COOKIE_SECRET }
+          readinessProbe:
+            httpGet: { path: /ping, port: http }
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /ping, port: http }
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oauth2-proxy
+  namespace: home
+spec:
+  selector:
+    app: oauth2-proxy
+  ports:
+    - name: http
+      port: 4180
+      targetPort: http
+---
+## 401/403 from forwardAuth become a redirect into the sign-in flow.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: oauth2-errors
+  namespace: home
+spec:
+  errors:
+    status: ["401-403"]
+    service:
+      name: oauth2-proxy
+      port: 4180
+    query: /oauth2/sign_in?rd={url}
+---
+## Any member of the `family` group. Attach after oauth2-errors.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: oauth2-family
+  namespace: home
+spec:
+  forwardAuth:
+    address: http://oauth2-proxy.home.svc.cluster.local:4180/oauth2/auth?allowed_groups=family
+    trustForwardHeader: true
+    authResponseHeaders: [X-Auth-Request-User, X-Auth-Request-Email]
+---
+## Members of the `admins` group only.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: oauth2-admins
+  namespace: home
+spec:
+  forwardAuth:
+    address: http://oauth2-proxy.home.svc.cluster.local:4180/oauth2/auth?allowed_groups=admins
+    trustForwardHeader: true
+    authResponseHeaders: [X-Auth-Request-User, X-Auth-Request-Email]

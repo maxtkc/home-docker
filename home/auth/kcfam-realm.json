@@ -1,0 +1,220 @@
+{
+  "realm": "kcfam",
+  "displayName": "kcfam.us",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "verifyEmail": false,
+
+  "authenticationFlows": [
+    {
+      "alias": "link existing only",
+      "description": "Link a brokered login to the realm user with the same email; refuse anyone else.",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "idp-detect-existing-broker-user",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10,
+          "userSetupAllowed": false
+        },
+        {
+          "authenticator": "idp-auto-link",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 20,
+          "userSetupAllowed": false
+        }
+      ]
+    }
+  ],
+
+  "clients": [
+    {
+      "clientId": "oauth2-proxy",
+      "name": "oauth2-proxy",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "${KC_OAUTH2_PROXY_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["https://auth.kcfam.us/oauth2/callback"],
+      "webOrigins": ["https://auth.kcfam.us"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "defaultClientScopes": ["acr", "basic", "email", "profile", "roles", "web-origins", "groups"]
+    },
+    {
+      "clientId": "grafana",
+      "name": "Grafana",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "${KC_GRAFANA_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["https://gf.kcfam.us/login/generic_oauth"],
+      "webOrigins": ["https://gf.kcfam.us"],
+      "attributes": {
+        "post.logout.redirect.uris": "https://gf.kcfam.us/*"
+      },
+      "defaultClientScopes": ["acr", "basic", "email", "profile", "roles", "web-origins", "groups"]
+    },
+    {
+      "clientId": "filebrowser",
+      "name": "File Browser",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "${KC_FILEBROWSER_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["https://files.kcfam.us/api/auth/oidc/callback"],
+      "webOrigins": ["https://files.kcfam.us"],
+      "attributes": {
+        "post.logout.redirect.uris": "https://files.kcfam.us/*"
+      },
+      "defaultClientScopes": ["acr", "basic", "email", "profile", "roles", "web-origins", "groups"]
+    },
+    {
+      "clientId": "immich",
+      "name": "Immich",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "${KC_IMMICH_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "https://im.kcfam.us/auth/login",
+        "https://im.kcfam.us/user-settings",
+        "https://im.kcfam.us/api/oauth/mobile-redirect",
+        "app.immich:///oauth-callback"
+      ],
+      "webOrigins": ["https://im.kcfam.us"],
+      "attributes": {
+        "post.logout.redirect.uris": "https://im.kcfam.us/*"
+      },
+      "defaultClientScopes": ["acr", "basic", "email", "profile", "roles", "web-origins", "groups"]
+    }
+  ],
+
+  "clientScopes": [
+    {
+      "name": "groups",
+      "description": "Realm group memberships, as a flat `groups` claim.",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "groups",
+            "full.path": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+
+  "groups": [
+    { "name": "family", "path": "/family" },
+    { "name": "admins", "path": "/admins" }
+  ],
+
+  "users": [
+    {
+      "username": "maxtkc",
+      "email": "REDACTED",
+      "emailVerified": true,
+      "firstName": "Max",
+      "lastName": "Katz-Christy",
+      "enabled": true,
+      "groups": ["/family", "/admins"]
+    },
+    {
+      "username": "stkchristy",
+      "email": "REDACTED",
+      "emailVerified": true,
+      "enabled": true,
+      "groups": ["/family"]
+    }
+  ],
+
+  "identityProviders": [
+    {
+      "alias": "google",
+      "displayName": "Google",
+      "providerId": "google",
+      "enabled": true,
+      "trustEmail": true,
+      "storeToken": false,
+      "linkOnly": false,
+      "firstBrokerLoginFlowAlias": "link existing only",
+      "config": {
+        "clientId": "${KC_GOOGLE_CLIENT_ID}",
+        "clientSecret": "${KC_GOOGLE_CLIENT_SECRET}",
+        "defaultScope": "openid email profile",
+        "syncMode": "IMPORT"
+      }
+    },
+    {
+      "alias": "github",
+      "displayName": "GitHub",
+      "providerId": "github",
+      "enabled": true,
+      "trustEmail": true,
+      "storeToken": false,
+      "linkOnly": false,
+      "firstBrokerLoginFlowAlias": "link existing only",
+      "config": {
+        "clientId": "${KC_GITHUB_CLIENT_ID}",
+        "clientSecret": "${KC_GITHUB_CLIENT_SECRET}",
+        "defaultScope": "read:user user:email",
+        "syncMode": "IMPORT"
+      }
+    },
+    {
+      "alias": "linkedin",
+      "displayName": "LinkedIn",
+      "providerId": "linkedin-openid-connect",
+      "enabled": true,
+      "trustEmail": true,
+      "storeToken": false,
+      "linkOnly": false,
+      "firstBrokerLoginFlowAlias": "link existing only",
+      "config": {
+        "clientId": "${KC_LINKEDIN_CLIENT_ID}",
+        "clientSecret": "${KC_LINKEDIN_CLIENT_SECRET}",
+        "defaultScope": "openid profile email",
+        "syncMode": "IMPORT"
+      }
+    }
+  ]
+}

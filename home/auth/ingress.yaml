@@ -1,0 +1,101 @@
+## id.kcfam.us: Keycloak. Its `/` and `/admin` lead to the master realm, so both
+## redirect into realm kcfam; master stays reachable at its full URL. 302 so
+## browsers do not cache it.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: keycloak-root-redirect
+  namespace: home
+spec:
+  redirectRegex:
+    regex: ".*"
+    replacement: https://id.kcfam.us/realms/kcfam/account/
+    permanent: false
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: keycloak-admin-redirect
+  namespace: home
+spec:
+  redirectRegex:
+    regex: ".*"
+    replacement: https://id.kcfam.us/admin/kcfam/console/
+    permanent: false
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: keycloak
+  namespace: home
+  annotations:
+    external-dns.alpha.kubernetes.io/target: kcfam.us
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`id.kcfam.us`) && Path(`/`)
+      kind: Rule
+      middlewares:
+        - name: keycloak-root-redirect
+      services:
+        - name: keycloak
+          port: 8080
+    - match: Host(`id.kcfam.us`) && (Path(`/admin`) || Path(`/admin/`))
+      kind: Rule
+      middlewares:
+        - name: keycloak-admin-redirect
+      services:
+        - name: keycloak
+          port: 8080
+    - match: Host(`id.kcfam.us`)
+      kind: Rule
+      services:
+        - name: keycloak
+          port: 8080
+  tls:
+    secretName: id-kcfam-us-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: id-kcfam-us-tls
+  namespace: home
+spec:
+  secretName: id-kcfam-us-tls
+  dnsNames:
+    - id.kcfam.us
+  issuerRef:
+    name: letsencrypt-porkbun
+    kind: ClusterIssuer
+---
+## auth.kcfam.us: oauth2-proxy's callback and sign-out.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: oauth2-proxy
+  namespace: home
+  annotations:
+    external-dns.alpha.kubernetes.io/target: kcfam.us
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`auth.kcfam.us`)
+      kind: Rule
+      services:
+        - name: oauth2-proxy
+          port: 4180
+  tls:
+    secretName: auth-kcfam-us-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: auth-kcfam-us-tls
+  namespace: home
+spec:
+  secretName: auth-kcfam-us-tls
+  dnsNames:
+    - auth.kcfam.us
+  issuerRef:
+    name: letsencrypt-porkbun
+    kind: ClusterIssuer

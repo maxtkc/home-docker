@@ -58,6 +58,17 @@ endpoints:
     alerts:
       - type: telegram
 
+  - name: Keycloak
+    group: Apps
+    url: https://id.kcfam.us/realms/kcfam/.well-known/openid-configuration
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+      - "[BODY].issuer == https://id.kcfam.us/realms/kcfam"
+      - "[CERTIFICATE_EXPIRATION] > 240h"
+    alerts:
+      - type: telegram
+
   - name: Grafana
     group: Apps
     url: https://gf.kcfam.us/api/health

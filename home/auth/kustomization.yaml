@@ -1,0 +1,33 @@
+# Keycloak (id.kcfam.us) and oauth2-proxy (auth.kcfam.us).
+#
+# kcfam-realm.json is imported once, when the realm does not exist yet. Editing
+# it later rolls the Deployment but changes nothing; make later changes in the
+# admin console, or drop the keycloak database to re-import. Keycloak rejects
+# unknown fields, so the JSON holds no comments; notes live here:
+#
+# - Placeholders are filled by the render-realm init container from the `auth`
+#   Secret. Every placeholder needs a key there; no other dollar-brace sequence
+#   may appear in the file.
+# - The three IdPs use the `link existing only` first-broker-login flow: a
+#   brokered login attaches to the realm user with the same email, anyone else
+#   is refused. New people are added as realm users first.
+# - trustEmail is on because the flow links only on a verified email; Google,
+#   GitHub and LinkedIn release only addresses they have verified.
+# - No pkce attribute on clients that do not send a code_challenge (Grafana,
+#   File Browser, Immich), or their logins fail.
+# - Groups: `family` (oauth2-family), `admins` (oauth2-admins, Grafana Admin,
+#   File Browser admin).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+generators:
+  - secret-generator.yaml
+resources:
+  - postgres.yaml
+  - keycloak.yaml
+  - oauth2-proxy.yaml
+  - ingress.yaml
+configMapGenerator:
+  - name: keycloak-realm
+    namespace: home
+    files:
+      - kcfam-realm.json
