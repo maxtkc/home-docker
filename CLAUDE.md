@@ -96,6 +96,9 @@ password login. Status page and cors are public.
 - Small state is Longhorn PVCs (Postgres, GrampsWeb, Grafana, tgtg tokens,
   Syncthing/File Browser config, Keycloak's CNPG `keycloak-pg`).
 - Immich mounts `/srv/photos` read-write, so a delete in Immich removes the file.
+- External-library assets were rehashed to content SHA-1 on 2026-10-08 (Immich
+  scans store `sha1-path`), so phone backup skips photos already there. A scan
+  of a new or changed file stores `sha1-path` again for that file.
 - File Browser users and source access live in its database (PVC), not the
   ConfigMap.
 
