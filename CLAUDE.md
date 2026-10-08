@@ -318,7 +318,9 @@ blocks; `26.2.10` passes. It is pinned in `home/tgtg/env.yaml`. To tell a
 blocked version from a blocked IP, run a throwaway pod from the tgtg image with
 `HTTPS_PROXY=http://gluetun:8888` that POSTs `token/v1/refresh` with a bogus
 token: 401 means DataDome passed, 403 means it did not. Never use the real
-tokens for this; a refresh rotates them.
+tokens for this; a refresh rotates them. A few 403s burn the exit within
+seconds (even for a good version afterwards), so after probing, park
+`/tokens/datadome`, move the exit, and restart tgtg.
 
 Related: floating tags like `latest-alpine` are never re-pulled, because
 `docker_container.image` is a plain string and the provider only pulls when the
