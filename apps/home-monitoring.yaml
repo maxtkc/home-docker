@@ -19,7 +19,7 @@ spec:
         releaseName: kube-prometheus-stack
         valueFiles:
           - $values/home/monitoring/values.yaml
-    - repoURL: https://github.com/maxtkc/home-docker.git
+    - repoURL: https://github.com/maxtkc/kcfam-infra.git
       targetRevision: main
       ref: values
   destination:

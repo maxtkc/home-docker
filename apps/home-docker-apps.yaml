@@ -11,7 +11,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/maxtkc/home-docker.git
+    repoURL: https://github.com/maxtkc/kcfam-infra.git
     targetRevision: main
     path: home/docker-apps
   destination:

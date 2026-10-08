@@ -18,7 +18,7 @@ spec:
       helm:
         valueFiles:
           - $values/home/external-dns/values.yaml
-    - repoURL: https://github.com/maxtkc/home-docker.git
+    - repoURL: https://github.com/maxtkc/kcfam-infra.git
       targetRevision: main
       ref: values
   destination:
