@@ -309,6 +309,7 @@
       "emailVerified": true,
       "enabled": true,
       "groups": [
+        "/family",
         "/gramps"
       ],
       "realmRoles": [
