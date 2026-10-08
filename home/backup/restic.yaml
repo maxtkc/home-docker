@@ -48,6 +48,9 @@ spec:
               image: ghcr.io/cloudnative-pg/postgresql:18.3
               command: ["pg_dump", "-h", "keycloak-pg-rw", "-U", "keycloak", "-d", "keycloak",
                         "-Fc", "-Z0", "-f", "/dumps/keycloak.dump"]
+              # The image runs as uid 26; /srv/backup-dumps is root's.
+              securityContext:
+                runAsUser: 0
               env:
                 - name: PGPASSWORD
                   valueFrom:
