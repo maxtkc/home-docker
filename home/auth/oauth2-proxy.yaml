@@ -35,8 +35,9 @@ spec:
             - { name: OAUTH2_PROXY_CLIENT_ID, value: oauth2-proxy }
             - { name: OAUTH2_PROXY_OIDC_ISSUER_URL, value: https://id.kcfam.us/realms/kcfam }
             - { name: OAUTH2_PROXY_OIDC_JWKS_URL, value: http://keycloak:8080/realms/kcfam/protocol/openid-connect/certs }
-            # `groups` is what the allowed_groups query on /oauth2/auth reads.
-            - { name: OAUTH2_PROXY_SCOPE, value: openid email profile groups }
+            # The groups claim, read by allowed_groups on /oauth2/auth, comes from the
+            # client's own mapper; Keycloak has no `groups` scope to request.
+            - { name: OAUTH2_PROXY_SCOPE, value: openid email profile }
             - { name: OAUTH2_PROXY_USER_ID_CLAIM, value: sub }
             - { name: OAUTH2_PROXY_CODE_CHALLENGE_METHOD, value: S256 }
             # Ends the Keycloak session too on /oauth2/sign_out.

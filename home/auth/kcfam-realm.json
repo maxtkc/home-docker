@@ -9,7 +9,6 @@
   "resetPasswordAllowed": false,
   "editUsernameAllowed": false,
   "verifyEmail": false,
-
   "authenticationFlows": [
     {
       "alias": "link existing only",
@@ -35,7 +34,6 @@
       ]
     }
   ],
-
   "clients": [
     {
       "clientId": "oauth2-proxy",
@@ -48,12 +46,38 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
-      "redirectUris": ["https://auth.kcfam.us/oauth2/callback"],
-      "webOrigins": ["https://auth.kcfam.us"],
+      "redirectUris": [
+        "https://auth.kcfam.us/oauth2/callback"
+      ],
+      "webOrigins": [
+        "https://auth.kcfam.us"
+      ],
       "attributes": {
         "pkce.code.challenge.method": "S256"
       },
-      "defaultClientScopes": ["acr", "basic", "email", "profile", "roles", "web-origins", "groups"]
+      "defaultClientScopes": [
+        "acr",
+        "basic",
+        "email",
+        "profile",
+        "roles",
+        "web-origins"
+      ],
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "groups",
+            "full.path": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
     },
     {
       "clientId": "grafana",
@@ -66,12 +90,38 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
-      "redirectUris": ["https://gf.kcfam.us/login/generic_oauth"],
-      "webOrigins": ["https://gf.kcfam.us"],
+      "redirectUris": [
+        "https://gf.kcfam.us/login/generic_oauth"
+      ],
+      "webOrigins": [
+        "https://gf.kcfam.us"
+      ],
       "attributes": {
         "post.logout.redirect.uris": "https://gf.kcfam.us/*"
       },
-      "defaultClientScopes": ["acr", "basic", "email", "profile", "roles", "web-origins", "groups"]
+      "defaultClientScopes": [
+        "acr",
+        "basic",
+        "email",
+        "profile",
+        "roles",
+        "web-origins"
+      ],
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "groups",
+            "full.path": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
     },
     {
       "clientId": "filebrowser",
@@ -84,12 +134,38 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
-      "redirectUris": ["https://files.kcfam.us/api/auth/oidc/callback"],
-      "webOrigins": ["https://files.kcfam.us"],
+      "redirectUris": [
+        "https://files.kcfam.us/api/auth/oidc/callback"
+      ],
+      "webOrigins": [
+        "https://files.kcfam.us"
+      ],
       "attributes": {
         "post.logout.redirect.uris": "https://files.kcfam.us/*"
       },
-      "defaultClientScopes": ["acr", "basic", "email", "profile", "roles", "web-origins", "groups"]
+      "defaultClientScopes": [
+        "acr",
+        "basic",
+        "email",
+        "profile",
+        "roles",
+        "web-origins"
+      ],
+      "protocolMappers": [
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "groups",
+            "full.path": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
     },
     {
       "clientId": "immich",
@@ -108,23 +184,20 @@
         "https://im.kcfam.us/api/oauth/mobile-redirect",
         "app.immich:///oauth-callback"
       ],
-      "webOrigins": ["https://im.kcfam.us"],
+      "webOrigins": [
+        "https://im.kcfam.us"
+      ],
       "attributes": {
         "post.logout.redirect.uris": "https://im.kcfam.us/*"
       },
-      "defaultClientScopes": ["acr", "basic", "email", "profile", "roles", "web-origins", "groups"]
-    }
-  ],
-
-  "clientScopes": [
-    {
-      "name": "groups",
-      "description": "Realm group memberships, as a flat `groups` claim.",
-      "protocol": "openid-connect",
-      "attributes": {
-        "include.in.token.scope": "true",
-        "display.on.consent.screen": "false"
-      },
+      "defaultClientScopes": [
+        "acr",
+        "basic",
+        "email",
+        "profile",
+        "roles",
+        "web-origins"
+      ],
       "protocolMappers": [
         {
           "name": "groups",
@@ -142,12 +215,16 @@
       ]
     }
   ],
-
   "groups": [
-    { "name": "family", "path": "/family" },
-    { "name": "admins", "path": "/admins" }
+    {
+      "name": "family",
+      "path": "/family"
+    },
+    {
+      "name": "admins",
+      "path": "/admins"
+    }
   ],
-
   "users": [
     {
       "username": "maxtkc",
@@ -156,17 +233,21 @@
       "firstName": "Max",
       "lastName": "Katz-Christy",
       "enabled": true,
-      "groups": ["/family", "/admins"]
+      "groups": [
+        "/family",
+        "/admins"
+      ]
     },
     {
       "username": "stkchristy",
       "email": "REDACTED",
       "emailVerified": true,
       "enabled": true,
-      "groups": ["/family"]
+      "groups": [
+        "/family"
+      ]
     }
   ],
-
   "identityProviders": [
     {
       "alias": "google",
