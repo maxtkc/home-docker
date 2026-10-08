@@ -1,0 +1,14 @@
+# ha.kcfam.us -> k3s (TLS passthrough), Home Assistant.
+# Uses the kcfam-k3s service from kcfam-new-passthrough.yml.
+#
+# No Go-template expressions in this file, comments included.
+tcp:
+  routers:
+    kcfam-ha-passthrough:
+      rule: "HostSNI(`ha.kcfam.us`)"
+      priority: 1000
+      entryPoints:
+        - "websecure"
+      tls:
+        passthrough: true
+      service: "kcfam-k3s"

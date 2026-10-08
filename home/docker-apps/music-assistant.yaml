@@ -1,0 +1,75 @@
+## music-assistant runs on Docker (docker/compose.yml), published on the proxy-tier gateway.
+apiVersion: v1
+kind: Service
+metadata:
+  name: music-assistant
+  namespace: home
+spec:
+  ports:
+    - name: http
+      port: 8095
+      targetPort: 8095
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: music-assistant
+  namespace: home
+  labels:
+    kubernetes.io/service-name: music-assistant
+addressType: IPv4
+ports:
+  - name: http
+    port: 8095
+    protocol: TCP
+endpoints:
+  - addresses: ["172.18.0.1"]
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: music-assistant-new
+  namespace: home
+  annotations:
+    external-dns.alpha.kubernetes.io/target: kcfam.us
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`ma.new.kcfam.us`)
+      kind: Rule
+      services:
+        - name: music-assistant
+          port: 8095
+  tls:
+    secretName: new-kcfam-us-tls
+---
+## ma.kcfam.us's CNAME predates external-dns, so this route carries no target
+## annotation.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: music-assistant
+  namespace: home
+spec:
+  entryPoints: [websecure]
+  routes:
+    - match: Host(`ma.kcfam.us`)
+      kind: Rule
+      services:
+        - name: music-assistant
+          port: 8095
+  tls:
+    secretName: ma-kcfam-us-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ma-kcfam-us-tls
+  namespace: home
+spec:
+  secretName: ma-kcfam-us-tls
+  dnsNames:
+    - ma.kcfam.us
+  issuerRef:
+    name: letsencrypt-porkbun
+    kind: ClusterIssuer
