@@ -23,11 +23,11 @@ spec:
       labels:
         app: immich-server
       annotations:
-        config-revision: "2"
+        config-revision: "3"
     spec:
       containers:
         - name: server
-          image: ghcr.io/immich-app/immich-server:v3.2.0
+          image: ghcr.io/immich-app/immich-server:v3.3.0
           env:
             - name: DB_HOSTNAME
               value: immich-postgres
