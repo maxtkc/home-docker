@@ -15,7 +15,7 @@ Services and their routes:
 - `op.kcfam.us` → OpenProject (project management, toggleable via `var.run_openproject`)
 - `tgtg.kcfam.us` → Too Good To Go notifier
 
-tgtg and `gluetun` now run in k3s (see "tgtg on k3s"). `gluetun` is a NordVPN tunnel exposed as an HTTP proxy on `gluetun:8888`. tgtg exports price and scan-health metrics on `tgtg:8000`. With `PRICE_MONITORING`, the bot notifies when a bag is in stock at its price floor, the lowest price/value ratio seen for it (kept in `price_floors.json` on the tokens PVC, reset to the current price if not reached for 7 days). Fixed-price bags notify on restock; a dynamic bag stays silent at 1/2 of value and notifies when it steps down to its floor. Prometheus alerts with `TgtgScanStale` when no scan has succeeded for an hour. The tgtg bot itself posts a notice after three failed scans in a row (e.g. DataDome 403s), with buttons to move the VPN exit; `/vpn`, `/vpn new` and `/vpn <country>[, city]` do the same by command.
+tgtg and `gluetun` now run in k3s (see "tgtg on k3s"). `gluetun` is a NordVPN tunnel exposed as an HTTP proxy on `gluetun:8888`. tgtg exports price and scan-health metrics on `tgtg:8000`. With `PRICE_MONITORING`, the bot notifies when a bag is in stock at its price floor, the lowest price/value ratio seen for it (kept in `price_floors.json` on the tokens PVC, reset to the current price if not reached for 7 days). Fixed-price bags notify on restock; a dynamic bag stays silent at 1/2 of value and notifies when it steps down to its floor. Prometheus alerts with `TgtgScanStale` when no scan has succeeded for an hour. The tgtg bot itself posts a notice after three failed scans in a row (e.g. DataDome 403s), with buttons to move the VPN exit or try direct; `/vpn`, `/vpn new` and `/vpn <country>[, city]` do the same by command. `/vpn off` sends TGTG traffic direct from the home IP and `/vpn on` back through gluetun; the mode is kept in `vpn.json` on the tokens PVC and wins over `HTTPS_PROXY` in `env.yaml`.
 
 **Traefik v3** handles reverse proxying and Let's Encrypt SSL. **Sablier** manages auto-scaling for GrampsWeb: containers spin down after 1 minute of inactivity and wake on request. **OpenProject** is not Sablier-managed — it is entirely toggled on/off via `var.run_openproject` (Terraform `count`).
 
@@ -311,6 +311,12 @@ gets blocked too, the bot says so and offers buttons; `/vpn new` (same country) 
 `datadome` file. A country change made this way lasts until gluetun restarts;
 `SERVER_COUNTRIES` in `home/tgtg/tgtg.yaml` is the persistent default. Don't rotate on a schedule:
 DataDome binds its cookie to the IP.
+
+On 2026-10-08 a bogus-token probe from the home IP (no proxy) with 26.2.10 got
+401, so DataDome lets home through again after the fork fixes in `main-763bed7`
+(SDK `ddvc` matching the APK version, blocked cookies replaced). `/vpn off`
+switches to direct without a redeploy; a mode change resets the DataDome cookie.
+`/vpn new` or `/vpn <country>` while direct switches back to the VPN first.
 
 On 2026-10-08 every exit got 403 because the APK version, scraped from the Play
 Store when `TGTG_APK_VERSION` is unset, became `26.10.0`, which DataDome
