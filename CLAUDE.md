@@ -76,7 +76,9 @@ password login. Status page and cors are public.
   Grafana `grafana cli admin reset-admin-password`.
 - Immich: system settings come from `immich-config.enc.yaml`
   (`IMMICH_CONFIG_FILE`), read-only in the UI; bump `config-revision` in
-  `server.yaml` after editing. Users link by email.
+  `server.yaml` after editing. Users link by email. Since v3.3.0 Immich syncs
+  OAuth claims on every login, so `storageLabelClaim`/`storageQuotaClaim` name
+  claims Keycloak does not send; otherwise labels would be rewritten.
 - File Browser: matches `preferred_username` to its user, which must have login
   method `oidc`.
 - GrampsWeb: native OIDC, bound by Keycloak user ID in the `oidc_accounts` table
