@@ -236,6 +236,9 @@
       "groups": [
         "/family",
         "/admins"
+      ],
+      "realmRoles": [
+        "default-roles-kcfam"
       ]
     },
     {
@@ -245,6 +248,9 @@
       "enabled": true,
       "groups": [
         "/family"
+      ],
+      "realmRoles": [
+        "default-roles-kcfam"
       ]
     }
   ],

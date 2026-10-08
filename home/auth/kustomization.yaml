@@ -17,6 +17,8 @@
 #   File Browser, Immich), or their logins fail.
 # - Defining clientScopes here would stop Keycloak creating the built-in ones
 #   (email, profile, roles), so the groups mapper sits on each client instead.
+# - Imported users get no default roles, so each lists default-roles-kcfam;
+#   without it the account console fails with "Something went wrong".
 # - Groups: `family` (oauth2-family), `admins` (oauth2-admins, Grafana Admin,
 #   File Browser admin).
 apiVersion: kustomize.config.k8s.io/v1beta1
