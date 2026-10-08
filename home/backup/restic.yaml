@@ -8,6 +8,8 @@
 ## are mounted read-only under /pvc/<name>.
 ##
 ## --retry-lock waits out another job's exclusive lock during prune/check.
+## forget groups by host only, so adding a source path does not start a new
+## retention group.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -103,7 +105,7 @@ spec:
                     --exclude /srv/immich/model-cache \
                     --exclude /pvc/syncthing/config/index-v2 \
                     /srv/photos /srv/immich /srv/files /dumps /pvc
-                  restic forget --host home-k8s --retry-lock 2h --prune \
+                  restic forget --host home-k8s --group-by host --retry-lock 2h --prune \
                     --keep-daily 7 --keep-weekly 4 --keep-monthly 6
               env:
                 - name: RESTIC_REPOSITORY
@@ -235,7 +237,7 @@ spec:
                 - |
                   restic cat config >/dev/null 2>&1 || restic init --copy-chunker-params
                   restic copy --host home-k8s --retry-lock 3h --limit-upload 3000
-                  restic forget --host home-k8s --retry-lock 3h --prune \
+                  restic forget --host home-k8s --group-by host --retry-lock 3h --prune \
                     --keep-daily 7 --keep-weekly 4 --keep-monthly 6
               env:
                 - name: RESTIC_REPOSITORY
