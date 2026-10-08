@@ -1,46 +1,38 @@
-# home-docker
+# kcfam-infra
 
-Home server stack managed with OpenTofu, deploying Docker containers to a remote host over SSH (`ssh://kcfam`).
+The `kcfam.us` home server: Kubernetes manifests synced by ArgoCD into the k3s
+cluster on `kcfam`, plus a small Docker Compose file for the services that stay
+on Docker.
 
 ## Services
 
-| Service | URL | Notes |
+| Service | URL | Where |
 |---------|-----|-------|
-| Nextcloud | nc.kcfam.us | Custom build with ffmpeg, exiftool, imagemagick |
-| Immich | im.kcfam.us | Photo management with AI/ML |
-| GrampsWeb | gramps.kcfam.us | Genealogy, auto-scales with Sablier |
-| Grafana | gf.kcfam.us | Metrics dashboards |
-| Uptime Kuma | uptime.kcfam.us | Status monitoring at status.kcfam.us |
-| OpenProject | op.kcfam.us | Project management (toggleable) |
-| TGTG | tgtg.kcfam.us | Too Good To Go notifier |
+| Immich | im.kcfam.us | `home/immich` |
+| File Browser Quantum, Syncthing | files.kcfam.us | `home/files` |
+| GrampsWeb | gramps.kcfam.us | `home/grampsweb` |
+| Grafana, Prometheus, Alertmanager | gf.kcfam.us | `home/monitoring` |
+| Gatus | status.kcfam.us | `home/gatus` |
+| cors-anywhere | cors.kcfam.us | `home/cors-proxy` |
+| tgtg notifier, gluetun | (no hostname) | `home/tgtg` |
+| restic backups (local + B2) | | `home/backup` |
+| Home Assistant | ha.kcfam.us | `docker/compose.yml`, routed by `home/docker-apps` |
+| Music Assistant | ma.kcfam.us | `docker/compose.yml`, routed by `home/docker-apps` |
+| Personal site | max.kcfam.us | GitHub Pages (`maxtkc/personal-site`) |
 
-## Infrastructure
+## Layout
 
-- **Traefik v3** — reverse proxy and Let's Encrypt SSL
-- **Sablier** — auto-scales low-traffic services (spin down after 1 min idle)
-- **Prometheus + Grafana** — metrics and dashboards
-- **Uptime Kuma** — health monitoring and public status page at status.kcfam.us
-
-## External Dependencies
-
-- Porkbun — DNS management (managed via Terraform)
-- Let's Encrypt — TLS certificates (via Traefik)
-- Remote host `kcfam` — Docker runs here, accessed over SSH
+- `apps/`: ArgoCD Applications. `apps/home-root.yaml` is the app of apps; every
+  other file deploys one `home/<dir>`.
+- `home/`: manifests, one directory per service, namespace `home`. Secrets are
+  SOPS files (`*.enc.yaml`).
+- `docker/compose.yml`: Home Assistant and Music Assistant.
+- `migration/`: scripts and baselines from the move off Docker/Nextcloud.
 
 ## Deployment
 
-Infrastructure is defined in `tf/`. Monitors are in `tf-monitors/`.
+Commit and push to `main`; ArgoCD syncs. The Docker services:
 
 ```bash
-cd tf
-tofu plan
-tofu apply
+docker -H ssh://kcfam compose -f docker/compose.yml up -d
 ```
-
-Custom images (Nextcloud, Traefik, Prometheus, Grafana, nginx) are baked with config files rather than volume-mounted, since the Docker host is remote. Rebuild with:
-
-```bash
-tofu apply -replace=docker_image.nextcloud
-```
-
-Secrets go in `secrets.auto.tfvars` (gitignored) in each module directory.

@@ -1,9 +1,9 @@
 # Gatus check set for kcfam.us, ported from tf-monitors/monitors.tf. Hash-suffixed
 # into a ConfigMap, so editing it rolls the Deployment.
 #
-# Public hostnames are checked by their real URL so DNS, the Docker Traefik
-# passthrough, k3s Traefik and the certificate are all exercised. Docker
-# container monitors became HTTP or TCP checks on the service, or were dropped.
+# Public hostnames are checked by their real URL so DNS, k3s Traefik and the
+# certificate are all exercised. Docker container monitors became HTTP or TCP
+# checks on the service, or were dropped.
 storage:
   type: memory
 

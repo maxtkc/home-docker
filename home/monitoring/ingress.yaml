@@ -16,8 +16,7 @@ spec:
   tls:
     secretName: new-kcfam-us-tls
 ---
-## gf.kcfam.us is reached through a per-host passthrough in Docker Traefik. Its
-## CNAME predates external-dns, so this route carries no target annotation.
+## gf.kcfam.us's CNAME predates external-dns, so this route carries no target annotation.
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:

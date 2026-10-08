@@ -1,38 +1,4 @@
-# Sensitive files - DO NOT COMMIT
-secrets.env
-db.env
-immich.env
-
 .playwright-mcp
-
-# Docker Compose — replaced by Terraform
-docker-compose.yml
-docker-compose.yml.backup
-.env
-
-# Terraform
-tf/terraform.tfstate
-tf/terraform.tfstate.backup
-tf/terraform.tfstate.*.backup
-tf/.terraform.tfstate.lock.info
-tf/.terraform/
-tf/*.tfplan
-tf/secrets.auto.tfvars
-tf/*.auto.tfvars
-tf-monitors/terraform.tfstate
-tf-monitors/terraform.tfstate.backup
-tf-monitors/terraform.tfstate.*.backup
-tf-monitors/.terraform.tfstate.lock.info
-tf-monitors/.terraform/
-tf-monitors/*.tfplan
-tf-monitors/secrets.auto.tfvars
-tf-dns/terraform.tfstate
-tf-dns/terraform.tfstate.backup
-tf-dns/terraform.tfstate.*.backup
-tf-dns/.terraform.tfstate.lock.info
-tf-dns/.terraform/
-tf-dns/*.tfplan
-tf-dns/secrets.auto.tfvars
 
 # SOPS age private key
 age.key

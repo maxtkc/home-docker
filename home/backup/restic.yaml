@@ -1,13 +1,12 @@
-## restic into the existing /mnt/backups/restic repo, the one Docker's
-## restic-data also writes (same password). Snapshots carry host `home-k8s`, so
-## forget only ever selects this job's own snapshots.
+## restic into /mnt/backups/restic. Snapshots carry host `home-k8s`, so forget
+## only ever selects this job's own snapshots; the Docker-era hosts
+## (`dbedfab23807`, `docker-final`) are never forgotten.
 ##
 ## Sources are mounted at their host paths so snapshot paths match the host.
 ## /dumps is where per-database pg_dump initContainers write. Dumps are
 ## uncompressed (-Z0) so restic can deduplicate them day to day.
 ##
-## Times avoid restic-data (02:00 daily) and restic-check (Sunday 05:00).
-## --retry-lock waits out the other writer's exclusive lock during prune/check.
+## --retry-lock waits out another job's exclusive lock during prune/check.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
