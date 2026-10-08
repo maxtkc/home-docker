@@ -4,7 +4,8 @@
 ##
 ## Sources are mounted at their host paths so snapshot paths match the host.
 ## /dumps is where per-database pg_dump initContainers write. Dumps are
-## uncompressed (-Z0) so restic can deduplicate them day to day.
+## uncompressed (-Z0) so restic can deduplicate them day to day. Longhorn PVCs
+## are mounted read-only under /pvc/<name>.
 ##
 ## --retry-lock waits out another job's exclusive lock during prune/check.
 apiVersion: batch/v1
@@ -65,6 +66,33 @@ spec:
                   memory: 512Mi
               volumeMounts:
                 - { name: dumps, mountPath: /dumps }
+            # Consistent copies of GrampsWeb's SQLite files (tree and users);
+            # the whole PVC is also backed up as-is under /pvc.
+            - name: dump-grampsweb
+              image: ghcr.io/gramps-project/grampsweb:26.7.0
+              command: ["python3", "-c"]
+              args:
+                - |
+                  import glob, os, sqlite3
+                  os.makedirs("/dumps/grampsweb", exist_ok=True)
+                  srcs = glob.glob("/pvc/grampsweb/grampsdb/*/sqlite.db") + ["/pvc/grampsweb/users/users.sqlite"]
+                  for src in srcs:
+                      dst = "/dumps/grampsweb/" + src.removeprefix("/pvc/grampsweb/").replace("/", "_")
+                      s = sqlite3.connect(f"file:{src}?mode=ro", uri=True)
+                      d = sqlite3.connect(dst)
+                      s.backup(d)
+                      d.close()
+                      s.close()
+                      print("dumped", src, "to", dst)
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  memory: 512Mi
+              volumeMounts:
+                - { name: dumps, mountPath: /dumps }
+                - { name: grampsweb, mountPath: /pvc/grampsweb, readOnly: true }
           containers:
             - name: restic
               image: restic/restic:0.18.1
@@ -73,7 +101,8 @@ spec:
                 - |
                   restic backup --host home-k8s --tag home --retry-lock 2h \
                     --exclude /srv/immich/model-cache \
-                    /srv/photos /srv/immich /srv/files /dumps
+                    --exclude /pvc/syncthing/config/index-v2 \
+                    /srv/photos /srv/immich /srv/files /dumps /pvc
                   restic forget --host home-k8s --retry-lock 2h --prune \
                     --keep-daily 7 --keep-weekly 4 --keep-monthly 6
               env:
@@ -99,6 +128,10 @@ spec:
                 - { name: photos, mountPath: /srv/photos, readOnly: true }
                 - { name: immich, mountPath: /srv/immich, readOnly: true }
                 - { name: files, mountPath: /srv/files, readOnly: true }
+                - { name: grampsweb, mountPath: /pvc/grampsweb, readOnly: true }
+                - { name: filebrowser, mountPath: /pvc/filebrowser, readOnly: true }
+                - { name: syncthing, mountPath: /pvc/syncthing, readOnly: true }
+                - { name: tgtg, mountPath: /pvc/tgtg, readOnly: true }
           volumes:
             - name: repo
               hostPath: { path: /mnt/backups/restic, type: Directory }
@@ -114,6 +147,15 @@ spec:
               hostPath: { path: /srv/immich, type: DirectoryOrCreate }
             - name: files
               hostPath: { path: /srv/files, type: DirectoryOrCreate }
+            # Longhorn RWO volumes; single node, so they mount next to the apps.
+            - name: grampsweb
+              persistentVolumeClaim: { claimName: grampsweb-data, readOnly: true }
+            - name: filebrowser
+              persistentVolumeClaim: { claimName: filebrowser-data, readOnly: true }
+            - name: syncthing
+              persistentVolumeClaim: { claimName: syncthing-config, readOnly: true }
+            - name: tgtg
+              persistentVolumeClaim: { claimName: tgtg-tokens, readOnly: true }
 ---
 ## Reads back 5% of pack data each week, so the whole repo is re-read about
 ## every five months.
@@ -166,7 +208,8 @@ spec:
 ## Copies home-k8s snapshots from the local repo to B2. Retention matches
 ## restic-backup exactly, so copy never re-uploads a snapshot B2 already forgot.
 ## The B2 repo shares the local repo's passphrase and chunker params, so the
-## copy deduplicates.
+## copy deduplicates. Upload is capped at 3000 KiB/s (about 25 Mbit/s) so a
+## large delta after a bulk photo import does not saturate the uplink.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -191,7 +234,7 @@ spec:
               args:
                 - |
                   restic cat config >/dev/null 2>&1 || restic init --copy-chunker-params
-                  restic copy --host home-k8s --retry-lock 3h
+                  restic copy --host home-k8s --retry-lock 3h --limit-upload 3000
                   restic forget --host home-k8s --retry-lock 3h --prune \
                     --keep-daily 7 --keep-weekly 4 --keep-monthly 6
               env:

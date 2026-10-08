@@ -104,12 +104,15 @@ password login. Status page and cors are public.
 - `restic-backup` (`home/backup`, daily 03:30) writes `/mnt/backups/restic` as
   host `home-k8s`: `/srv/photos`, `/srv/immich` (minus model cache),
   `/srv/files` and `pg_dump`s of the Immich and Keycloak DBs to
-  `/srv/backup-dumps` first. 7 daily / 4 weekly / 6 monthly. `restic-check`
+  `/srv/backup-dumps` first. GrampsWeb's SQLite files are copied there too
+  (`/dumps/grampsweb`), and the `grampsweb-data`, `filebrowser-data`,
+  `syncthing-config` and `tgtg-tokens` PVCs are mounted read-only under `/pvc`.
+  7 daily / 4 weekly / 6 monthly. `restic-check`
   reads 5% Saturdays at 05:00.
 - `restic-offsite` (daily 06:00) copies the `home-k8s` snapshots to B2,
   `s3:s3.us-east-005.backblazeb2.com/kcfam-restic`, and forgets with the same
   policy as `restic-backup` (a different policy makes `copy` re-upload snapshots
-  B2 already forgot). Same passphrase as the local repo; key in
+  B2 already forgot). Upload capped at 3000 KiB/s. Same passphrase as the local repo; key in
   `home/backup/restic-b2.enc.yaml`. The bucket must keep only the last file
   version, or pruned data stays billed. `restic-offsite-check` reads 2% on the
   1st. `copy` locks the source repo, so it is mounted read-write.
