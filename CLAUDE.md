@@ -312,6 +312,14 @@ gets blocked too, the bot says so and offers buttons; `/vpn new` (same country) 
 `SERVER_COUNTRIES` in `home/tgtg/tgtg.yaml` is the persistent default. Don't rotate on a schedule:
 DataDome binds its cookie to the IP.
 
+On 2026-10-08 every exit got 403 because the APK version, scraped from the Play
+Store when `TGTG_APK_VERSION` is unset, became `26.10.0`, which DataDome
+blocks; `26.2.10` passes. It is pinned in `home/tgtg/env.yaml`. To tell a
+blocked version from a blocked IP, run a throwaway pod from the tgtg image with
+`HTTPS_PROXY=http://gluetun:8888` that POSTs `token/v1/refresh` with a bogus
+token: 401 means DataDome passed, 403 means it did not. Never use the real
+tokens for this; a refresh rotates them.
+
 Related: floating tags like `latest-alpine` are never re-pulled, because
 `docker_container.image` is a plain string and the provider only pulls when the
 image is missing locally. That is how tgtg sat on v1.25 for seven weeks after
