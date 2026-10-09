@@ -23,7 +23,7 @@ spec:
       labels:
         app: immich-server
       annotations:
-        config-revision: "8"
+        config-revision: "9"
     spec:
       containers:
         - name: server
@@ -65,6 +65,8 @@ spec:
               memory: 512Mi
             limits:
               memory: 4Gi
+              # /dev/dri from home/intel-gpu, for VAAPI (QSV needs 9th gen or newer).
+              gpu.intel.com/i915: 1
           volumeMounts:
             - { name: upload, mountPath: /usr/src/app/upload }
             - { name: photos, mountPath: /mnt/photos }
