@@ -23,7 +23,7 @@ spec:
       labels:
         app: immich-server
       annotations:
-        config-revision: "7"
+        config-revision: "8"
     spec:
       containers:
         - name: server
