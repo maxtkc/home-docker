@@ -4,8 +4,9 @@
 ##
 ## Sources are mounted at their host paths so snapshot paths match the host.
 ## /dumps is where per-database pg_dump initContainers write. Dumps are
-## uncompressed (-Z0) so restic can deduplicate them day to day. Longhorn PVCs
-## are mounted read-only under /pvc/<name>.
+## uncompressed (-Z0) so restic can deduplicate them day to day. Immich's own
+## gzipped dumps (/srv/immich/upload/backups) are excluded as they do not
+## deduplicate. Longhorn PVCs are mounted read-only under /pvc/<name>.
 ##
 ## --retry-lock waits out another job's exclusive lock during prune/check.
 ## forget groups by host only, so adding a source path does not start a new
@@ -103,6 +104,7 @@ spec:
                 - |
                   restic backup --host home-k8s --tag home --retry-lock 2h \
                     --exclude /srv/immich/model-cache \
+                    --exclude /srv/immich/upload/backups \
                     --exclude /pvc/syncthing/config/index-v2 \
                     /srv/photos /srv/immich /srv/files /dumps /pvc
                   restic forget --host home-k8s --group-by host --retry-lock 2h --prune \
