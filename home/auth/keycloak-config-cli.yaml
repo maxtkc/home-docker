@@ -37,6 +37,10 @@ spec:
             # Fills $(env:KC_...) from the `auth` Secret below.
             - name: IMPORT_VARSUBSTITUTION_ENABLED
               value: "true"
+            # The cache skips the import when the file is unchanged, which would
+            # leave console drift in place.
+            - name: IMPORT_CACHE_ENABLED
+              value: "false"
             # Deletes only what config-cli itself created, never the built-in
             # clients or anything made in the console.
             - name: IMPORT_REMOTESTATE_ENABLED
