@@ -1,0 +1,7 @@
+## Intel GPU device plugin: advertises the UHD 620 as gpu.intel.com/i915, so a
+## pod that requests it gets /dev/dri without running privileged.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: home
+resources:
+  - https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/gpu_plugin?ref=v0.37.1

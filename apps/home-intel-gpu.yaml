@@ -1,0 +1,25 @@
+## Intel GPU device plugin (gpu.intel.com/i915 for Immich's VAAPI transcoding).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-intel-gpu
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/maxtkc/kcfam-infra.git
+    targetRevision: main
+    path: home/intel-gpu
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: home
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

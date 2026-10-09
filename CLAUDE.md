@@ -52,6 +52,9 @@ use the wildcard cert from `home/base`.
 - k3s's containerd store is `/srv/k3s/containerd`, bind-mounted over
   `/var/lib/rancher/k3s/agent/containerd` (fstab). `/var` is too small for it.
 - Pin image versions; floating tags are never re-pulled.
+- `home/intel-gpu` runs Intel's GPU device plugin, so the UHD 620 is the node
+  resource `gpu.intel.com/i915` (one pod at a time); Immich requests it for
+  VAAPI transcoding instead of running privileged.
 
 ## Login
 
