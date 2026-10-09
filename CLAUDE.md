@@ -77,8 +77,10 @@ password login. Status page and cors are public.
 - Immich: system settings come from `immich-config.enc.yaml`
   (`IMMICH_CONFIG_FILE`), read-only in the UI; bump `config-revision` in
   `server.yaml` after editing. Users link by email. Since v3.3.0 Immich syncs
-  OAuth claims on every login, so `storageLabelClaim`/`storageQuotaClaim` name
-  claims Keycloak does not send; otherwise labels would be rewritten.
+  quota, role and a non-default storage label claim on every login; Keycloak
+  sends none of `immich_quota`, `immich_role` or a custom label claim, and the
+  default `preferred_username` label applies only at registration, so login
+  changes nothing. Adding one of those claims in Keycloak would.
 - File Browser: matches `preferred_username` to its user, which must have login
   method `oidc`.
 - GrampsWeb: native OIDC, bound by Keycloak user ID in the `oidc_accounts` table
