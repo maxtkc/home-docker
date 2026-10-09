@@ -41,7 +41,7 @@
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,
-      "secret": "${KC_OAUTH2_PROXY_CLIENT_SECRET}",
+      "secret": "$(env:KC_OAUTH2_PROXY_CLIENT_SECRET)",
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
@@ -85,7 +85,7 @@
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,
-      "secret": "${KC_GRAFANA_CLIENT_SECRET}",
+      "secret": "$(env:KC_GRAFANA_CLIENT_SECRET)",
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
@@ -129,7 +129,7 @@
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,
-      "secret": "${KC_FILEBROWSER_CLIENT_SECRET}",
+      "secret": "$(env:KC_FILEBROWSER_CLIENT_SECRET)",
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
@@ -173,7 +173,7 @@
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,
-      "secret": "${KC_IMMICH_CLIENT_SECRET}",
+      "secret": "$(env:KC_IMMICH_CLIENT_SECRET)",
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
@@ -220,7 +220,7 @@
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,
-      "secret": "${KC_GRAMPSWEB_CLIENT_SECRET}",
+      "secret": "$(env:KC_GRAMPSWEB_CLIENT_SECRET)",
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
@@ -273,98 +273,6 @@
       "path": "/gramps"
     }
   ],
-  "users": [
-    {
-      "username": "maxtkc",
-      "email": "${KC_EMAIL_MAXTKC}",
-      "emailVerified": true,
-      "firstName": "Max",
-      "lastName": "Katz-Christy",
-      "enabled": true,
-      "groups": [
-        "/family",
-        "/admins",
-        "/gramps"
-      ],
-      "realmRoles": [
-        "default-roles-kcfam"
-      ]
-    },
-    {
-      "username": "stkchristy",
-      "email": "${KC_EMAIL_STKCHRISTY}",
-      "emailVerified": true,
-      "enabled": true,
-      "groups": [
-        "/family",
-        "/gramps"
-      ],
-      "realmRoles": [
-        "default-roles-kcfam"
-      ]
-    },
-    {
-      "username": "janie",
-      "email": "${KC_EMAIL_JANIE}",
-      "emailVerified": true,
-      "enabled": true,
-      "groups": [
-        "/family",
-        "/gramps"
-      ],
-      "realmRoles": [
-        "default-roles-kcfam"
-      ]
-    },
-    {
-      "username": "mkc",
-      "email": "${KC_EMAIL_MKC}",
-      "emailVerified": true,
-      "enabled": true,
-      "groups": [
-        "/gramps"
-      ],
-      "realmRoles": [
-        "default-roles-kcfam"
-      ]
-    },
-    {
-      "username": "dmassey96",
-      "email": "${KC_EMAIL_DMASSEY96}",
-      "emailVerified": true,
-      "enabled": true,
-      "groups": [
-        "/gramps"
-      ],
-      "realmRoles": [
-        "default-roles-kcfam"
-      ]
-    },
-    {
-      "username": "emilymassey",
-      "email": "${KC_EMAIL_EMILYMASSEY}",
-      "emailVerified": true,
-      "enabled": true,
-      "groups": [
-        "/gramps"
-      ],
-      "realmRoles": [
-        "default-roles-kcfam"
-      ]
-    },
-    {
-      "username": "ellagreaves",
-      "email": "${KC_EMAIL_ELLAGREAVES}",
-      "emailVerified": true,
-      "enabled": true,
-      "groups": [
-        "/gramps"
-      ],
-      "realmRoles": [
-        "default-roles-kcfam"
-      ]
-    }
-  ],
   "identityProviders": [
     {
       "alias": "google",
@@ -376,8 +284,8 @@
       "linkOnly": false,
       "firstBrokerLoginFlowAlias": "link existing only",
       "config": {
-        "clientId": "${KC_GOOGLE_CLIENT_ID}",
-        "clientSecret": "${KC_GOOGLE_CLIENT_SECRET}",
+        "clientId": "$(env:KC_GOOGLE_CLIENT_ID)",
+        "clientSecret": "$(env:KC_GOOGLE_CLIENT_SECRET)",
         "defaultScope": "openid email profile",
         "syncMode": "IMPORT"
       }
@@ -392,8 +300,8 @@
       "linkOnly": false,
       "firstBrokerLoginFlowAlias": "link existing only",
       "config": {
-        "clientId": "${KC_GITHUB_CLIENT_ID}",
-        "clientSecret": "${KC_GITHUB_CLIENT_SECRET}",
+        "clientId": "$(env:KC_GITHUB_CLIENT_ID)",
+        "clientSecret": "$(env:KC_GITHUB_CLIENT_SECRET)",
         "defaultScope": "read:user user:email",
         "syncMode": "IMPORT"
       }
@@ -408,8 +316,8 @@
       "linkOnly": false,
       "firstBrokerLoginFlowAlias": "link existing only",
       "config": {
-        "clientId": "${KC_LINKEDIN_CLIENT_ID}",
-        "clientSecret": "${KC_LINKEDIN_CLIENT_SECRET}",
+        "clientId": "$(env:KC_LINKEDIN_CLIENT_ID)",
+        "clientSecret": "$(env:KC_LINKEDIN_CLIENT_SECRET)",
         "defaultScope": "openid profile email",
         "syncMode": "IMPORT"
       }

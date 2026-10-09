@@ -1,13 +1,12 @@
 # Keycloak (id.kcfam.us) and oauth2-proxy (auth.kcfam.us).
 #
-# kcfam-realm.json is imported once, when the realm does not exist yet. Editing
-# it later rolls the Deployment but changes nothing; make later changes in the
-# admin console, or drop the keycloak database to re-import. Keycloak rejects
+# kcfam-realm.json is applied to the live realm by the keycloak-config-cli
+# PostSync Job on every sync, so console edits to anything it declares are
+# reverted; change the file instead. Users are not in it: create them in the
+# admin console or API (their IdP links are made at login). Keycloak rejects
 # unknown fields, so the JSON holds no comments; notes live here:
 #
-# - Placeholders are filled by the render-realm init container from the `auth`
-#   Secret. Every placeholder needs a key there; no other dollar-brace sequence
-#   may appear in the file. User emails are placeholders (KC_EMAIL_<USERNAME>).
+# - $(env:KC_...) placeholders are filled by config-cli from the `auth` Secret.
 # - The three IdPs use the `link existing only` first-broker-login flow: a
 #   brokered login attaches to the realm user with the same email, anyone else
 #   is refused. New people are added as realm users first.
@@ -17,8 +16,6 @@
 #   File Browser, Immich), or their logins fail.
 # - Defining clientScopes here would stop Keycloak creating the built-in ones
 #   (email, profile, roles), so the groups mapper sits on each client instead.
-# - Imported users get no default roles, so each lists default-roles-kcfam;
-#   without it the account console fails with "Something went wrong".
 # - Groups: `family` (oauth2-family, Grafana Viewer, File Browser), `admins`
 #   (oauth2-admins, Grafana Admin, File Browser admin), `gramps` (GrampsWeb).
 #   Relatives with only a GrampsWeb account are in `gramps` alone.
@@ -29,6 +26,7 @@ generators:
 resources:
   - postgres.yaml
   - keycloak.yaml
+  - keycloak-config-cli.yaml
   - oauth2-proxy.yaml
   - ingress.yaml
 configMapGenerator:

@@ -68,11 +68,13 @@ password login. Status page and cors are public.
 - Groups: `family` (Files, Immich, Grafana Viewer), `admins` (Grafana Admin,
   File Browser admin, Syncthing GUI), `gramps` (GrampsWeb, including relatives
   who have nothing else).
-- `kcfam-realm.json` is imported only when the realm does not exist; later
-  changes go through the admin console or API and are mirrored into the file by
-  hand. It defines no `clientScopes` (that would skip the built-in email/profile
-  scopes), and users list `default-roles-kcfam` (imported users get no roles
-  otherwise).
+- `kcfam-realm.json` (clients, groups, the first-login flow, IdPs) is applied
+  to the live realm by the `keycloak-config-cli` PostSync Job on every sync of
+  `home-auth`, so console edits to those are reverted; change the file. Users
+  are not in it: they and their IdP links are database state, created in the
+  console or API. It defines no `clientScopes` (that would skip the built-in
+  email/profile scopes). The config-cli image is built per Keycloak version;
+  bump its tag with Keycloak (6.5.1-26.5.5 runs fine against 26.7.5).
 - Break-glass: master-realm `admin`, password `KEYCLOAK_ADMIN_PASSWORD` in
   `home/auth/auth.enc.yaml`. App-side: File Browser local `admin` (enable the
   password method), Immich `passwordLogin` in `home/immich/immich-config.enc.yaml`,

@@ -1,0 +1,58 @@
+## Applies kcfam-realm.json to the live realm after every sync, once Keycloak is
+## healthy. Users are not in the file, so they and their IdP links are left alone.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: keycloak-config-cli
+  namespace: home
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app: keycloak-config-cli
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: keycloak-config-cli
+          # Built for Keycloak 26.5.5; bump alongside Keycloak upgrades.
+          image: adorsys/keycloak-config-cli:6.5.1-26.5.5
+          env:
+            - name: KEYCLOAK_URL
+              value: http://keycloak:8080
+            - name: KEYCLOAK_USER
+              value: admin
+            - name: KEYCLOAK_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: auth, key: KEYCLOAK_ADMIN_PASSWORD }
+            - name: KEYCLOAK_AVAILABILITYCHECK_ENABLED
+              value: "true"
+            - name: KEYCLOAK_AVAILABILITYCHECK_TIMEOUT
+              value: 300s
+            - name: IMPORT_FILES_LOCATIONS
+              value: /config/*
+            # Fills $(env:KC_...) from the `auth` Secret below.
+            - name: IMPORT_VARSUBSTITUTION_ENABLED
+              value: "true"
+            # Deletes only what config-cli itself created, never the built-in
+            # clients or anything made in the console.
+            - name: IMPORT_REMOTESTATE_ENABLED
+              value: "true"
+          envFrom:
+            - secretRef:
+                name: auth
+          volumeMounts:
+            - { name: realm, mountPath: /config, readOnly: true }
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+      volumes:
+        - name: realm
+          configMap:
+            name: keycloak-realm
