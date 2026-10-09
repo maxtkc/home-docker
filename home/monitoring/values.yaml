@@ -66,6 +66,9 @@ grafana:
       root_url: https://gf.kcfam.us
     users:
       allow_sign_up: false
+    # The sidecar writes the home-server-overview-dashboard ConfigMap here.
+    dashboards:
+      default_home_dashboard_path: /tmp/dashboards/home-server-overview.json
     # Keycloak realm kcfam is the only login; only realm users get this far.
     # Break-glass: `grafana cli admin reset-admin-password` and the HTTP API
     # with basic auth still work for the local admin.
