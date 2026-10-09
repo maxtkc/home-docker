@@ -48,8 +48,12 @@ spec:
               value: America/New_York
             - name: IMMICH_CONFIG_FILE
               value: /config/immich.yaml
+            - name: IMMICH_TELEMETRY_INCLUDE
+              value: all
           ports:
             - containerPort: 2283
+            - { name: api-metrics, containerPort: 8081 }
+            - { name: ms-metrics, containerPort: 8082 }
           readinessProbe:
             httpGet:
               path: /api/server/ping
@@ -79,8 +83,26 @@ kind: Service
 metadata:
   name: immich-server
   namespace: home
+  labels:
+    app: immich-server
 spec:
   selector:
     app: immich-server
   ports:
-    - port: 2283
+    - { name: http, port: 2283 }
+    - { name: api-metrics, port: 8081 }
+    - { name: ms-metrics, port: 8082 }
+---
+## Prometheus metrics of the API and the microservices worker.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: immich-server
+  namespace: home
+spec:
+  selector:
+    matchLabels:
+      app: immich-server
+  endpoints:
+    - port: api-metrics
+    - port: ms-metrics
