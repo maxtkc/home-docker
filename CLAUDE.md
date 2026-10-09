@@ -70,7 +70,9 @@ password login. Status page and cors are public.
   who have nothing else).
 - `kcfam-realm.json` (clients, groups, the first-login flow, IdPs) is applied
   to the live realm by the `keycloak-config-cli` PostSync Job on every sync of
-  `home-auth`, so console edits to those are reverted; change the file. Users
+  `home-auth`, so console edits to those are reverted; change the file. Hooks
+  don't count toward sync status: console drift and edits to the Job alone
+  start no sync, so revert drift with a manual sync of `home-auth`. Users
   are not in it: they and their IdP links are database state, created in the
   console or API. It defines no `clientScopes` (that would skip the built-in
   email/profile scopes). The config-cli image is built per Keycloak version;
